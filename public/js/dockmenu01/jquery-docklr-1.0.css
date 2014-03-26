@@ -1,0 +1,457 @@
+/*
+ * Docklr v1.0
+ * Simple jQuery OSX-like Dock Menu
+ *
+ * Copyright 2011 amatyr4n
+ * http://codecanyon.net/user/amatyr4n
+ *
+ * licensed under Envato licenses
+ * http://wiki.envato.com/support/legal-terms/licensing-terms/
+ */
+
+/* CSS Normalize */
+
+.docklr,
+.docklr-stacks,
+.docklr-stacks *,
+.docklr * {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-family: Helvetica, Ubuntu, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #555;
+    vertical-align: baseline;
+}
+
+.docklr-stacks {
+	display: block;
+
+	/* All IE */
+	width: 100%\9;
+	padding-left: 100px\9;
+	padding-right: 100px\9;
+	margin-left: -100px\9;
+}
+
+/* Wrapper */
+
+.docklr {
+    position: absolute;
+    bottom: 0; 
+    padding-top: 5px;
+    padding-left: 5px;
+    margin-left: -40px;
+    padding-right: 5px;
+    
+    /* Center approximation */
+    left: 40%;
+    
+    z-index: 100;
+    list-style-type: none;
+    overflow: visible;
+}
+
+.docklr-top {
+    bottom: auto;
+    top: 0;
+    padding-bottom: 40px;
+    padding-top: 0;
+}
+
+.docklr-right,
+.docklr-left {
+    bottom: auto;
+    left: 0;
+    
+    /* Center approximation */
+    top: 40%;
+    
+    margin-top: -40px;
+    padding-bottom: 40px;
+    padding-left: 0;
+    margin-left: 0;
+	
+	*width : 64px;
+}
+
+.docklr-right {
+    left: auto;
+    right: 0;
+    margin-top: -40px;
+    padding-bottom: 40px;
+    padding-left: 40px;
+    padding-right: 0;
+}
+
+/* Icon */
+
+.docklr > li {
+    position: relative;
+    display: inline-block;
+    z-index: 101;
+    margin-left: -4px;
+    bottom: 4px;
+    height: 32px;
+    width: 40px;
+
+    -webkit-transition: all 0.7s ease-out;
+    -moz-transition: all 0.7s ease-out;    
+    -ms-transition: all 0.7s ease-out;
+    -o-transition: all 0.7s ease-out;
+    transition: all 0.7s ease-out;
+    
+    /* IE7 and below */
+	*display: block;
+	*float: left;
+}
+
+.docklr-left > li,
+.docklr-right > li {
+	*float: none;
+}
+
+.docklr-top > li {
+    display: inline-block;
+    bottom: auto;
+    top: 0;
+    vertical-align: top;
+}
+
+.docklr-stacks > li,
+.docklr-left > li,
+.docklr-right > li {
+    position: relative;
+    display: block;
+    margin-left: 0;
+    margin-top: -4px;
+    bottom: auto;
+    left: 4px;
+    height: 40px;
+    width: 32px;
+}
+
+.docklr-right > li {
+    margin: -4px 0 0 auto;
+    left: auto;
+    right: 4px;
+}
+
+.docklr-js > li {
+    -webkit-transition: none;
+    -moz-transition: none;  
+    -ms-transition: none;  
+    -o-transition: none;  
+    transition: none;    
+}
+
+.docklr > li:hover {
+    height: 64px;
+    width: 72px;
+  
+    /* Icon hover animation */
+    -webkit-transition: all 0.3s ease-in-out;
+    -moz-transition: all 0.3s ease-in-out;
+    -ms-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+}
+
+.docklr-js > li:hover {
+    height: 32px;
+    width: 40px;
+    -webkit-transition: none;
+    -moz-transition: none;  
+    -ms-transition: none;  
+    -o-transition: none;  
+    transition: none;
+}
+
+.docklr > li > a,
+.docklr > li > ul > li > a {
+    position: relative;
+    display: block;
+    padding: 0 4px;
+    text-decoration: none;
+}
+
+/* Balloon tooltip */
+.docklr-tooltip,
+.docklr > li:hover > a:before {
+    position: absolute;
+    top: -32px;
+    padding: 2px 8px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px #171717;
+    -moz-box-shadow: inset 0 0 5px #171717;
+    box-shadow: inset 0 0 5px #171717;
+    opacity: 0.9;
+    overflow: visible;
+    content: attr(href);
+    text-align: center;
+    color: #f7f7f7;
+    background: #474747;
+    text-shadow: 1px 1px 1px #171717;
+    white-space: nowrap;
+    margin: 0 auto;
+    z-index: 102;
+}
+
+/* Triangle for balloon tooltip */
+.docklr-tooltip:after,
+.docklr > li:hover > a:after {
+    position: absolute;
+    left: 32px;
+    top: -10px;
+    width: 0;
+    height: 0;
+    content: '';
+    border-top: 5px solid #333;
+    border-bottom: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    opacity: 0.9;
+}
+
+.docklr-stacks .docklr-tooltip {
+    top: 4px;
+    left: 40px;
+}
+
+.docklr-stacks .docklr-tooltip:after {
+    display: none;
+}
+
+.docklr-stacks a {
+    text-decoration: none;
+}
+
+.docklr-tooltip:after {
+    top: 22px;
+    left: 22px;
+}
+
+.docklr-left .docklr-tooltip:after {
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: none;
+    border-right: 5px solid #333;
+    top: 6px;
+    left: -4px;
+}
+
+.docklr-right .docklr-tooltip:after {
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid #333;
+    border-right: none;
+    top: 6px;
+    left: auto;
+    right: -4px;
+}
+
+.docklr-top .docklr-tooltip:after {
+    border-top: none;
+    border-bottom: 5px solid #333;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    top: -4px;
+}
+
+.docklr-tooltip,
+.docklr-js > li:hover > a:before,
+.docklr-js > li:hover > a:after {
+    display: none;
+}
+
+/* Bouncing animation */
+
+@-webkit-keyframes docklr-icon-bounce {
+   0% {
+      bottom: 0;
+   }
+   12% {
+      bottom: 40px;
+   }
+   24% {
+      bottom: 4px;
+   }
+   36% {
+      bottom: 20px;
+   }
+   48% {
+      bottom: 2px;
+   }
+   60% {
+      bottom: 10px;
+   }
+   72% {
+      bottom: 1px;
+   }
+   84% {
+      bottom: 5px;
+   }
+   100% {
+      bottom: 0;
+   }
+}
+
+@-moz-keyframes docklr-icon-bounce {
+   0% {
+      bottom: 0;
+   }
+   12% {
+      bottom: 40px;
+   }
+   24% {
+      bottom: 4px;
+   }
+   36% {
+      bottom: 20px;
+   }
+   48% {
+      bottom: 2px;
+   }
+   60% {
+      bottom: 10px;
+   }
+   72% {
+      bottom: 1px;
+   }
+   84% {
+      bottom: 5px;
+   }
+   100% {
+      bottom: 0;
+   }
+}
+
+@-ms-keyframes docklr-icon-bounce {
+   0% {
+      bottom: 0;
+   }
+   12% {
+      bottom: 40px;
+   }
+   24% {
+      bottom: 4px;
+   }
+   36% {
+      bottom: 20px;
+   }
+   48% {
+      bottom: 2px;
+   }
+   60% {
+      bottom: 10px;
+   }
+   72% {
+      bottom: 1px;
+   }
+   84% {
+      bottom: 5px;
+   }
+   100% {
+      bottom: 0;
+   }
+}
+
+@-o-keyframes docklr-icon-bounce {
+   0% {
+      bottom: 0;
+   }
+   12% {
+      bottom: 40px;
+   }
+   24% {
+      bottom: 4px;
+   }
+   36% {
+      bottom: 20px;
+   }
+   48% {
+      bottom: 2px;
+   }
+   60% {
+      bottom: 10px;
+   }
+   72% {
+      bottom: 1px;
+   }
+   84% {
+      bottom: 5px;
+   }
+   100% {
+      bottom: 0;
+   }
+}
+
+@keyframes docklr-icon-bounce {
+   0% {
+      bottom: 0;
+   }
+   12% {
+      bottom: 40px;
+   }
+   24% {
+      bottom: 4px;
+   }
+   36% {
+      bottom: 20px;
+   }
+   48% {
+      bottom: 2px;
+   }
+   60% {
+      bottom: 10px;
+   }
+   72% {
+      bottom: 1px;
+   }
+   84% {
+      bottom: 5px;
+   }
+   100% {
+      bottom: 0;
+   }
+}
+
+.docklr-bounce,
+.docklr a:target {
+    -webkit-animation: docklr-icon-bounce 2s ease-in-out;
+    -moz-animation: docklr-icon-bounce 2s ease-in-out;    
+    -ms-animation: docklr-icon-bounce 2s ease-in-out;
+    -o-animation: docklr-icon-bounce 2s ease-in-out;
+    animation: docklr-icon-bounce 2s ease-in-out;
+}
+
+.docklr-stacks > li > a > img, 
+.docklr > li > a > img {
+    width: 100%;
+}
+
+.docklr-stacks {
+    position: absolute;
+    list-style-type: none;
+    z-index: 102;
+}
+
+.docklr > li > ul {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 20px 80px 120px 0;
+    list-style-type: none;
+    display: none;
+    
+    /* IE7 quick fix */
+    *padding-bottom: 0;
+}
+
+.docklr > li:hover > ul {
+    display: block;
+}

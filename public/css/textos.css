@@ -1,0 +1,144 @@
+ 
+  
+    
+  .link_normal { font-family:Arial; font-size:10pt; font-style:normal; font-weight:normal; letter-spacing:normal; text-decoration:none; text-transform:none; color:#808080; }
+  A.link_normal:hover { text-decoration:none; color:#5F76C4; }
+  
+  
+  .link_rojo { font-family:Arial; font-size:9pt; font-style:normal; font-weight:normal; letter-spacing:normal; text-decoration:none; text-transform:none; color:#666666; }
+  A.link_rojo:hover { text-decoration:none; color:#790411; }
+  
+   
+  
+  .link_botonera { font-family:Arial; font-size:11px; font-style:normal; font-weight:normal; letter-spacing:normal; text-decoration:none; text-transform:none; color:#333333; }
+  A.link_botonera:hover { text-decoration:none; color:#A2A2A2; }
+  
+  .link_botonera2 { font-family:Arial; font-size:11px; font-style:normal; font-weight:bold; letter-spacing:normal; text-decoration:none; text-transform:none; color:#333333; }
+  A.link_botonera:hover { text-decoration:none; color:#7F7F7F; }
+  
+
+  .roll4 { font-family:Arial; font-size:8pt; font-style:normal; font-weight:normal; letter-spacing:normal; text-decoration:none; text-transform:none; color:#990000; }
+  A.roll4:hover { text-decoration:none; color:#666666; }
+
+  .rollrojo { font-family:Arial; font-size:9pt; font-style:normal; font-weight:normal; letter-spacing:normal; text-decoration:none; text-transform:none; color:#C80000; }
+  A.rollrojo:hover { text-decoration:none; color:red; }
+  
+  
+  .rollrojob { font-family:Arial; font-size:9pt; font-style:normal; font-weight:bold; letter-spacing:normal; text-decoration:none; text-transform:none; color:#C80000; }
+  A.rollrojob:hover { text-decoration:none; color:#880000; }
+  
+   .rollrojob2 { font-family:Arial; font-size:10px; font-style:normal; font-weight:bold; letter-spacing:normal; text-decoration:none; text-transform:none; color:#C80000; }
+  A.rollrojob2:hover { text-decoration:none; color:#880000; }
+  
+
+  .rollblanco { font-family:Arial; font-size:11px; font-style:normal; font-weight:bold; letter-spacing:normal; text-decoration:none; text-transform:none; color:#ffffff; }
+  A.rollblanco:hover { text-decoration:none; color:#cccccc; }
+ 
+ 
+  .rollnormal { font-family:Arial, Arial; font-size:11px; font-style:normal; font-weight:bold; letter-spacing:normal; text-decoration:none; text-transform:none; color:#595959; }
+  A.rollnormal:hover { text-decoration:none; color:#A2A2A2; }
+
+  
+  .rollnormalinverso { font-family:Arial; font-size:9pt; font-style:normal; font-weight:normal; letter-spacing:normal; text-decoration:none; text-transform:none; color:#808080; }
+  A.rollnormalinverso:hover { text-decoration:none; color:black; }
+  
+    .rollpubli { font-family:Arial; font-size:10pt; font-style:normal; font-weight:normal; letter-spacing:normal; text-decoration:none; text-transform:none; color:#2D4492; }
+  A.rollpubli:hover { text-decoration:none; color:#4B62B0; }
+
+.textocomungris_oscuro {  font-family: Arial; font-size: 9pt; font-style: normal; font-weight: normal; color: #464646; }
+
+.textocomungris_oscuro2 {  font-family: Arial; font-size: 8pt; font-style: normal; font-weight: normal; color: #464646; }
+
+.textocomungris_oscuro3 {  font-family: Arial; font-size: 7pt; font-style: normal; font-weight: normal; color: #464646; }
+
+.textogris { font-family: Arial; font-size: x-small; font-style: normal; font-weight: normal; color: #808080; }
+
+.textogris1 { font-family: Arial; font-size: 12px; font-style: normal; font-weight: normal; color: #464646; }
+
+.textogris2 { font-family: Arial; font-size: 11px; font-style: normal; font-weight: normal; color: #464646; }
+
+.textogris3 { font-family: Arial; font-size: 10px; font-style: normal; font-weight: normal; color: #464646; }
+
+/**********************************/
+
+.texto_normal { font-family: Arial; font-size:12px; font-style: normal; color: #000000; }
+
+.texto_normal_negrita { font-family: Arial; font-size:12px; font-style: normal; color: #000000; font-weight: bold; }
+
+/**********************************/
+
+.textogris_bold { font-family: Arial; font-size:12px; font-style: normal; font-weight: bold; color: #808080; } 
+
+.textogris_bold2 { font-family: Arial; font-size:12px; font-style: normal; font-weight: bold; color: #5D5D5D; }
+
+
+.textorojo_bold { font-family: Arial; font-size:13px; font-style: normal; font-weight: bold; color: #CC0000; } 
+
+.textogrisbold { font-family: Arial; font-size: x-small; font-style: normal; font-weight: bold; color: #808080; }
+
+
+.textorojobold { font-family: Arial; font-size: x-small; font-style: normal; font-weight: bold; color: #790411; }
+
+
+.textomarron_peq { font-family: Arial; font-size: xx-small; font-style: normal; font-weight: normal; color: #B38600; } 
+
+.textorojo_peq { font-family: Arial; font-size: 10px; font-style: normal; font-weight: normal; color: #990000; }
+
+.textorojo { font-family: Arial; font-size: 12px; font-style: normal; font-weight: normal; color: #990000; }
+
+.textorojo2 { font-family: Arial; font-size: 11px; font-style: normal; font-weight: normal; color: #990000; }
+
+.textorojob { font-family: Arial; font-size: 12px; font-style: normal; font-weight: bold; color: #990000; }
+
+
+
+
+
+
+
+
+.textocomun_gris_c { font-family: Arial, Helvetica, sans-serif; font-size: x-small; font-style: normal; font-weight: normal; color: #C0C0C0; }
+
+.textonormalbold { font-family: Arial, Helvetica, sans-serif; font-size: x-small; font-style: normal; font-weight: normal; color: #000000; }
+
+
+.textocreditosgrisclaro {  font-family: Arial, Helvetica, sans-serif; font-size: x-small; font-style: normal; font-weight: normal; color: #C0C0C0; }
+.textobold_gris {  font-family: Arial, Helvetica, sans-serif; font-size: x-small; font-style: normal; font-weight: bold; color: #939393; }
+.textopequenobold_gris {  font-family: Arial, Helvetica, sans-serif; font-size: xx-small; font-style: normal; font-weight: bold; color: #9D9D9D; }
+
+.textopequenogris {  font-family: Arial, Helvetica, sans-serif; font-size: xx-small; font-style: normal; font-weight: normal; color: #C0C0C0; }
+.textonormalgrisbold {  font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-style: normal; font-weight: bold; color: #808080; }
+.grispeq {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: xx-small;
+	font-style: normal;
+	font-weight: normal;
+	color: #9E9E9E;
+}
+.Texblanco {
+	font-family: Arial;
+	font-size: 9px;
+	font-style: normal;
+	font-weight: normal;
+	color: #ffffff; 
+}
+
+
+
+
+.Texblanco_Bold {
+	font-family: Arial;
+	font-size: 10px;
+	font-style: normal;
+	font-weight: bold;
+	color: #ffffff; 
+}
+
+
+.Texblanco_Bold22{
+	font-family: Arial;
+	font-size: 12px;
+	font-style: normal;
+	font-weight: bold;
+	color: #ffffff; 
+}

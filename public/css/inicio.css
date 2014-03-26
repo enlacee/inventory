@@ -1,0 +1,962 @@
+/* [REQUIRED] (../by Ext.ux.grid.GridSummary plugin) */
+.x-grid3-gridsummary-row-inner{overflow:hidden;width:100%;}/* IE6 requires width:100% for hori. scroll to work */
+.x-grid3-gridsummary-row-offset{width:10000px;}
+.x-grid-hide-gridsummary .x-grid3-gridsummary-row-inner{display:none;}
+
+/*iconos*/
+
+.btn_bus_guia{
+    background-image: url(../images/icon/page_find.png) !important;
+}
+.btn_bus_man{
+    background-image: url(../images/icon/zoom.png) !important;
+}
+.btn_news_paper{
+    background-image: url(../images/icon/newspaper_go.png) !important;
+}
+.btn_editar_dir{
+    background-image: url(../images/icon/btn_editar.png) !important;
+}
+.btn_notif_gd{
+    background-image: url(../images/icon/email_go.png) !important;
+}
+.btn_notif_ge{
+    background-image: url(../images/icon/email_edit.png) !important;
+}
+.btn_ver_man{
+    background-image: url(../images/icon/ver.png) !important;
+}
+.btn_add_recojo{
+    background-image: url(../images/icon/add.png) !important;
+}
+.btn_ok{
+    background-image: url(../images/icon/ok.png) !important;
+}
+.btn_delete{
+    background-image: url(../images/icon/delete.png) !important;
+}
+.btn_buscar{
+    background-image: url(../images/icon/zoom.png) !important;
+}
+.btn_buscarb{
+    background-image: url(../images/icon/btn_ver.png) !important;
+}
+.btn_pdf{
+    background-image: url(../images/icon/pdf.png) !important;
+}
+.btn_cancelar{
+    background-image: url(../images/icon/btn_cancelar.png) !important;
+}
+.btn_cierra_session{
+    background-image: url(../images/icon/Standby.png) !important;
+}
+.btn_email{
+    background-image: url(../images/icon/mail_generic.png) !important;
+}
+.btn_home{
+    background-image: url(../images/icon/house.png) !important;
+}
+.btn_seguimiento{
+    background-image: url(../images/icon/aim_protocol.png) !important;
+}
+.btn_form{
+    background-image: url(../images/icon/application_form.png) !important;
+}
+.btn_img{
+    background-image: url(../images/icon/image.png) !important;
+}
+.btn_info{
+    background-image: url(../images/icon/info2.gif) !important;
+}
+.btn_enviar{
+    background-image: url(../images/icon/application_go.png) !important;
+}
+.btn_upload{
+    background-image: url(../images/icon/upload_icon.png) !important;
+}
+.btn_download{
+    background-image: url(../images/icon/download.png) !important;
+}
+.btn_estadistico{
+    background-image: url(../images/icon/statistics.png) !important;
+}
+.btn_interno{
+    background-image: url(../images/icon/interno.png) !important;
+}
+.btn_externo{
+    background-image: url(../images/icon/externo.png) !important;
+}
+.btn_adjuntar{
+    background-image: url(../images/icon/attach.png) !important;
+}
+.btn_excel{
+    background-image: url(../images/icon/excel.png) !important;
+}
+.btn_volver{
+    background-image: url(../images/icon/1304531113_sign-out.png) !important;
+}
+.btn_genera_nuevo{
+    background-image: url(../images/icon/cog_add.png) !important;
+}
+.btn_find{
+    background-image: url(../images/icon/find.png) !important;
+}
+.btn_grabar{
+    background-image: url(../images/icon/ok.png) !important;
+}
+.btn_exit{
+    background-image: url(../images/icon/exit.png) !important;
+}
+.btn_chksel{
+    background-image: url(../images/icon/check_sele.png) !important;
+}
+.btn_chkdesel{
+    background-image: url(../images/icon/check_desel.png) !important;
+}
+.btn_visita{
+    background-image: url(../images/icon/aim_protocol.png) !important;
+}
+.btn_gtelefono{
+    background-image: url(../images/icon/phone.png) !important;
+}
+.btn_dircliente{
+    background-image: url(../images/icon/direction.png) !important;
+}
+.btn_registra_llamada{
+    background-image: url(../images/icon/telephone_add.png) !important;
+}
+.btn_agendar{
+    background-image: url(../images/icon/book_addresses.png) !important;
+}
+.btn_asigna_cli{
+    background-image: url(../images/icon/client_account_template.png) !important;
+}
+.btn_lnewn{
+    background-image: url(../images/icon/page.png) !important;
+}
+.btn_newn{
+    background-image: url(../images/icon/add.png) !important;
+}
+.btn_lbentrada{
+    background-image: url(../images/icon/google_adsense.png) !important;
+}
+.btn_bentrada{
+    background-image: url(../images/icon/google_adsense_.png) !important;
+}
+.btn_regresar{
+    background-image: url(../images/icon/door_out.png) !important;
+}
+.btn_generar{
+    background-image: url(../images/icon/exec.gif) !important;
+}
+.btn_phone{
+    background-image: url(../images/icon/1304518991_phone_2.png) !important;
+}
+.btn_sendcall{
+    background-image: url(../images/icon/phone1.png) !important;
+}
+.btn_endcall{
+    background-image: url(../images/icon/1304521178_Phone.png) !important;
+}
+.btn_calls{
+    background-image: url(../images/icon/1304522576_09.call.png) !important;
+}
+.btn_incall{
+    background-image: url(../images/icon/1304531024_sign-in.png) !important;
+}
+.btn_outcall{
+    background-image: url(../images/icon/1304531113_sign-out.png) !important;
+}
+.btn_datContact{
+    background-image: url(../images/icon/vcard.png) !important;
+}
+.btn_datTarjetas{
+    background-image: url(../images/icon/visa_2.png) !important;
+}
+.btn_addphone{
+    background-image: url(../images/icon/phone_add.png) !important;
+}
+.btn_cursor{
+    background-image: url(../images/icon/cursor.png) !important;
+}
+.btn_calendar{
+    background-image: url(../images/icon/calendar.png) !important;
+}
+.btn_calendar01{
+    background-image: url(../images/icon/calendar_view_month.png) !important;
+}
+.btn_addform{
+    background-image: url(../images/icon/application_form_add.png) !important;
+}
+.btn_atrib{
+    background-image: url(../images/icon/attributes_display.png) !important;
+}
+.btn_filter{
+    background-image: url(../images/icon/1311778700_filter_add.png) !important;
+}
+.icon_chk_ss{
+    background-image: url(../images/icon/chk_ss.png) !important;
+}
+.icon_chk_rp{
+    background-image: url(../images/icon/chk_rp.png) !important;
+}
+.icon_chk_cv{
+    background-image: url(../images/icon/chk_cv.png) !important;
+}
+.icon_chk_nr{
+    background-image: url(../images/icon/chk_nr.png) !important;
+}
+.icon_chk_ro{
+    background-image: url(../images/icon/chk_ro.png) !important;
+}
+.icon_chk_er{
+    background-image: url(../images/icon/chk_er.png) !important;
+}
+.icon_chk_empty{
+    background-image: url(../images/icon/empty.png) !important;
+}
+.btn_post{
+    background-image: url(../images/icon/post.gif) !important;
+}
+.btn_actualizar{
+    background-image: url(../images/icon/actualizar.png) !important;
+}
+.btn_printer{
+    background-image: url(../images/icon/printer.png) !important;
+}
+.btn_limpiar{
+    background-image: url(../images/icon/page_.png) !important;
+}
+.btn_ok{
+    background-image: url(../images/icon/ok.png) !important;
+}
+.btn_newform{
+    background-image: url(../images/icon/add.png) !important;
+}
+.btn_editform{
+    background-image: url(../images/icon/edit.png) !important;
+}
+.btn_dbupdate{
+    background-image: url(../images/icon/1315403748_db_update.png) !important;
+}
+.btn_db{
+    background-image: url(../images/icon/1315404503_db.png) !important;
+}
+.btn_print{
+    background-image: url(../images/icon/1315404587_document-print.png) !important;
+}
+.btn_gear{
+    background-image: url(../images/icon/1315404769_gear_wheel.png) !important;
+}
+.btn_bill{
+    background-image: url(../images/icon/1315404859_billing.png) !important;
+}
+.btn_grafica1{
+    background-image: url(../images/icon/grafica01.png) !important;
+}
+.btn_grafica2{
+    background-image: url(../images/icon/grafica02.png) !important;
+}
+/*  NUEVOS ICONOS */
+
+.btn_add_log{
+    background-image: url(../images/icon/btn_add_log.png) !important;
+}
+.btn_edit_log{
+    background-image: url(../images/icon/btn_edit_log.png) !important;
+}
+.btn_update_log{
+    background-image: url(../images/icon/btn_update_log.png) !important;
+}
+.btn_save_log{
+    background-image: url(../images/icon/btn_save_log.png) !important;
+}
+.btn_delete_log{
+    background-image: url(../images/icon/btn_delete_log.png) !important;
+}
+.btn_cancel_log{
+    background-image: url(../images/icon/btn_cancel_log.png) !important;
+}
+.btn_nov_log{
+    background-image: url(../images/icon/help_log.png) !important;
+}
+.btn_upload_log{
+    background-image: url(../images/icon/upload_log.png) !important;
+}
+.btn_salir_sistema{
+    background-image: url(../images/icon/salir_sistema.png) !important;
+}
+
+.btn_aprobar{
+    background-image: url(../images/icon/accept.png) !important;
+}
+
+.btn_pdf_log{
+    background-image: url(../images/icon/pdf.png) !important;
+}
+
+.btn_tarifario{
+    background-image: url(../images/icon/1315403544_application_form_edit.png) !important;
+}
+
+.btn_tadd{
+    background-image: url(../images/icon/1323811939_layout_add.png) !important;
+}
+
+.btn_tprevious{
+    background-image: url(../images/icon/1323812186_Previous.png) !important;
+}
+/*
+* Icon tree
+*/
+.tree_opurbano-cr{
+    background-image: url(../images/icon/1309471185_trafficlight-red.png) !important;
+}
+.tree_opurbano-cm{
+    background-image: url(../images/icon/1309471164_Circle_Yellow.png) !important;
+}
+.tree_opurbano-cgc{
+    background-image: url(../images/icon/1309471169_Circle_Grey.png) !important;
+}
+.tree_opurbano-cgo{
+    background-image: url(../images/icon/1309471140_stock_draw-circle.png) !important;
+}
+/*-------------------------------------*/
+.grid_cell_color_00{
+    color:#000000;
+    background-color: #D0D0D0;
+}
+.grid_cell_color_01{
+    background-color: #CCE599;
+}
+.x-grid3-hd-header_urbano00 {
+    background-color: #4e4e4e;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.x-grid3-hd-header_urbano01 {
+    background-color: #4e4e4e;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.x-grid3-hd-header_urbano02 {
+    background-color: #4e4e4e;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.x-grid3-hd-header_urbano03 {
+    background-color: #4e4e4e;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.x-grid3-hd-header_urbano04 {
+    background-color: #4e4e4e;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.x-grid3-hd-header_urbano05 {
+    background-color: #4e4e4e;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.x-grid3-hd-header_urbano06 {
+    background-color: #4e4e4e;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.x-grid3-summary-table {
+    background-color: #424242;/*4e4e4e 030303*/
+    color:#FFFFFF;
+    font-weight:bold;
+}
+.databox {
+    background: #f9f9f9;
+    font-size: 13px;
+    color: #333;
+    border-bottom: 1px solid #e3e3e3;
+    padding: 5px;
+}
+.databox_user{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:11px;
+    font-weight:bold;
+}
+.databox_message{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:10px;
+    margin-left:5px;
+}
+.x-grid3-row{
+    width:100%;
+}
+.x-grid3-row-table{
+    width:100%;
+}
+.x-grid3-body{
+    width:100%;
+}
+#fi-button-msg {
+    border: 2px solid #ccc;
+    padding: 5px 10px;
+    background: #eee;
+    margin: 5px;
+    float: left;
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:10px;
+}
+.label01 .x-form-item-label {font-size:11px; color: #000;}
+.label02 .x-form-cb-label {font-size:11px; color: #000; }
+
+/******************SOLICITUD DE GUIAS**************************************/
+.menuv {
+        /*border: 1px solid #ACCFE8;*/
+        /*border: 1px solid #D0D0D0;*/
+        /*border-width: 1px 1px 0 1px;*/
+        width: 174px;
+        font: 90% Arial, Helvetica, sans-serif;
+}
+
+.menuv ul, li {
+        list-style-type: none;
+}
+
+.menuv ul {
+        margin: 0;
+        padding: 0;
+        /*width:168px;*/
+}
+
+.menuv li {
+     
+        /*border-bottom: 1px solid #ACCFE8;*/
+        background:url('/images/icon/flechaderecha3.png') no-repeat;
+        /*background:url(../'/images/icon/flechaderecha2.png') no-repeat;*/
+        background-position: right;
+        padding-top:10px;
+        background-color:#E6E6E6;
+        border-bottom: 1px solid #D0D0D0;
+        width:251px;
+        height:30px;
+}
+
+.menuv a {
+        text-decoration: none;
+        color: #050607;
+        /*background: #F0F7FC;*/
+        background-position: right;
+        display: block;
+        padding: 3px 6px;
+        width: 240px;
+        font-size:12px;
+        font-weight:bolder;
+        text-align:left;
+}
+
+.menuv a:hover {
+        background: #fff;
+        background:url('../images/icon/flechaderecha3.png') no-repeat;
+        /*background:url(../'/images/icon/flechaderecha2.png') no-repeat;*/
+        background-position: right;
+}
+/********************************************************/
+
+.table_th_cespecifica{
+    text-align:center;
+    padding:1px;
+    border:1px solid #fff; 
+    background-color:#424242; 
+    color:#fff;
+}
+
+.table_td_cespecifica{
+    text-align:center;
+    padding:1px;
+    border:1px solid #fff; 
+    background-color:#e5f1f4;
+}
+
+.table_jq_header{
+    font-family:"Lucida Grande,Lucida Sans,Arial,sans-serif"; 
+    font-size:11px;
+}
+.title_fcall{
+    background-color: #4e4e4e !important;
+    color: #FFFFFF;
+    font-family:Arial, Helvetica, sans-serif; 
+    border: 1px solid #ffffff !important;
+    font-size:11px;
+    padding:2px; 
+    font-weight:bold;
+}
+.x-tab-tabmenu-right {
+    background: transparent url(../images/icon/startbutton-icon-00.png) no-repeat 0 0;
+    border-bottom: 1px solid #8db2e3;
+    width:70px;
+    position:absolute;
+    /*right:0;*/
+    top:0;
+    z-index:100;
+    cursor:pointer;
+}
+.x-tab-tabmenu-over {
+    background-position: -18px 0;
+}
+.title_Iaccordion{
+    color:#fff;
+    font-weight:bold; 
+    font-size: 11px;
+    font-family: tahoma,arial,verdana,sans-serif;
+    border-color:#d0d0d0;
+    background-color: #000;
+    height:22px;
+    padding:10px 3px 0px 5px;
+}
+.title_Iaccordion01{
+    color:#fff;
+    font-weight:normal;
+    font-size: 11px;
+    font-family: tahoma,arial,verdana,sans-serif;
+    background-color: #3D4044 !important;
+    background: url('../images/extranet/footer_nuevo.png') ;
+    top:0;
+    /*background-image: none !important;*/
+    border: 0.5px solid;
+    border-color:#61656B;
+    padding:5px;
+}
+
+.x-grid3-hd-row-normal {
+    /*line-height:15px;
+    vertical-align:middle;*/
+    border-left:1px solid !important;
+    /*border-right:1px solid;*/
+}
+
+.labelTitle01{
+    font-size:12px;
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight:bold;
+}
+.labelText01{
+    font-size:11px;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+/*--------------------------------------------------*/
+
+.tablaOrden{
+    font-family:Arial, Helvetica, sans-serif;
+    border:0.1em solid #D9E0CA;
+    width:100%;
+    height:100%;
+}
+.tablaOrden thead{
+    width:100%;
+    min-height:15px;
+    max-height:25px;
+}
+.tablaOrden thead tr{
+
+}
+.tablaOrden thead tr th{
+    font-weight:bold;
+    text-align:center;
+
+    white-space:nowrap;
+    border-top:none;
+    border-bottom:none;
+    border-right:#A9C1D8 solid 1px;
+    padding:0px;
+    margin:0px;
+    font-size:11px;
+    border-bottom:solid #E0E0E0 1px;
+    background-color: #DFDFDE;
+    background-image: url(../images/bg_grid.gif);
+    background-repeat: repeat-x;
+    background-position: top;
+}
+.tablaOrden tbody{
+    width:100%;
+    height:90%;
+    max-height:85%;
+    min-height:95%; 
+    /*overflow-y:auto !important;*/
+    overflow-x:hidden;
+    overflow: auto !important;
+    
+}
+.tablaOrden tbody tr{
+    font-family:Arial, Helvetica, sans-serif normal;
+    font-size:11px;
+
+}
+.tablaOrden  .e0{
+    background-color:#00FF00;
+    color:#000000;
+}
+
+.tablaOrden  .e1{
+    background-color:#FFFFFF;
+    color:#000000;
+}
+.tablaOrden .e2{
+    background-color:#deedf8;
+    color:#004080;
+}
+.tablaOrden .e3{
+    background-color:#fed8d8;
+    color:#660033;
+}
+.tablaOrden .e4{
+    background-color:#deedf8;
+    color:#004080;
+}
+.tablaOrden .e5{
+    background-color:#fefbda;
+    color:#000000;
+}
+.tablaOrden .e6{
+    background-color:#FF3300;
+}
+.tablaOrden .e7{
+    background-color:#cfcfcf;
+    color:#5d5d5d;
+}
+.tablaOrden .e8{
+    background-color:#ececff;
+    color:#400040;
+}
+.tablaOrden .e9{
+    background-color:#ececff;
+    color:#400040;
+}
+.tablaOrden .e10{
+    background-color:#FF0000;
+    color:#FFFFFF;
+}
+.tablaOrden .e11{
+    background-color:#000000;
+}
+.tablaOrden .e12{
+    background-color:#000000;
+}
+.tablaOrden .e13{
+    background-color:#000000;
+}
+.tablaOrden .e14{
+    background-color:#000000;
+}
+.tablaOrden .e15{
+    background-color:#000000;
+}
+.tablaOrden tbody tr td{
+    padding:1px;
+    margin:0px;
+    border-bottom:solid #ADC5CC 1px;
+    border-right:solid #ADC5CC 1px;
+    cursor:pointer;
+    text-transform:uppercase;
+}
+.tablaOrden tbody tr td input{
+    border:0px;
+    margin:0px;
+    padding:0px;
+    font-size:10px;
+    width:100%;
+    height:100%;
+    text-transform:uppercase;
+}
+.tablaOrden .filaSeleccionada{
+    background-color:#BCDD97;
+}
+.tablaOrden .fila1{
+    background-color:#FFFFFF;
+}
+.tablaOrden .fila2{
+    background-color:#EEEEEE;
+}
+.tablaOrden .filar{
+    background-color:#FFCCCC;
+    font-weight:bold;
+}
+.checkboxOrden{
+    border:none;
+    margin:0px;
+    background-color:#0066FF;
+}
+/*********************************/
+
+.tablaOrden.filaSeleccionada{
+    background-color:#BCDD97;
+    font-weight:bold;
+}
+.tablaOrden.filaFaltas{
+    background-color:#FFBBBB;
+    font-weight:bold;
+}
+.TablaAsistencia.tbody tr td input{
+    border:0px;
+    margin:0px;
+    padding:0px;
+    font-size:10px;
+    width:100%;
+    height:100%;
+    text-transform:uppercase;
+}
+/****clases para el modulo de logistica************/
+input.id_prog_ocupado {
+    background-color: #C01F1F !important;/*4e4e4e 030303*/
+    font-weight:bold;
+    color:#FFFFFF !important;
+    background-image: url(../images/default_r24_c29_f2.jpg) !important;
+}
+input.id_prog_seleccionado {
+    background-color: #C01F1F !important;/*4e4e4e 030303*/
+    font-weight:bold;
+    color:#FFFFFF !important;
+    background-image: url(../images/default_r34_c24.jpg) !important;
+}
+input.no_seleccionado_idprog {
+    font-weight:bold;
+    font-size:16;
+}
+msg_descarga_guia {
+    background-color: #C01F1F !important;/*4e4e4e 030303*/
+    font-weight:bold;
+    color:#FFFFFF !important;
+}
+/*----------------------------------------*/
+#x-shortcuts dt {
+    float:left;
+    margin:1px 0 10px 15px;
+    clear:right;
+    width:64px;
+    font:normal 10px tahoma,arial,verdana,sans-serif;
+    text-align:center;
+    zoom:1;
+    display:block;
+}
+#x-shortcuts dt a {
+    width:64px;
+    display:block;
+    color:white;
+    text-decoration:none;
+}
+#x-shortcuts dt div {
+    width:100%;
+    color:#000;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    cursor:pointer;
+}
+.ext-ie #x-shortcuts dt img {
+    background:transparent !important;
+}
+#x-shortcuts dt a:hover {
+    text-decoration:underline;
+}
+/* shortcuts */
+#grid-win-shortcut img {
+    width:48px;
+    height:48px;
+    background-image: url(../images/shortcut/grid48x48.png);
+    filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='..8images/grid48x48.png', sizingMethod='scale');
+}
+#acc-win-shortcut img {
+    width:48px;
+    height:48px;
+    background-image: url(../images/shortcut/im48x48.png);
+    filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='../images/im48x48.png', sizingMethod='scale');
+}
+.tbl-accd-shortcut{
+    border-collapse:collapse; 
+    border-spacing:0; 
+    background-color:#FFF; 
+    font-family:Verdana, Geneva, sans-serif;
+    width: 100%;
+}
+.tbl-accd-shortcut-title{
+    background:none repeat scroll 0 0 #717FA1; 
+    border-color:#596480; 
+    color:white; 
+    border-bottom:1px solid; 
+    padding:2px 10px;
+}
+.tbl-accd-shortcut-title div{
+    border-bottom:0 solid; 
+    font-size:13px; 
+    font-weight:bolder;
+}
+.tbl-novedad-shortcut-title{
+    background:none repeat scroll 0 0 #717FA1; 
+    border-color:#596480; 
+    color:white; 
+    border-bottom:1px solid; 
+    padding:2px 10px;
+}
+.tbl-novedad-shortcut-title div{
+    border-bottom:0 solid; 
+    font-size:13px; 
+    font-weight:bolder;
+}
+.tbl-novedad-shortcut{
+    border-collapse:collapse; 
+    border-spacing:0; 
+    background-color:#FFF; 
+    font-family:Verdana, Geneva, sans-serif;
+    width: 100%;
+}
+.tbl-novedad-shortcut-content{
+    border-collapse:collapse; 
+    width:100%;
+    padding:10px; 
+    font:11px Verdana, Geneva, sans-serif !important;
+}
+.tbl-tr-novedad-impar{
+    background-color: #ffffff;
+}
+.tbl-tr-novedad-par{
+    background-color: #ECEFF7;
+}
+.tbl-td-separe{
+    background-image:url(../images/shortcut/shr.png); 
+    background-repeat:repeat-y;
+}
+
+a.edit{
+    text-decoration: none;
+    background: #FFFFFF url(../images/icon/edit_log.png) left no-repeat ;
+    border: 1px solid #666666;
+    border-radius: 4px 4px 4px 4px;
+    float: left;
+    margin-top: -3px;
+    outline: medium none;
+    padding: 1px 6px 1px 19px;
+}
+    
+.tbar-button .x-btn-ml{
+	background-position: -6px -24px;
+}
+
+.tbar-button .x-btn-mr{
+	background-position: -9px -24px;
+}
+
+.tbar-button .x-btn-mc{
+	background-position: 0 -2168px;
+}
+
+.tbar-button .x-btn-tl{
+	background-position: -6px 0;
+}
+
+.tbar-button  .x-btn-tr{
+	background-position: -9px 0;
+}
+
+.tbar-button  .x-btn-tc{
+	background-position: 0 -9px;
+}
+
+.tbar-button  .x-btn-bl{
+	background-position: -6px -3px;
+}
+
+.tbar-button  .x-btn-br{
+	background-position: -9px -3px;
+}
+
+.tbar-button  .x-btn-bc{
+	background-position: 0 -18px;
+}
+
+div.exportar {
+    
+    overflow: hidden;
+}
+div.exportar a {
+    color: green;
+    float: right;
+    font-size: 10px;
+    margin: 2px 3px;
+    outline: medium none;
+    text-decoration: none;
+    border: 1px solid #666666;
+    border-radius: 4px 4px 4px 4px;
+    padding: 1px 6px 1px 21px;
+    background: #FFFFFF url(../images/icon/excel.png) left no-repeat ;
+    
+}
+
+div#encuesta-tab div#center-panel > div.x-panel-header{
+    text-align:center;
+}
+
+/*add 14-02-2012*/
+
+.fondo_principal > div > div > div.x-panel-body {
+    background: none repeat scroll 0 0 transparent;
+}
+
+#scorecenter-panel > div > div.x-panel-body {
+    background:transparent;
+}
+
+#mantloyaltycenter-panel > div > div.x-panel-body {
+    background:transparent;
+}
+
+#clasenovedades-tab #center-panel {
+margin-top: 10px;
+}
+
+#clasenovedades-tab #center-panel > div > div.x-panel-body,
+#tiponovedades-tab #center-panel > div > div.x-panel-body,
+#solguias-tab #center-panel > div > div.x-panel-body,
+#asignarguias-tab #center-panel > div > div.x-panel-body,
+#shipper-tab #center-panel > div > div.x-panel-body,
+#formventas-tab #center-panel > div > div.x-panel-body,
+#regiones-tab #center-panel > div > div.x-panel-body,
+#provincias-tab #center-panel > div > div.x-panel-body,
+#ciudades-tab #center-panel > div > div.x-panel-body,
+#tipozonas-tab #center-panel > div > div.x-panel-body,
+#personal-tab #center-panel > div > div.x-panel-body,
+#usuario-tab #center-panel > div > div.x-panel-body,
+#productos-tab #center-panel > div > div.x-panel-body,
+#servicios-tab #center-panel > div > div.x-panel-body,
+#industrias-tab #center-panel > div > div.x-panel-body,
+#competidores-tab #center-panel > div > div.x-panel-body,
+#pipestage-tab #center-panel > div > div.x-panel-body,
+#panelcs-tab #center-panel > div > div.x-panel-body,
+#transporte-tab #center-panel > div > div.x-panel-body,
+#salidaruta-tab #center-panel > div > div.x-panel-body,
+#descargaruta-tab #center-panel > div > div.x-panel-body,
+#planviaje-tab #center-panel > div > div.x-panel-body,
+#recepcionDespacho-tab #center-panel > div > div.x-panel-body,
+#recojos-tab #center-panel > div > div.x-panel-body,
+#rutasViaje-tab #center-panel > div > div.x-panel-body,
+#mantras-tab #center-panel > div > div.x-panel-body,
+#cobertura-tab #center-panel > div > div.x-panel-body{
+    background:transparent;
+}
+
+#bases-tab > div > div > div > div > div {
+    background:transparent;
+}
+
+#formventas-tab #center-panel > div > div > div > div > div.x-panel-body{
+    background:transparent;
+}
+
+#shippercenter-panel > div > div.x-panel-body{
+    background:transparent;
+}
+
+#liquidacion-tab,#facturacion-wrap,#factura-tab,#refacturas-tab,#tiponovedades-tab,#gestornovedades-tab,
+#shipper-tab,#formadministrarpipeline-tab,#formventas-tab{
+margin-top: 10px !important;
+}
+
+#tiponovedades-tab > div > div,#shipper-tab > div > div,#formadministrarpipeline-tab > div > div,#formventas-tab > div > div{ border-width:0;}
+
+#content-grafico-panel {margin-top:0 !important;}

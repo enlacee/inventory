@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>Urbano Express</title>
+<link href="default.css" rel="stylesheet" type="text/css" media="screen" />
+<link href="css-dock-menu/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="css-dock-menu/js/jquery.js"></script>
+<script type="text/javascript" src="css-dock-menu/js/interface.js"></script>
+</head>
+<body>
+<div id="header">
+	<div id="logo">
+		
+	</div>
+	
+</div>
+<div id="wrapper">
+	<div id="page">
+		<div id="sidebar1" class="sidebar">
+			<ul>
+				<li>
+					<h2>Sistemas Coorporativos</h2>
+					<ul>
+						<li><a href="#">Sistema de Servicio Logistica</a></li>
+						<li><a href="#">Sistema de Servicio Masivo</a></li>
+					</ul>
+				</li>				
+			</ul>
+		</div>
+		<!-- start content -->
+		<div id="content">
+			<div class="flower"><!--<img src="images/img06.jpg" alt="" width="510" height="250" />--></div>
+			<div class="post">
+
+			</div>
+			<div class="post">
+		    	<div class="dock" id="dock2">
+                    <div class="dock-container2">
+                        <a class="dock-item2" href="#"><span>Sistema Servicio Logistica</span><img src="css-dock-menu/images/1315836109_Delivery.png" alt="home" /></a> 
+                        <a class="dock-item2" href="#"><span>Sistema Servicio Masivo</span><img src="css-dock-menu/images/email.png" alt="contact" /></a> 
+                    </div>
+                </div>
+			</div>
+		</div>
+		<!-- end content -->
+		<!-- start sidebars -->
+		<div id="sidebar2" class="sidebar">
+			
+		</div>
+		<!-- end sidebars -->
+		<div style="clear: both;">&nbsp;</div>
+	</div>
+	<!-- end page -->
+</div>
+<div id="footer">
+</div>
+<script type="text/javascript">
+	
+	$(document).ready(
+		function()
+		{
+			$('#dock2').Fisheye(
+				{
+					maxWidth: 60,
+					items: 'a',
+					itemsText: 'span',
+					container: '.dock-container2',
+					itemWidth: 40,
+					proximity: 80,
+					alignment : 'left',
+					valign: 'bottom',
+					halign : 'center'
+				}
+			)
+		}
+	);
+
+</script>
+</body>
+</html>

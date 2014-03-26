@@ -1,0 +1,361 @@
+body{
+	background-color: #292828;
+	font-family: Arial, "MS Trebuchet", sans-serif;
+	margin:0px;
+	padding:0px;
+	background: url('../images/extranet/fondo_login.png') repeat-y scroll top left;
+	background: url('../images/extranet/urbano_fondo.png') no-repeat scroll top left;
+	background-position: 10px 100px;
+	background-color: #D0E9FD;
+}
+#pantalla_fondo_login{
+	
+	background-position: 0px 0px;
+	width:100%;
+	height:100%;
+	color:#FFFFFF;	
+
+}
+
+#cuadro_login{
+	background: url('../images/extranet/cuadro_login.png') no-repeat scroll top left;
+	width: 511px;
+	height: 364px;
+	top: 50%;
+	left: 50%;
+	position:absolute;
+	margin-left:-260px;
+	margin-top:-180px;
+
+}
+
+#cuadro_login .adentro{
+	padding-top:95px;
+	padding-left:20px;
+	font-size: 11px;
+	color:#626060;
+}
+
+#cuadro_login .adentro_texto{
+	width:95%;
+	height:20px;
+	padding:5px;
+	padding-top:8px;
+}
+#cuadro_login .adentro_texto a.rojo{
+	color:#e51b24;
+}
+#cuadro_login .adentro_texto label{
+	float:left;
+	width:150px;
+	color:#625e5e;
+	font-size: 18px;
+	padding-top:2px;
+}
+#cuadro_login .adentro_texto input.campo{
+	background: url('../images/extranet/fondo_input.jpg') repeat-x scroll top left;
+	width:300px;
+	height:26px;
+	border:1px Solid #b2b0b0;
+	font-size:18px;
+}
+#cuadro_login .adentro_texto select{
+	background-color: #FFFFFF;
+	width:300px;
+	height:26px;
+	border:1px Solid #b2b0b0;
+	font-size:18px;
+}
+
+
+#cuadro_login .adentro_texto .enviar{
+	background: url('../images/extranet/boton_entrar.png') no-repeat scroll top left;
+	width: 112px;
+	height: 38px;
+	cursor: pointer;
+	margin:auto;
+}
+#cuadro_login .adentro_texto .enviar_hover{
+	background-position:-112px 0px;
+}
+
+
+#content-login{
+	width:551px;
+	height:auto;
+	background-color:#FFFFFF;
+	border:8px Solid #cdcccc;
+	padding:4px;
+}
+#content-login .logo{
+	float:left;
+	width:50%;
+}
+
+#content-login .holding{
+	float:left;
+	width:48%;
+}
+
+#content-login .holding .adentro{
+	padding:5px;
+	padding-top:10px;
+	text-align: right;
+}
+
+#campos{
+	padding:14px;
+	padding-top:30px;
+	padding-left:25px;
+}
+
+#campos label{
+	float:left;
+	width:100px;
+	color:#474444;
+	font-size:18px;
+	padding-top:8px;
+}
+
+#campos input.campo{
+	width:385px;
+	height:35px;
+	font-size:28px;
+	border:1px Solid #bdbbbb;
+	background: url('../images/extranet/fondo_input.jpg') repeat-x scroll top left;
+}
+
+
+#campos input.campo_hover{
+	border:1px Solid #c70607;
+}
+#campos div.acceder{
+	background: url('../images/extranet/boton.jpg') no-repeat scroll top left;
+	width: 140px;
+	height: 43px;
+	cursor:pointer;
+	margin:auto;
+	font-size:24px;
+	line-height:43px;
+	text-align:center;
+	font-size:24px;
+	color:#5d5959;
+	vertical-align: middle;
+	background-position: 0px -43px;
+}
+
+#campos div.acceder_hover{
+	background-position:0px 0px;
+}
+
+
+#content-login .detalles{
+	margin-top:18px;
+	font-size:12px;
+	color:#474444;
+}
+
+#content-login .detalles ul{
+	margin:0px;
+	padding:0px;
+}
+
+#content-login .detalles a{
+	color:#ff0304;
+	text-decoration: none;
+}
+
+#content-login .detalles a:hover{
+	text-decoration: underline;
+}
+
+#campos h1{
+	text-align: center;
+	font-size:18px;
+	color: #c70607;
+	font-weight:normal;
+}
+.clear{
+	clear:both;
+}
+
+#index_login{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left:-288px;
+	margin-top:-230px;
+}
+
+#devolver_password{
+	margin-top:20px;
+	background-color: #d3d2d2;
+	border:1px Solid #c70607;
+	display:none;
+}
+
+#devolver_password .contenido{
+	padding:6px;
+	color:#353434;
+	font-size:13px;
+}
+#devolver_password ul{
+	list-style-type: none;
+	margin:0px;
+	padding:0px;
+}
+
+#devolver_password  h1{
+	color:#c70607;
+	font-size:15px;
+	padding:4px 4px  4px 0px;
+	margin:4px 4px  4px 0px;
+	text-align: left;
+	font-weight:bold;
+}
+
+#devolver_password li{
+	float:left;
+}
+
+#devolver_password input.campo{
+	width:200px;
+	margin-right:10px;
+	height:32px;
+	font-size:28px;
+	border:1px Solid #bdbbbb;
+	background: url('../images/extranet/fondo_input.jpg') repeat-x scroll top left;
+}
+
+
+#campos select.campo{
+	width:385px;
+	height:35px;
+	font-size:28px;
+	border:1px Solid #bdbbbb;
+	background: url('../images/extranet/fondo_input.jpg') repeat-x scroll top left;
+}
+
+
+
+#devolver_password li.email{
+	font-size:24px;
+	float:left;
+}
+
+#devolver_password  div.acceder{
+	background: url('../images/extranet/boton.jpg') no-repeat scroll top left;
+	width: 140px;
+	height: 43px;
+	cursor:pointer;
+	margin:auto;
+	font-size:24px;
+	line-height:43px;
+	text-align:center;
+	font-size:18px;
+	color:#5d5959;
+	color:#c70607;
+	vertical-align: middle;
+	background-position: 0px -43px;
+}
+
+#devolver_password  div.acceder_hover{
+	background-position:0px 0px;
+	text-decoration: underline;
+}
+
+.error{
+	background-color: #c70607;
+	padding:5px;
+	font-size:11px;
+	display: inline;
+	color:#FFFFFF;
+	display:none;
+
+}
+
+#error-sistema-login{
+	background-color: #f6180b;
+	padding:4px;
+	color:#FFFFFF;
+	font-size:13px;
+	display:none;
+}
+
+/*-----------------------------------------------------------*/
+#cuadro_login_01{
+	background: url('../images/extranet/cuadro_login_01.png') no-repeat scroll top left;
+	width: 511px;
+	height: 320px;
+	top: 50%;
+	left: 50%;
+	position:absolute;
+	margin-left:-260px;
+	margin-top:-180px;
+
+}
+
+#cuadro_login_01 .adentro{
+	padding-top:95px;
+	padding-left:20px;
+	font-size: 11px;
+	color:#626060;
+}
+
+#cuadro_login_01 .adentro_texto{
+	width:95%;
+	height:20px;
+	padding:5px;
+	padding-top:8px;
+}
+
+#cuadro_login_01 .adentro_texto a.rojo{
+	color:#e51b24;
+}
+
+#cuadro_login_01 .adentro_texto label{
+	float:left;
+	width:150px;
+	color:#625e5e;
+	font-size: 18px;
+	padding-top:2px;
+}
+#cuadro_login_01 .adentro_texto input.campo{
+	background: url('../images/extranet/fondo_input.jpg') repeat-x scroll top left;
+	width:300px;
+	height:26px;
+	border:1px Solid #b2b0b0;
+	font-size:18px;
+}
+
+#cuadro_login_01 .adentro_texto select{
+	background-color: #FFFFFF;
+	width:300px;
+	height:26px;
+	border:1px Solid #b2b0b0;
+	font-size:18px;
+}
+
+
+#cuadro_login_01 .adentro_texto .enviar{
+	background: url('../images/extranet/boton_entrar.png') no-repeat scroll top left;
+	width: 112px;
+	height: 38px;
+	cursor: pointer;
+	margin:auto;
+}
+#cuadro_login_01 .adentro_texto .enviar_hover{
+	background-position:-112px 0px;
+}
+
+.btn_ok{
+    background-image: url(../images/icon/ok.png) !important;
+}
+
+.btn_regresar{
+    background-image: url(../images/icon/door_out.png) !important;
+}
+
+.btn_key{
+    background-image: url(../images/icon/key.png) !important;
+}

@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--
+ * Copyright (c) 2010-2011 Amatyr4n
+ * http://codecanyon.net/user/amatyr4n?ref=amatyr4n
+ *
+ * licensed under Envato licenses
+ * http://wiki.envato.com/support/legal-terms/licensing-terms/
+ *
+
+               .__                                  
+__  _  __ ____ |  |   ____  ____   _____   ____     
+\ \/ \/ // __ \|  | _/ ___\/  _ \ /     \_/ __ \    
+ \     /\  ___/|  |_\  \__(  <_> )  Y Y  \  ___/    
+  \/\_/  \___  >____/\___  >____/|__|_|  /\___  > /\
+             \/          \/            \/     \/  )/
+                                                           .___      
+  __________  __ _________   ____  ____     ____  ____   __| _/____  
+ /  ___/  _ \|  |  \_  __ \_/ ___\/ __ \  _/ ___\/  _ \ / __ |/ __ \ 
+ \___ (  <_> )  |  /|  | \/\  \__\  ___/  \  \__(  <_> ) /_/ \  ___/ 
+/____  >____/|____/ |__|    \___  >___  >  \___  >____/\____ |\___  >
+     \/                         \/    \/       \/           \/    \/ 
+      .__                           ._.
+___  _|__| ______  _  __ ___________| |
+\  \/ /  |/ __ \ \/ \/ // __ \_  __ \ |
+ \   /|  \  ___/\     /\  ___/|  | \/\|
+  \_/ |__|\___  >\/\_/  \___  >__|   __
+              \/            \/       \/
+
+
+Have fun. Don't forget to bookmark this website :)
+
+And..
+  _____ _                 _           __                                   _               _               /\ /\ 
+ |_   _| |__   __ _ _ __ | | _____   / _| ___  _ __   _ __  _   _ _ __ ___| |__   __ _ ___(_)_ __   __ _  |/\|/\|
+   | | | '_ \ / _` | '_ \| |/ / __| | |_ / _ \| '__| | '_ \| | | | '__/ __| '_ \ / _` / __| | '_ \ / _` |        
+   | | | | | | (_| | | | |   <\__ \ |  _| (_) | |    | |_) | |_| | | | (__| | | | (_| \__ \ | | | | (_| |        
+   |_| |_| |_|\__,_|_| |_|_|\_\___/ |_|  \___/|_|    | .__/ \__,_|_|  \___|_| |_|\__,_|___/_|_| |_|\__, |        
+                                                     |_|                                           |___/         
+                                                                      
+ *  PS: just in case, if you got this from a ripped file, it wouldn't hurt if you thank me by purchasing this item
+ *
+ *	─ Amatyr4n
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Docklr</title>	
+	<meta name="description" content="Simple jQuery OSX-like Dock Menu" />
+	<!--link rel="stylesheet" type="text/css" media="screen,projection" href="960gs.css" />
+	<link rel="stylesheet" type="text/css" media="screen,projection" href="style.css" />
+	<!--link href='http://fonts.googleapis.com/css?family=Oswald&v2' rel='stylesheet' type='text/css'-->
+	<style type="text/css">
+	    body {
+	        background: url('img/osx.jpg') 0 0 repeat;
+	        margin-bottom: 250px;
+	        position: relative;
+	    }
+	    #dock1,
+	    #dock2 {
+	        position: relative;
+	        margin: 0 auto;
+	        width: 100%;
+	        height: 100px;
+	        margin-top: -135px;
+	    }
+	    #dock2 {
+	        margin-top: -35px;
+	    }
+	    #header,
+	    #footer {
+	        position: relative;
+	        top: 50px;
+	        height: 350px;
+	        width: 350px;
+	        margin: 0 auto;
+	        padding: 20px;
+	        overflow: hidden;
+	        font-family: Helvetica, Arial, sans-serif;
+	        background: #999;
+	        background: rgba(0,0,0,0.1);
+	        color: #fff;
+	        -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.3)
+	    }
+	    #footer {
+	        position: fixed;
+	        top: auto;
+	        bottom: 0;
+	        height: 60px;
+	        width: 100%;
+	        text-align: center;
+	    }
+	    h1 {
+	        font-size: 60px;
+	    }
+	    h2 {
+	        font-size: 20px;
+	    }
+	    h1 small, p {
+	        font-size: 15px;
+	    }
+	    h1, h2 {
+	        font-weight: normal;
+	        margin: 0;
+	        text-align: center;
+	    }
+	    #header p {
+	        margin-top: 50px;
+	        text-align: center;
+	    }
+	    a {
+	        color: white;
+	    }
+	</style>
+	<link rel="stylesheet" type="text/css" media="screen,projection" href="jquery-docklr-1.0.css" />
+	<script type="text/javascript" src="jquery-1.4.3.min.js"></script>
+	<script type="text/javascript" src="jquery-docklr-1.0.pack.js"></script>
+	<script type="text/javascript">
+	    $(document).ready(function(){
+	        $('#example1').docklr({
+	            alignment   : 'right'
+	        });
+	        $('#example2').docklr({
+	            alignment   : 'left'
+	        });
+	        $('#example3').docklr({
+	            alignment   : 'top'
+	        });
+	        $('#example4').docklr({
+	            alignment   : 'bottom'
+	        });
+	        $('#example5').docklr({
+	            position    : 'absolute',
+	            alignment   : 'bottom',
+	            zoomFactor  : 2
+	        });
+	    });
+	</script>
+</head>
+<body>
+    <ul id="example1" class="docklr docklr-right">
+        <li><a href="index.html#a"><img src="img/icon3-64.png" alt="Media Player" /></a></li>
+        <li><a href="index.html#b"><img src="img/icon1-64.png" alt="Explorer" /></a></li>    
+        <li><a href="http://themeforest.net/user/amatyr4n?ref=amatyr4n"><img src="img/icon4-64.png" alt="Games" /></a></li>
+        <li><a href="index.html#c"><img src="img/icon5-64.png" alt="Explorer" /></a></li>
+        <li><a href="index.html#d"><img src="img/icon-11-64.png" alt="Calculator" /></a></li>
+        <li><a href="index.html#e"><img src="img/icon-12-64.png" alt="Book" /></a></li>    
+        <li><a href="http://www.google.com"><img src="img/icon-20-64.png" alt="Cards" /></a></li>
+        <li><a href="index.html#f"><img src="img/icon-16-64.png" alt="Console" /></a></li>
+        <li><a href="index.html#g"><img src="img/icon-14-64.png" alt="Amatyr4n Labs" /></a></li>
+        <li><a href="index.html#h"><img src="img/icon-19-64.png" alt="Finder" /></a></li>    
+        <li><a href="http://www.google.com"><img src="img/icon4-64.png" alt="Solitaire" /></a></li>
+        <li><a href="index.html#i"><img src="img/icon-17-64.png" alt="Shell" /></a></li>
+    </ul>
+    
+    <ul id="example2" class="docklr docklr-left">
+        <li><a href="index.html#j"><img src="img/icon3-64.png" alt="Media Player" /></a></li>
+        <li><a href="index.html#l"><img src="img/icon1-64.png" alt="Explorer" /></a></li>    
+        <li><a href="http://themeforest.net/user/amatyr4n?ref=amatyr4n"><img src="img/icon4-64.png" alt="Games" /></a></li>
+        <li><a href="index.html#k"><img src="img/icon5-64.png" alt="Explorer" /></a></li>
+        <li><a href="index.html#m"><img src="img/icon-11-64.png" alt="Calculator" /></a></li>
+        <li><a href="index.html#n"><img src="img/icon-12-64.png" alt="Book" /></a></li>    
+        <li><a href="http://www.google.com"><img src="img/icon-20-64.png" alt="Cards" /></a></li>
+        <li><a href="index.html#o"><img src="img/icon-16-64.png" alt="Console" /></a></li>
+        <li><a href="index.html#p"><img src="img/icon-14-64.png" alt="Amatyr4n Labs" /></a></li>
+        <li><a href="index.html#q"><img src="img/icon-19-64.png" alt="Finder" /></a></li>    
+        <li><a href="http://www.google.com"><img src="img/icon4-64.png" alt="Solitaire" /></a></li>
+        <li><a href="index.html#r"><img src="img/icon-17-64.png" alt="Shell" /></a></li>
+    </ul>
+    
+    <ul id="example3" class="docklr docklr-top">
+        <li><a href="index.html#s"><img src="img/icon3-64.png" alt="Media Player" /></a></li>
+        <li><a href="index.html#t"><img src="img/icon1-64.png" alt="Explorer" /></a></li>    
+        <li><a href="http://themeforest.net/user/amatyr4n?ref=amatyr4n"><img src="img/icon4-64.png" alt="Games" /></a></li>
+        <li><a href="index.html#u"><img src="img/icon5-64.png" alt="Explorer" /></a></li>
+        <li><a href="index.html#v"><img src="img/icon-11-64.png" alt="Calculator" /></a></li>
+        <li><a href="index.html#w"><img src="img/icon-12-64.png" alt="Book" /></a></li>    
+        <li><a href="http://www.google.com"><img src="img/icon-20-64.png" alt="Cards" /></a></li>
+        <li><a href="index.html#x"><img src="img/icon-16-64.png" alt="Console" /></a></li>
+        <li><a href="index.html#y"><img src="img/icon-14-64.png" alt="Amatyr4n Labs" /></a></li>
+        <li><a href="index.html#z"><img src="img/icon-19-64.png" alt="Finder" /></a></li>    
+        <li><a href="http://www.google.com"><img src="img/icon4-64.png" alt="Solitaire" /></a></li>
+        <li><a href="index.html#aa"><img src="img/icon-17-64.png" alt="Shell" /></a></li>
+    </ul>
+    
+    <ul id="example4" class="docklr">
+        <li><a href="index.html#ab"><img src="img/icon3-64.png" alt="Media Player" /></a></li>
+        <li><a href="index.html#ac"><img src="img/icon1-64.png" alt="Explorer" /></a></li>    
+        <li><a href="http://themeforest.net/user/amatyr4n?ref=amatyr4n"><img src="img/icon4-64.png" alt="Games" /></a></li>
+        <li><a href="index.html#ad"><img src="img/icon5-64.png" alt="Explorer" /></a></li>
+        <li><a href="index.html#ae"><img src="img/icon-11-64.png" alt="Calculator" /></a>
+        <ul>
+                <li><a href="#"><img src="img/icon6-64.png" alt="lremicio" /></a></li>
+                <li><a href="#"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="#"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="#"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="#"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="#"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="#"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="#"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="#"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="#"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="#"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="#"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+            </ul>
+        </li>
+        <li><a href="index.html#af"><img src="img/icon-12-64.png" alt="Book" /></a></li>   
+        <li><a href="http://www.facebook.com"><img src="img/icon-17-64.png" alt="My Musics" /></a></li>
+        <li><a href="http://www.twitter.com"><img src="img/icon2-64.png" alt="My Downloads" /></a></li> 
+        <li><a href="http://www.google.com"><img src="img/icon-20-64.png" alt="Cards" /></a></li>
+        <li><a href="index.html#ag"><img src="img/icon-16-64.png" alt="Console" /></a>        
+        <ul>
+                <li><a href="http://www.google.com"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="http://www.facebook.com"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="http://www.twitter.com"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="http://www.yahoo.com"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="http://www.apple.com"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="http://www.google.com"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="http://www.facebook.com"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="http://www.twitter.com"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="http://www.yahoo.com"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="http://www.apple.com"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="http://www.google.com"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="http://www.facebook.com"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+            </ul>
+        </li>
+        <li><a href="index.html#ah"><img src="img/icon-14-64.png" alt="Amatyr4n Labs" /></a></li>
+        <li><a href="index.html#ai"><img src="img/icon-19-64.png" alt="Finder" /></a>
+            <ul>
+                <li><a href="http://www.google.com"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="http://www.facebook.com"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="http://www.twitter.com"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="http://www.yahoo.com"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="http://www.apple.com"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="http://www.google.com"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="http://www.facebook.com"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="http://www.twitter.com"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="http://www.yahoo.com"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="http://www.apple.com"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="http://www.google.com"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="http://www.facebook.com"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+            </ul>
+        </li> 
+        <li><a href="index.html#aj"><img src="img/icon8-64.png" alt="Stacks Menu" /></a>
+            <ul>
+                <li><a href="#"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="#"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="#"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="#"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="#"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="#"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="#"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+                <li><a href="#"><img src="img/icon8-64.png" alt="My Downloads" /></a></li>
+                <li><a href="#"><img src="img/icon9-64.png" alt="My Videos" /></a></li>
+                <li><a href="#"><img src="img/icon10-64.png" alt="My Mails" /></a></li>
+                <li><a href="#"><img src="img/icon6-64.png" alt="My Bookmarks" /></a></li>
+                <li><a href="#"><img src="img/icon7-64.png" alt="My Musics" /></a></li>
+            </ul>
+        </li>
+    </ul>    
+    
+    <div id="page" class="container_12">
+        <div id="header">
+            <h1>Docklr <small>v1.0</small></h1>
+            <h2><em>Simple jQuery OSX-like Dock Menu</em></h2>
+            <p>This is a bonus script, the jQuery version of Docklr CSS3 that you can <a href="http://codecanyon.net/item/docklr-css-pure-css3-osxlike-dock-menu/337077?ref=amatyr4n">get from here</a> already</p>
+            <p>This is Docklr when JS present:</p>
+            <p>This is Docklr when no JS (CSS fallback):</p>
+        </div>
+        <div id="dock1">            
+            <ul id="example5" class="docklr">
+                <li><a href="index.html#ak"><img src="img/icon3-64.png" alt="Media Player" /></a></li>
+                <li><a href="index.html#al"><img src="img/icon1-64.png" alt="Explorer" /></a></li>    
+                <li><a href="http://themeforest.net/user/amatyr4n?ref=amatyr4n"><img src="img/icon4-64.png" alt="Games" /></a></li>
+                <li><a href="index.html#am"><img src="img/icon5-64.png" alt="Explorer" /></a></li>
+                <li><a href="index.html#an"><img src="img/icon-11-64.png" alt="Calculator" /></a></li>
+                <li><a href="index.html#ao"><img src="img/icon-12-64.png" alt="Book" /></a></li>
+                <li><a href="index.html#ap"><img src="img/icon-19-64.png" alt="Finder" /></a></li>
+            </ul>
+        </div>
+        <div id="dock2">            
+            <ul id="example6" class="docklr">
+                <li><a href="index.html#aq"><img src="img/icon3-64.png" alt="Media Player" /></a></li>
+                <li><a href="index.html#ar"><img src="img/icon1-64.png" alt="Explorer" /></a></li>    
+                <li><a href="http://themeforest.net/user/amatyr4n?ref=amatyr4n"><img src="img/icon4-64.png" alt="Games" /></a></li>
+                <li><a href="index.html#as"><img src="img/icon5-64.png" alt="Explorer" /></a></li>
+                <li><a href="index.html#at"><img src="img/icon-11-64.png" alt="Calculator" /></a></li>
+                <li><a href="index.html#au"><img src="img/icon-12-64.png" alt="Book" /></a></li>
+                <li><a href="index.html#av"><img src="img/icon-19-64.png" alt="Finder" /></a></li>
+            </ul>
+        </div>        
+    </div>
+    
+        <div id="footer">
+        Try Stacks (click the icon on the most right):
+        </div>
+        
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-3767301-4']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</body>
+</html>
