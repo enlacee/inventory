@@ -1,0 +1,10 @@
+
+# IDE netbeans
+/nbproject/*
+
+# IDE Sublime
+/inventory.sublime-project
+/inventory.sublime-workspace
+
+#libreria
+/library/*
