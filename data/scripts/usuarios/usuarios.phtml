@@ -1,0 +1,1350 @@
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('usuarios');
+    usuarios={
+        id:'usuarios',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:usuarios.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(usuarios.id+'-panel_derecho').expand();
+				Ext.getCmp(usuarios.id+'-panel_derecho').setVisible(true);
+                            usuarios.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:usuarios.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            usuarios.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:usuarios.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            usuarios.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:usuarios.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            usuarios.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:usuarios.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(usuarios.id+'-panel_derecho').collapse();
+							Ext.getCmp(usuarios.id+'-panel_derecho').setVisible(false);
+                            usuarios.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:usuarios.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							usuarios.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:usuarios.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    usuarios.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_usuarios_tipo_lista=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-tipo-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ust_id','nombre','activo']
+            });
+            
+            store_usuarios_tipo_lista.load();
+            
+            var store_usuarios_perfil_lista=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-perfil-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['usp_id','nombre','activo']
+            });
+
+            store_usuarios_perfil_lista.load();
+            
+            var store_tienda_lista=new Ext.data.JsonStore({
+                url:'maestros/tiendas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tie_id','nombre','descripcion','telefono','direccion','precio','suc_id','estado']
+            });
+
+            store_tienda_lista.load();
+            
+            var store_usuarios_lista=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['usr_id','nombres','apellidos','cargo','area','telefono','email','direccion','usuario','clave','ust_id','usp_id','tie_id','activo', 'tip_usu', 'usu_per','usu_tie', 'acc_lun', 'acc_mar', 'acc_mie', 'acc_jue', 'acc_vie', 'acc_sab', 'acc_dom']
+            });
+            
+            store_usuarios_lista.load();
+            
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'usuarios'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:usuarios.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_usuarios_lista = new Ext.grid.GridPanel({
+                id:usuarios.id+'-grid_lista',
+                store: store_usuarios_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'usr_id',width:25},
+                    {header:'Nombres',sortable :true,dataIndex:'nombres',width:150},
+                    {header:'Apellidos',sortable :true,dataIndex:'apellidos',width:150},
+                    {header:'Cargo',sortable :true,dataIndex:'cargo',width:80,hidden:true},
+                    {header:'Área',sortable :true,dataIndex:'area',hidden:true},					
+                    {header:'Tipo de Usuario',sortable :true,dataIndex:'tip_usu',width:100},
+                    {header:'Perfil',sortable :true,dataIndex:'usu_per',width:100},
+                    {header:'Tienda',sortable :true,dataIndex:'usu_tie',width:100},
+                    {header:'Teléfono',sortable :true,dataIndex:'telefono'},
+                    {header:'E-mail',sortable :true,dataIndex:'email',width:100,hidden:true},
+                    {header:'Dirección',sortable :true,dataIndex:'direccion',width:100,hidden:true},
+                    {header:'Usuario',sortable :true,dataIndex:'usuario',width:100,hidden:true},
+                    {header:'Clave',sortable :true,dataIndex:'clave',width:100,hidden:true},
+                    {header:'Activo',sortable :true,dataIndex:'tie_id',width:100,hidden:true},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+						if(Ext.getCmp(usuarios.id+'-btn_editar').isVisible()){
+							Ext.getCmp(usuarios.id+'-panel_derecho').expand();
+				Ext.getCmp(usuarios.id+'-panel_derecho').setVisible(true);
+                        	usuarios.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(usuarios.id+'-btn_editar').enable();
+						Ext.getCmp(usuarios.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                xtype:'panel',
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:usuarios.id+'-usr_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-nombres',
+                                fieldLabel:'Nombres',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:200, layout:'form',
+                        border:false,columnWidth:0.45,
+                        items:
+                        [
+                            {
+                                xtype:'label',
+                                fieldLabel:'Activación de Accesos por Días y Horas',
+                                itemCls: 'label01',
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-apellidos',
+                                fieldLabel:'Apellidos',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50, layout:'form',
+                        border:false,columnWidth:0.13,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+								id:usuarios.id+'-lun_chk',
+                                fieldLabel:'Lunes',
+                                itemCls: 'label01',
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-lun_ini',
+                                fieldLabel:'Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-lun_fin',
+                                fieldLabel:'Fin',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-cargo',
+                                fieldLabel:'Cargo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50, layout:'form',
+                        border:false,columnWidth:0.13,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+								id:usuarios.id+'-mar_chk',
+                                fieldLabel:'Martes',
+                                itemCls: 'label01',
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-mar_ini',
+                                fieldLabel:'Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-mar_fin',
+                                fieldLabel:'Fin',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-area',
+                                fieldLabel:'Area',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50, layout:'form',
+                        border:false,columnWidth:0.13,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+								id:usuarios.id+'-mie_chk',
+                                fieldLabel:'Miercoles',
+                                itemCls: 'label01',
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-mie_ini',
+                                fieldLabel:'Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-mie_fin',
+                                fieldLabel:'Fin',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-telefono',
+                                fieldLabel:'Telefono',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50, layout:'form',
+                        border:false,columnWidth:0.13,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+								id:usuarios.id+'-jue_chk',
+                                fieldLabel:'Jueves',
+                                itemCls: 'label01',
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-jue_ini',
+                                fieldLabel:'Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-jue_fin',
+                                fieldLabel:'Fin',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-email',
+                                fieldLabel:'E-mail',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:200
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50, layout:'form',
+                        border:false,columnWidth:0.13,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+								id:usuarios.id+'-vie_chk',
+                                fieldLabel:'Viernes',
+                                itemCls: 'label01',
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-vie_ini',
+                                fieldLabel:'Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-vie_fin',
+                                fieldLabel:'Fin',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-direccion',
+                                fieldLabel:'Dirección',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50, layout:'form',
+                        border:false,columnWidth:0.13,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+								id:usuarios.id+'-sab_chk',
+                                fieldLabel:'Sabado',
+                                itemCls: 'label01',
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-sab_ini',
+                                fieldLabel:'Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-sab_fin',
+                                fieldLabel:'Fin',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-usuario',
+                                fieldLabel:'Usuario',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50, layout:'form',
+                        border:false,columnWidth:0.13,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+								id:usuarios.id+'-dom_chk',
+                                fieldLabel:'Domingo',
+                                itemCls: 'label01',
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-dom_ini',
+                                fieldLabel:'Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:0.16,
+                        items:
+                        [
+                            {
+                                xtype:'timefield',
+                                id:usuarios.id+'-dom_fin',
+                                fieldLabel:'Fin',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios.id+'-clave',
+                                inputType: 'password',
+                                fieldLabel:'Clave',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:200
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_usuarios_tipo_lista,
+                                id:usuarios.id+'-ust_id',
+                                fieldLabel:'Tipo de Usuario',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'ust_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_usuarios_perfil_lista,
+                                id:usuarios.id+'-usp_id',
+                                fieldLabel:'Perfil',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'usp_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_tienda_lista,
+                                id:usuarios.id+'-tie_id',
+                                fieldLabel:'Tienda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'tie_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: usuarios.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:usuarios.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:usuarios.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar,
+                            combo_usuarios_describe,'-',
+                    new Ext.app.SearchField({
+                        id:usuarios.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_usuarios_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+                                store_usuarios_lista.load({params:{campo:Ext.getCmp(usuarios.id+'-combo_describe').getValue(),query:Ext.getCmp(usuarios.id+'-buscar').getValue()}});
+                                }
+                            },
+                            keyup:function(obj,e)
+                            {
+                                store_usuarios_lista.load({params:{campo:Ext.getCmp(usuarios.id+'-combo_describe').getValue(),query:Ext.getCmp(usuarios.id+'-buscar').getValue()}});
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_usuarios_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:usuarios.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_usuarios',
+                                        title:'Usuarios', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_usuarios').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_usuarios').show();
+                Ext.getCmp('win_usuarios').center();
+                Ext.getCmp('win_usuarios').toFront();
+                usuarios.fn_habilitar(false,0);
+        },
+        fn_nuevo:function()
+        {
+            Ext.getCmp(usuarios.id+'-usr_id').setValue('');
+            Ext.getCmp(usuarios.id+'-nombres').setValue('');
+            Ext.getCmp(usuarios.id+'-apellidos').setValue('');
+			
+            Ext.getCmp(usuarios.id+'-cargo').setValue('');
+			
+            Ext.getCmp(usuarios.id+'-area').setValue('');
+			
+            Ext.getCmp(usuarios.id+'-telefono').setValue('');
+            Ext.getCmp(usuarios.id+'-email').setValue('');
+			
+            Ext.getCmp(usuarios.id+'-direccion').setValue('');
+            Ext.getCmp(usuarios.id+'-usuario').setValue('');
+            Ext.getCmp(usuarios.id+'-clave').setValue('');
+
+            Ext.getCmp(usuarios.id+'-ust_id').setValue('');
+            Ext.getCmp(usuarios.id+'-usp_id').setValue('');
+            Ext.getCmp(usuarios.id+'-tie_id').setValue('');
+            
+            Ext.getCmp(usuarios.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(usuarios.id+'-estado').items.items[1].setValue(false);
+			
+			Ext.getCmp(usuarios.id+'-lun_chk').setValue(false);
+			Ext.getCmp(usuarios.id+'-mar_chk').setValue(false);
+			Ext.getCmp(usuarios.id+'-mie_chk').setValue(false);
+			Ext.getCmp(usuarios.id+'-jue_chk').setValue(false);
+			Ext.getCmp(usuarios.id+'-vie_chk').setValue(false);
+			Ext.getCmp(usuarios.id+'-sab_chk').setValue(false);
+			Ext.getCmp(usuarios.id+'-dom_chk').setValue(false);
+			
+			Ext.getCmp(usuarios.id+'-lun_ini').setValue('');
+			Ext.getCmp(usuarios.id+'-lun_fin').setValue('');
+			Ext.getCmp(usuarios.id+'-mar_ini').setValue('');
+			Ext.getCmp(usuarios.id+'-mar_fin').setValue('');
+			Ext.getCmp(usuarios.id+'-mie_ini').setValue('');
+			Ext.getCmp(usuarios.id+'-mie_fin').setValue('');
+			Ext.getCmp(usuarios.id+'-jue_ini').setValue('');
+			Ext.getCmp(usuarios.id+'-jue_fin').setValue('');
+			Ext.getCmp(usuarios.id+'-vie_ini').setValue('');
+			Ext.getCmp(usuarios.id+'-vie_fin').setValue('');
+			Ext.getCmp(usuarios.id+'-sab_ini').setValue('');
+			Ext.getCmp(usuarios.id+'-sab_fin').setValue('');
+			Ext.getCmp(usuarios.id+'-dom_ini').setValue('');
+			Ext.getCmp(usuarios.id+'-dom_fin').setValue('');
+			
+            
+            usuarios.fn_habilitar(true,1);
+			
+        },
+        fn_editar:function()
+        {
+			//usuarios.fn_nuevo();
+            var rs=Ext.getCmp(usuarios.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(usuarios.id+'-panel_derecho').expand();
+				Ext.getCmp(usuarios.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(usuarios.id+'-usr_id').setValue(rs.get('usr_id'));
+                Ext.getCmp(usuarios.id+'-nombres').setValue(rs.get('nombres'));
+                Ext.getCmp(usuarios.id+'-apellidos').setValue(rs.get('apellidos'));
+                Ext.getCmp(usuarios.id+'-cargo').setValue(rs.get('cargo'));
+                Ext.getCmp(usuarios.id+'-area').setValue(rs.get('area'));
+                Ext.getCmp(usuarios.id+'-telefono').setValue(rs.get('telefono'));
+                Ext.getCmp(usuarios.id+'-email').setValue(rs.get('email'));
+                Ext.getCmp(usuarios.id+'-direccion').setValue(rs.get('direccion'));
+                Ext.getCmp(usuarios.id+'-usuario').setValue(rs.get('usuario'));
+                Ext.getCmp(usuarios.id+'-clave').setValue(rs.get('clave'));
+                Ext.getCmp(usuarios.id+'-ust_id').setValue(rs.get('ust_id'));
+                Ext.getCmp(usuarios.id+'-usp_id').setValue(rs.get('usp_id'));
+                Ext.getCmp(usuarios.id+'-tie_id').setValue(rs.get('tie_id'));
+                Ext.getCmp(usuarios.id+'-estado').setValue(rs.get('activo'));
+				
+				Ext.getCmp(usuarios.id+'-lun_chk').setValue(false);
+				Ext.getCmp(usuarios.id+'-mar_chk').setValue(false);
+				Ext.getCmp(usuarios.id+'-mie_chk').setValue(false);
+				Ext.getCmp(usuarios.id+'-jue_chk').setValue(false);
+				Ext.getCmp(usuarios.id+'-vie_chk').setValue(false);
+				Ext.getCmp(usuarios.id+'-sab_chk').setValue(false);
+				Ext.getCmp(usuarios.id+'-dom_chk').setValue(false);
+				
+				Ext.getCmp(usuarios.id+'-lun_ini').setValue('');
+				Ext.getCmp(usuarios.id+'-lun_fin').setValue('');
+				Ext.getCmp(usuarios.id+'-mar_ini').setValue('');
+				Ext.getCmp(usuarios.id+'-mar_fin').setValue('');
+				Ext.getCmp(usuarios.id+'-mie_ini').setValue('');
+				Ext.getCmp(usuarios.id+'-mie_fin').setValue('');
+				Ext.getCmp(usuarios.id+'-jue_ini').setValue('');
+				Ext.getCmp(usuarios.id+'-jue_fin').setValue('');
+				Ext.getCmp(usuarios.id+'-vie_ini').setValue('');
+				Ext.getCmp(usuarios.id+'-vie_fin').setValue('');
+				Ext.getCmp(usuarios.id+'-sab_ini').setValue('');
+				Ext.getCmp(usuarios.id+'-sab_fin').setValue('');
+				Ext.getCmp(usuarios.id+'-dom_ini').setValue('');
+				Ext.getCmp(usuarios.id+'-dom_fin').setValue('');
+				
+				var valor = rs.get('acc_lun');
+				if(valor != '' && valor != null ){
+					 Ext.getCmp(usuarios.id+'-lun_chk').setValue(true);
+					 vVal = valor.split('@');
+					 Ext.getCmp(usuarios.id+'-lun_ini').setValue(vVal[0]);
+					 Ext.getCmp(usuarios.id+'-lun_fin').setValue(vVal[1]);
+				}
+                var valor = rs.get('acc_mar');
+				if(valor != '' && valor != null){
+					 Ext.getCmp(usuarios.id+'-mar_chk').setValue(true);
+					 vVal = valor.split('@');
+					 Ext.getCmp(usuarios.id+'-mar_ini').setValue(vVal[0]);
+					 Ext.getCmp(usuarios.id+'-mar_fin').setValue(vVal[1]);
+				}
+				var valor = rs.get('acc_mie');
+				if(valor != '' && valor != null){
+					 Ext.getCmp(usuarios.id+'-mie_chk').setValue(true);
+					 vVal = valor.split('@');
+					 Ext.getCmp(usuarios.id+'-mie_ini').setValue(vVal[0]);
+					 Ext.getCmp(usuarios.id+'-mie_fin').setValue(vVal[1]);
+				}
+				var valor = rs.get('acc_jue');
+				if(valor != '' && valor != null){
+					 Ext.getCmp(usuarios.id+'-jue_chk').setValue(true);
+					 vVal = valor.split('@');
+					 Ext.getCmp(usuarios.id+'-jue_ini').setValue(vVal[0]);
+					 Ext.getCmp(usuarios.id+'-jue_fin').setValue(vVal[1]);
+				}
+				var valor = rs.get('acc_vie');
+				if(valor != '' && valor != null){
+					 Ext.getCmp(usuarios.id+'-vie_chk').setValue(true);
+					 vVal = valor.split('@');
+					 Ext.getCmp(usuarios.id+'-vie_ini').setValue(vVal[0]);
+					 Ext.getCmp(usuarios.id+'-vie_fin').setValue(vVal[1]);
+				}
+				var valor = rs.get('acc_sab');
+				if(valor != '' && valor != null){
+					 Ext.getCmp(usuarios.id+'-sab_chk').setValue(true);
+					 vVal = valor.split('@');
+					 Ext.getCmp(usuarios.id+'-sab_ini').setValue(vVal[0]);
+					 Ext.getCmp(usuarios.id+'-sab_fin').setValue(vVal[1]);
+				}
+				var valor = rs.get('acc_dom');
+				if(valor != '' && valor != null){
+					 Ext.getCmp(usuarios.id+'-dom_chk').setValue(true);
+					 vVal = valor.split('@');
+					 Ext.getCmp(usuarios.id+'-dom_ini').setValue(vVal[0]);
+					 Ext.getCmp(usuarios.id+'-dom_fin').setValue(vVal[1]);
+				}
+                usuarios.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			vLunes='';
+			if(Ext.getCmp(usuarios.id+'-lun_chk').getValue()){
+				vLunes = 	Ext.getCmp(usuarios.id+'-lun_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-lun_fin').getValue();
+			}
+			
+			vMartes='';
+			if(Ext.getCmp(usuarios.id+'-mar_chk').getValue()){
+				vMartes = 	Ext.getCmp(usuarios.id+'-mar_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-mar_fin').getValue();
+			}
+			
+			vMiercoles='';
+			if(Ext.getCmp(usuarios.id+'-mie_chk').getValue()){
+				vMiercoles = 	Ext.getCmp(usuarios.id+'-mie_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-mie_fin').getValue();
+			}
+			
+			vJueves='';
+			if(Ext.getCmp(usuarios.id+'-jue_chk').getValue()){
+				vJueves = 	Ext.getCmp(usuarios.id+'-jue_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-jue_fin').getValue();
+			}
+			
+			vViernes='';
+			if(Ext.getCmp(usuarios.id+'-vie_chk').getValue()){
+				vViernes = 	Ext.getCmp(usuarios.id+'-vie_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-vie_fin').getValue();
+			}
+			
+			vSabado='';
+			if(Ext.getCmp(usuarios.id+'-sab_chk').getValue()){
+				vSabado = 	Ext.getCmp(usuarios.id+'-sab_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-sab_fin').getValue();
+			}
+			
+			vDomingo='';
+			if(Ext.getCmp(usuarios.id+'-dom_chk').getValue()){
+				vDomingo = 	Ext.getCmp(usuarios.id+'-dom_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-dom_fin').getValue();
+			}
+			if(usuarios.fn_validar()){				
+				Ext.Msg.wait('Actulizando informacion de usuario... por favor espere!');
+				Ext.Ajax.request({
+					url:'usuarios/usuarios-actualizar',
+					params:
+					{
+						usr_id:Ext.getCmp(usuarios.id+'-usr_id').getValue(),
+						nombres:Ext.getCmp(usuarios.id+'-nombres').getValue(),
+						apellidos:Ext.getCmp(usuarios.id+'-apellidos').getValue(),
+						cargo:Ext.getCmp(usuarios.id+'-cargo').getValue(),
+						area:Ext.getCmp(usuarios.id+'-area').getValue(),
+						telefono:Ext.getCmp(usuarios.id+'-telefono').getValue(),
+						email:Ext.getCmp(usuarios.id+'-email').getValue(),
+						direccion:Ext.getCmp(usuarios.id+'-direccion').getValue(),
+						usuario:Ext.getCmp(usuarios.id+'-usuario').getValue(),
+						clave:Ext.getCmp(usuarios.id+'-clave').getValue(),
+						ust_id:Ext.getCmp(usuarios.id+'-ust_id').getValue(),
+						usp_id:Ext.getCmp(usuarios.id+'-usp_id').getValue(),
+						tie_id:Ext.getCmp(usuarios.id+'-tie_id').getValue(),
+						estado:Ext.getCmp(usuarios.id+'-estado').getValue().getGroupValue(),
+						lunes:vLunes,
+						martes:vMartes,
+						miercoles:vMiercoles,
+						jueves:vJueves,
+						viernes:vViernes,
+						sabado:vSabado,
+						domingo:vDomingo
+					},
+					success:function(response,options)
+					{          
+						Ext.Msg.hide();
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(usuarios.id+'-panel_derecho').collapse();
+							Ext.getCmp(usuarios.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							usuarios.fn_habilitar(false,0);
+							Ext.getCmp(usuarios.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(usuarios.id+res.campo).focus(true,10);							
+						}						
+				}
+				});
+			}
+        },
+        fn_guardar:function()
+        {
+			vLunes='';
+			if(Ext.getCmp(usuarios.id+'-lun_chk').getValue()){
+				vLunes = 	Ext.getCmp(usuarios.id+'-lun_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-lun_fin').getValue();
+			}
+			
+			vMartes='';
+			if(Ext.getCmp(usuarios.id+'-mar_chk').getValue()){
+				vMartes = 	Ext.getCmp(usuarios.id+'-mar_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-mar_fin').getValue();
+			}
+			
+			vMiercoles='';
+			if(Ext.getCmp(usuarios.id+'-mie_chk').getValue()){
+				vMiercoles = 	Ext.getCmp(usuarios.id+'-mie_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-mie_fin').getValue();
+			}
+			
+			vJueves='';
+			if(Ext.getCmp(usuarios.id+'-jue_chk').getValue()){
+				vJueves = 	Ext.getCmp(usuarios.id+'-jue_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-jue_fin').getValue();
+			}
+			
+			vViernes='';
+			if(Ext.getCmp(usuarios.id+'-vie_chk').getValue()){
+				vViernes = 	Ext.getCmp(usuarios.id+'-vie_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-vie_fin').getValue();
+			}
+			
+			vSabado='';
+			if(Ext.getCmp(usuarios.id+'-sab_chk').getValue()){
+				vSabado = 	Ext.getCmp(usuarios.id+'-sab_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-sab_fin').getValue();
+			}
+			
+			vDomingo='';
+			if(Ext.getCmp(usuarios.id+'-dom_chk').getValue()){
+				vDomingo = 	Ext.getCmp(usuarios.id+'-dom_ini').getValue() +'@'+ Ext.getCmp(usuarios.id+'-dom_fin').getValue();
+			}
+            if(usuarios.fn_validar()){
+				Ext.Msg.wait('Guardando informacion de usuario... por favor espere!');
+				Ext.Ajax.request({
+					url:'usuarios/usuarios-guardar',
+					params:
+					{
+						nombres:Ext.getCmp(usuarios.id+'-nombres').getValue(),
+						apellidos:Ext.getCmp(usuarios.id+'-apellidos').getValue(),
+						cargo:Ext.getCmp(usuarios.id+'-cargo').getValue(),
+						area:Ext.getCmp(usuarios.id+'-area').getValue(),
+						telefono:Ext.getCmp(usuarios.id+'-telefono').getValue(),
+						email:Ext.getCmp(usuarios.id+'-email').getValue(),
+						direccion:Ext.getCmp(usuarios.id+'-direccion').getValue(),
+						usuario:Ext.getCmp(usuarios.id+'-usuario').getValue(),
+						clave:Ext.getCmp(usuarios.id+'-clave').getValue(),
+						ust_id:Ext.getCmp(usuarios.id+'-ust_id').getValue(),
+						usp_id:Ext.getCmp(usuarios.id+'-usp_id').getValue(),
+						tie_id:Ext.getCmp(usuarios.id+'-tie_id').getValue(),
+						estado:Ext.getCmp(usuarios.id+'-estado').getValue().getGroupValue(),
+						lunes:vLunes,
+						martes:vMartes,
+						miercoles:vMiercoles,
+						jueves:vJueves,
+						viernes:vViernes,
+						sabado:vSabado,
+						domingo:vDomingo
+					},
+					success:function(response,options)
+					{              
+						Ext.Msg.hide();
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(usuarios.id+'-panel_derecho').collapse();
+							Ext.getCmp(usuarios.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							usuarios.fn_habilitar(false,0);
+							Ext.getCmp(usuarios.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(usuarios.id+res.campo).focus(true,10);							
+						}	
+				}
+				});
+			}
+        },
+		fn_validar:function(){
+			if(Ext.getCmp(usuarios.id+'-nombres').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Nombres");
+                Ext.getCmp(usuarios.id+'-nombres').focus(true,10);
+                return false;
+            }
+            if(Ext.getCmp(usuarios.id+'-apellidos').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Apellidos");
+                Ext.getCmp(usuarios.id+'-apellidos').focus(true,10);
+                return false;
+            }
+
+            if(Ext.getCmp(usuarios.id+'-cargo').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Cargo");
+                Ext.getCmp(usuarios.id+'-cargo').focus(true,10);
+                return false;
+            }
+            if(Ext.getCmp(usuarios.id+'-area').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Área");
+                Ext.getCmp(usuarios.id+'-area').focus(true,10);
+                return false;
+            }
+
+            if(Ext.getCmp(usuarios.id+'-telefono').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Teléfono");
+                Ext.getCmp(usuarios.id+'-telefono').focus(true,10);
+                return false;
+            }
+            if(Ext.getCmp(usuarios.id+'-email').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo E-mail");
+                Ext.getCmp(usuarios.id+'-email').focus(true,10);
+                return false;
+            }
+
+            if(Ext.getCmp(usuarios.id+'-direccion').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Dirección");
+                Ext.getCmp(usuarios.id+'-direccion').focus(true,10);
+                return false;
+            }
+
+            if(Ext.getCmp(usuarios.id+'-usuario').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Usuario");
+                Ext.getCmp(usuarios.id+'-usuario').focus(true,10);
+                return false;
+            }
+            if(Ext.getCmp(usuarios.id+'-clave').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Clave");
+                Ext.getCmp(usuarios.id+'-clave').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(usuarios.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Usuario :<br>' + rs.get('nombres') + ' ' + rs.get('apellidos'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando usuario... por favor espere!');
+						Ext.Ajax.request({
+							url:'usuarios/usuarios-eliminar',
+							params:
+							{
+								usr_id:rs.get('usr_id')
+							},
+							success:function(response,options)
+							{    
+								Ext.Msg.hide();         
+								var res = Ext.decode(response.responseText);
+								og.msg("Ok","El registro se ha eliminado");
+								usuarios.fn_habilitar(false,0);
+								Ext.getCmp(usuarios.id+'-grid_lista').store.load();
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-usuarios').action="tablas/usuarios-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(usuarios.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(usuarios.id+'-buscar').getValue();
+            document.getElementById('frmReporte-usuarios').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(usuarios.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(usuarios.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(usuarios.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(usuarios.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(usuarios.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(usuarios.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(usuarios.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(usuarios.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(usuarios.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(usuarios.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+			if(Ext.getCmp(usuarios.id+'-grid_lista').getSelectionModel().getSelected()){
+				Ext.getCmp(usuarios.id+'-btn_editar').enable();
+				Ext.getCmp(usuarios.id+'-btn_eliminar').enable();
+			}else{			
+				Ext.getCmp(usuarios.id+'-btn_editar').disable();
+				Ext.getCmp(usuarios.id+'-btn_eliminar').disable();
+			}
+			Ext.getCmp(usuarios.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(usuarios.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(usuarios.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(usuarios.init,usuarios);
+
+</script>

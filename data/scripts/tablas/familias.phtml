@@ -1,0 +1,600 @@
+<form id="frmReporte-familias" name="frmReporte-familias" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('familias');
+    familias={
+        id:'familias',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:familias.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(familias.id+'-panel_derecho').expand();
+				Ext.getCmp(familias.id+'-panel_derecho').setVisible(true);
+                            familias.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:familias.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            familias.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:familias.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            familias.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:familias.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            familias.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:familias.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(familias.id+'-panel_derecho').collapse();
+							Ext.getCmp(familias.id+'-panel_derecho').setVisible(false);
+                            familias.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:familias.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            familias.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:familias.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    familias.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_familias_lista=new Ext.data.JsonStore({
+                url:'tablas/familias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['fam_id', 'codigo', 'nombre']
+            });
+            
+            store_familias_lista.load();
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'familias'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:familias.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_familias_lista = new Ext.grid.GridPanel({
+                id:familias.id+'-grid_lista',
+                store: store_familias_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'fam_id',width:25},
+                    {header:'Codigo',sortable :true,dataIndex:'codigo',width:150},
+                    {header:'Nombre',sortable :true,dataIndex:'nombre',width:150},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(familias.id+'-btn_editar').isVisible()){
+							Ext.getCmp(familias.id+'-panel_derecho').expand();
+				Ext.getCmp(familias.id+'-panel_derecho').setVisible(true);
+                        	familias.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(familias.id+'-btn_editar').enable();
+						Ext.getCmp(familias.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:familias.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:familias.id+'-fam_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:familias.id+'-codigo',
+                                fieldLabel:'Código',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:familias.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    }
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:10px;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'760',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_familias_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:familias.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'790',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_familias',
+                                        title:'Familias', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:familias.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_familias_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									familias.fn_habilitar(false,0);
+                                store_familias_lista.load({params:{campo:Ext.getCmp(familias.id+'-combo_describe').getValue(),query:Ext.getCmp(familias.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+                                        onEsc:function(){Ext.getCmp('win_familias').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_familias').show();
+                Ext.getCmp('win_familias').center();
+                Ext.getCmp('win_familias').toFront();
+                familias.fn_habilitar(false,0);
+        },
+        fn_nuevo:function()
+        {
+            Ext.Msg.wait('Generando código de Familia... por favor espere!');
+            Ext.Ajax.request({
+                    url:'tablas/familias-codigo',
+                    params:
+                    {
+                        table:'familias'
+                    },
+                    success:function(response,options)
+                    {          
+						Ext.Msg.hide();   
+                        var res = Ext.decode(response.responseText);
+                        var numero="0000"+res.AUTO_INCREMENT;
+                        var codigo="FM"+numero.substr(numero.length-4,4)
+                        Ext.getCmp(familias.id+'-codigo').setValue(codigo);
+                    }
+                });
+            Ext.getCmp(familias.id+'-fam_id').setValue(''); 
+			Ext.getCmp(familias.id+'-nombre').setValue('');         
+            familias.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(familias.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(familias.id+'-panel_derecho').expand();
+				Ext.getCmp(familias.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(familias.id+'-fam_id').setValue(rs.get('fam_id'));
+                Ext.getCmp(familias.id+'-codigo').setValue(rs.get('codigo'));
+				Ext.getCmp(familias.id+'-nombre').setValue(rs.get('nombre'));
+                
+                familias.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(familias.fn_validar()){
+				Ext.getCmp(familias.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/familias-actualizar',
+					params:{ 
+						fam_id:Ext.getCmp(familias.id+'-fam_id').getValue(),
+						codigo:Ext.getCmp(familias.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(familias.id+'-nombre').getValue().toUpperCase()
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(familias.id+'-panel_derecho').collapse();
+							Ext.getCmp(familias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							familias.fn_habilitar(false,0);
+							Ext.getCmp(familias.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(familias.id+'-combo_describe').getValue(),query:Ext.getCmp(familias.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(familias.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(familias.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(familias.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/familias-actualizar',
+					params:
+					{
+						fam_id:Ext.getCmp(familias.id+'-fam_id').getValue(),
+						codigo:Ext.getCmp(familias.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(familias.id+'-nombre').getValue().toUpperCase()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(familias.id+'-panel_derecho').collapse();
+							Ext.getCmp(familias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							familias.fn_habilitar(false,0);
+							Ext.getCmp(familias.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(familias.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+            
+			if(familias.fn_validar()){
+				Ext.getCmp(familias.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/familias-guardar',
+					params:{ 
+						codigo:Ext.getCmp(familias.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(familias.id+'-nombre').getValue().toUpperCase()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(familias.id+'-panel_derecho').collapse();
+							Ext.getCmp(familias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							familias.fn_habilitar(false,0);
+							Ext.getCmp(familias.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(familias.id+'-combo_describe').getValue(),query:Ext.getCmp(familias.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(familias.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(familias.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(familias.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/familias-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(familias.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(familias.id+'-nombre').getValue().toUpperCase()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(familias.id+'-panel_derecho').collapse();
+							Ext.getCmp(familias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							familias.fn_habilitar(false,0);
+							Ext.getCmp(familias.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(familias.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(familias.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Documento :<br>' + rs.get('nombre'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando familia... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/familias-eliminar',
+							params:
+							{
+								fam_id:rs.get('fam_id')
+							},
+							success:function(response,options)
+							{        
+								Ext.Msg.hide();     
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									familias.fn_habilitar(false,0);
+									Ext.getCmp(familias.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(familias.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(familias.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombres");
+                Ext.getCmp(familias.id+'-nombre').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-familias').action="tablas/familias-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(familias.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(familias.id+'-buscar').getValue();
+            document.getElementById('frmReporte-familias').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(familias.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(familias.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(familias.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(familias.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(familias.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(familias.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(familias.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(familias.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(familias.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(familias.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(familias.id+'-btn_editar').disable();
+			Ext.getCmp(familias.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(familias.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(familias.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(familias.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(familias.init,familias);
+
+</script>

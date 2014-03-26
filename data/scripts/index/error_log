@@ -1,0 +1,1 @@
+[31-Jan-2013 18:25:14 America/New_York] PHP Fatal error:  Using $this when not in object context in /home/impoinga/public_html/inventory/data/scripts/index/index.phtml on line 229

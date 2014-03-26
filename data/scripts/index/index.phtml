@@ -1,0 +1,663 @@
+<html>
+    <head>
+        <title>.:Inventario:.</title>
+        <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+        <link href="images/favicon.ico" type="image/x-icon" rel="shortcut icon" />
+        <link rel="stylesheet" type="text/css" href="js/ext-3.4.0/resources/css/ext-all.css">
+        <link rel="stylesheet" type="text/css" href="js/ext-3.4.0/resources/css/xtheme-gray.css">
+        <link rel="stylesheet" type="text/css" href="js/ext-3.4.0/ux/css/CenterLayout.css">
+        <link rel="stylesheet" type="text/css" href="js/ext-3.4.0/ux/css/Spinner.css">
+	<link rel="stylesheet" type="text/css" href="js/ext-3.4.0/ux/SuperBoxSelect/superboxselect-gray-extend.css">
+	<link rel="stylesheet" type="text/css" href="js/ext-3.4.0/ux/fileuploadfield/css/fileuploadfield.css">    
+        <link rel="stylesheet" type="text/css" href="js/ext-3.4.0/ux/treegrid/treegrid.css">
+        <script type="text/javascript" src="js/ext-3.4.0/adapter/ext/ext-base.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ext-all.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/locale/ext-lang-es.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/TabCloseMenu.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/XmlTreeLoader.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/RowExpander-min.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/Ext.ux.Notification.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/CenterLayout.js"></script>
+	<script type="text/javascript" src="js/ext-3.4.0/ux/monthPicker.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/Spinner.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/SpinnerField.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/numberfield_fomat.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/GroupSummary.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/CheckColumn.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/Ext.ux.plugin.PagingToolbarResizer.js"></script>
+	<script type="text/javascript" src="js/ext-3.4.0/ux/SuperBoxSelect/SuperBoxSelect-min.js"></script>
+	<script type="text/javascript" src="js/ext-3.4.0/ux/fileuploadfield/FileUploadField.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/treegrid/TreeGrid.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/treegrid/TreeGridLoader.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/treegrid/TreeGridColumnResizer.js"></script>
+        <script type="text/javascript" src="js/ext-3.4.0/ux/treegrid/TreeGridColumns.js"></script>
+	<script type="text/javascript" src="js/ext-3.4.0/ux/treegrid/TreeGridNodeUI.js"></script>
+	<script type="text/javascript" src="js/ext-3.4.0/ux/treegrid/TreeGridSorter.js"></script>
+        
+        <link rel="stylesheet" type="text/css" href="css/inicio.css">
+        <link rel="stylesheet" type="text/css" href="css/textos.css">
+        <link rel="stylesheet" type="text/css" href="css/layout.css">
+        <link rel="stylesheet" href="js/dockmenu01/jquery-docklr-1.0.css" type="text/css" media="screen" />
+        <style type="text/css">
+            body{
+                margin:0px;
+                padding:0px;
+                font-family: Arial, "MS Trebuchet", sans-serif;
+                background: url('images/extranet/fondo_body.png') 50% 50% repeat scroll ;
+                width:100%;
+            }
+            .fondo_principal{
+                /*background: url('images/extranet/fondo_body.png') 50% 50% repeat scroll ;*/
+                background-color: #D0E9FD;
+                font-family: Arial, "MS Trebuchet", sans-serif;
+                margin:0px;
+                padding:0px;
+                background: url('images/fondos/fondo_inventory.jpg') no-repeat scroll top left;
+                background-position: 50% 70px;
+            }
+            .fondo_principal01{
+                
+            }
+            #header{
+                background: url('images/extranet/fondo_header_nuevo.png') repeat-x scroll top left;
+                /*height:60px;*/
+                height:60px;
+                min-width:1008px;
+                background-color: #45474b;
+                width:100.8%;
+            }
+            #wrapper{
+                width:100%;
+            }
+            #header .logo{
+                float:left;
+                width:45%;
+            }
+            #header .addheader{
+                padding-top:16px;
+                float:left;
+                width:55%;
+            }
+            #header .addheader .adentroheader{
+                padding-top:10px;
+            }
+            #header .addheader .cajausuario{
+                font-size:11px;
+                background: url('images/extranet/usericono.png') no-repeat scroll top left;
+                padding-left:16px;
+                font-weight:bold;
+                font-family:sans-serif;
+            }
+            #header .addheader .cajausuario .tituser{
+                color:#f41500;
+                font-size:11px;
+                font-weight: bold;
+                font-family:sans-serif;
+            }
+            #header .addheader .fecha{
+                font-weight: normal;
+            }
+            .clear{
+                clear:both;
+            }
+            #menu{
+                padding-top:5px;
+                display:block;
+                width:100%;
+                min-width:1000px;
+            }
+            #footer{
+                background: url('images/extranet/footer_nuevo.png') repeat-x scroll top left;
+                height: 75px;
+                color:#FFFFFF;
+                background-color: #2d2e31;
+                width:100.8%;
+                clear:both;
+                position:relative;
+            }
+            #footer .adentro_izq{
+                background: url('images/extranet/sellosurbanosizq.png') no-repeat scroll top left;
+                background-position: 0px 10px;
+                height:75px;
+                width:40%;
+                float:left;
+            }
+            #footer .copyright{
+                text-align:center;
+                padding-top:10px;
+                font-size:11px;
+                float:left;
+                width:20%;
+            }
+            #footer .adentro_der{
+                background: url('images/extranet/sellosurbanosder.png') no-repeat scroll top right;
+                background-position: 100% 10px;
+                height:75px;
+                width:40%;
+                float:left;
+            }
+            .fondo_principal00{
+                background:#EAEAEA url("images/icon/logo_portada.png");
+                background-position: center center;
+                background-repeat: no-repeat;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                border: 0 none;
+                overflow: hidden;
+                width: 100%;
+            }
+            .fondo_container{
+                background:url("images/extranet/fondocontainer.jpg") repeat-x repeat-y;
+            }
+            #userboxWrapper{
+                font: 10px sans-serif;
+                position: absolute;
+                right: 0;
+                top: -2px;
+            }
+            #userbox{
+                font: 10px sans-serif;
+                background-image:url("images/core/userborder.png");
+                margin-right:0;
+                padding: 2px 10px 8px;
+            }
+            td.ux-grid-hd-group-cell {
+
+                background-color:#f9f9f9;
+                background-image:url("js/ext-3.3.0/resources/images/gray/grid/grid3-hrow2.gif");
+            }
+			.derecha{ text-align:right}
+
+        </style>
+
+        <link rel="stylesheet" type="text/css" href="js/multiselector/multiselect.css">
+        <script type="text/javascript" src="js/jquery/jquery-1.6.4.min.js"></script>
+        <script type="text/javascript" src="js/global.js"></script>
+        <script type="text/javascript" src="js/dockmenu01/jquery-docklr-1.0.pack.js"></script>
+        <script type="text/javascript" src="js/app.js"></script>
+        <script type="text/javascript" src="js/traductor.js"></script>
+        <script type="text/javascript" src="js/og.js"></script>
+	<script type="text/javascript" src="js/multiselector/DDView.js"></script>
+	<script type="text/javascript" src="js/multiselector/MultiSelect.js"></script>
+
+        <script type="text/javascript" src="js/jquery/jquery.mousewheel.min.js"></script>
+        <script type="text/javascript" src="js/jquery/jquery.iviewer.js"></script>
+
+        
+        <script type="text/javascript"> 
+
+
+    Ext.BLANK_IMAGE_URL = 'js/ext-3.4.0/resources/images/default/s.gif';
+Ext.WindowMgr.zseed = 10000; 
+
+	var msgLongValido = 'Hola';
+	Ext.apply(Ext.form.VTypes,{
+		ruc: function(value,field){
+			return value.replace(/[ \-\(\)]/g,'').length == field.el.dom.maxLength;
+		},
+		rucText:'Longitud de Dni debe ser de 8 digitos',
+		rucMask: /\d/
+	});
+	
+	Ext.apply(Ext.form.VTypes,{
+		nonumero: function(value,field){
+			return value.replace(/[0-9]/g,'');
+		},
+		nonumeroText: 'El campo no debe contener numeros',
+		nonumeroMask: /\D/
+	});
+	
+	Ext.override(Ext.form.NumberField, {
+		setValue : function(v){
+			//alert(v);
+				v = typeof v == 'number' ? v : String(v).replace(this.decimalSeparator, ".");
+			v = isNaN(v) ? '' : String(v).replace(".", this.decimalSeparator);
+			return Ext.form.NumberField.superclass.setValue.call(this, v);
+		},
+		fixPrecision : function(value){
+			//alert(v);
+			var nan = isNaN(value);
+			if(!this.allowDecimals || this.decimalPrecision == -1 || nan || !value){
+			   return nan ? '' : value;
+			}
+			return parseFloat(value).toFixed(this.decimalPrecision);
+		}
+	})
+	var vgVentana = 'Mi Ventana';
+	var vgId = 0;
+	var vgIdTienda = <?=$this->se_age_id?>;
+	var vgIgv = <?=($this->sesion->se_igv?$this->sesion->se_igv:18)?>;
+	var vgTcC = <?=($this->sesion->se_tc_c?$this->sesion->se_tc_c:0)?>;
+	var vgTcV = <?=($this->sesion->se_tc_v?$this->sesion->se_tc_v:0)?>;
+	
+
+    Ext.ns('inicio');
+		
+		
+	
+			<?php 
+			function hora_local_int($zona_horaria = 0)
+			{
+				if ($zona_horaria > -12.1 and $zona_horaria < 12.1)
+				{
+					$hora_local = time() + ($zona_horaria * 3600);
+					return $hora_local;
+				}
+				return 'error';
+			}
+			
+			$otro = gmdate('d/m/Y H:i:s', hora_local_int(-5));
+			?>
+            var labelUser = 'admin';
+			//'<img src="images/core/pe.png"  alt="">'+
+            var vhtmlTop = ''+
+                '<div id="header">'+
+                '<div id="wrapper">'+
+                '<div class="logo">'+
+                '<img src="images/core/logo_nuevo_1.png"  alt="">'+
+                
+                '</div>'+
+                '<div class="addheader"><div class="adentroheader">'+
+                '<div id="userboxWrapper">'+
+                '<table>'+
+                '<tr>'+
+                '<td>'+
+                '<div style="font:11px Verdana, Geneva, sans-serif;">'+
+                '<table border="0">'+
+                '<tr>'+
+                '<td>'+
+                '<div id="miNombre" style="float:right;width:260px;font-size:11px;"><?php echo VAR_NOMBRES." ".VAR_APELLIDOS.", ".VAR_CARGO.' - '.$this->se_tienda.'<br>'.$otro; ?><br></div>'+
+                '</td>'+
+                '<td>'+
+                '<div id="salir" style="font:11px Verdana, Geneva, sans-serif;margin-top: 14px;">'+
+                '<table cellspacing="0" style="width: auto; font-size: 9px;"  class="x-btn x-btn-text-icon">'+
+                  '<td></td><td class="x-btn-mc"></td></tr></table>'+
+                '</div>'+
+                '</td>'+
+                '</tr>'+
+                '</table>'+
+                '</div>'+
+                '</td>'+
+                '<td>'+
+                '</td>'+
+                '<td>'+
+                '</td>'+
+            '</tr>'+
+                '</table>'+
+						
+                '</div>'+
+                '</div>'+
+                '</div>';
+            var vhtmlFooter = ''+
+                '<div id="footer">'+
+                '<div id="wrapper">'+
+                '<div class="adentro_izq"></div>'+
+                '<div class="copyright"></div>'+
+                '<div class="adentro_der"></div>'+
+                '<div class="clear"></div>'+
+                '</div>'+
+                '</div>';	
+ 
+            /*var vhtmlmenu = '<?php echo $this->menu;?>';
+            vhtmlFooter += vhtmlmenu;*/
+			
+			
+					
+			
+    inicio={
+                id:'inicio',
+                autoHide:false,
+                taskBandeja:[],
+                taskChat:[],
+                taskSess:[],
+                countComentario:0,
+                countSolucion:0,
+                aux_var:0,
+                tipo_usuario:0,
+                bcollapse:true,
+                init:function(){
+                    
+                    Ext.QuickTips.init();
+					
+					var tb = new Ext.Toolbar();
+					//alert("<?php echo $this->menu;?>");
+					<?php
+					$icomod = '';
+					$texmod='';
+					$titmod='';
+					 $umo_id_ant=0;
+					foreach($this->menu as $fila){
+						?>
+						<?php
+						if($umo_id_ant!=$fila["umo_id"] and $umo_id_ant>0)
+						{
+							?>
+							//alert("<?php echo $umo_id_ant.'-'.$fila['umo_id'].'-'.$fila["nombre_menu"].'-'.$fila["url_menu"];?>");
+							var menu<?php echo $umo_id_ant;?> = new Ext.menu.Menu({
+								id: 'mainMenu<?php echo $umo_id_ant;?>',
+								style: {
+									overflow: 'visible'     // For the Combo popup
+								},
+								items: [                // A Field in a Menu
+									<?php echo $menu;?>
+								]
+							});
+							tb.add({
+								text:'<?php echo $texmod;?>',
+								tooltip:'<?php echo $titmod;?>',
+								icon: '<?php echo "images/icon/download.png";?>',
+								menu: menu<?php echo $umo_id_ant;?>  // assign menu by instance
+								
+							});
+							<?php											
+							$umo_id_ant=	$fila["umo_id"];	
+							$menu='';
+						}
+						if($uno_id_ant==0){
+							$umo_id_ant=	$fila["umo_id"];		
+						}
+						
+						$menu.="{
+									text: '".$fila["nombre_menu"]."',
+									enlace:'".$fila["url_menu"]."',
+									tooltip: '".$fila["alias"]."',
+									icon: 'images/iconos/".$fila["icono_menu"]."',
+									handler: onItemClick
+								},";
+						?>
+						
+						<?php
+						$icomod=$fila["icono_modulo"];
+						$texmod=$fila["nombre_modulo"];
+						$titmod=$fila["nombre_modulo"];
+					}					
+					?>
+					var menu<?php echo $umo_id_ant;?> = new Ext.menu.Menu({
+						id: 'mainMenu<?php echo $umo_id_ant;?>',
+						style: {
+							overflow: 'visible'     // For the Combo popup
+						},
+						items: [                // A Field in a Menu
+							<?php echo $menu;?>
+						]
+					});
+					tb.add({
+						text:'<?php echo $texmod;?>',
+						tooltip:'<?php echo $titmod;?>',
+						icon: '<?php echo "images/icon/download.png";?>',
+						menu: menu<?php echo $umo_id_ant;?>  // assign menu by instance
+						
+					});
+    				//tb.render('toolbar');
+					
+					var tbAbajo = new Ext.Toolbar();
+					
+					tbAbajo.add({
+                        icon: 'images/icon/clientes.png',
+                        width: '40px',
+						height:'40px',
+						scale:'large',
+						enlace:'maestros/clientes',
+                        tooltip: 'Administrador de Clientes',
+						handler: onItemClick						
+                    });
+					tbAbajo.add({
+                        icon: 'images/icon/mercaderias.png',
+                        width: '40px',
+						height:'40px',
+						scale:'large',
+						enlace:'maestros/mercaderias',
+                        tooltip: 'Administrador de Mercaderias',
+						handler: onItemClick						
+                    });
+					tbAbajo.add({
+                        icon: 'images/iconos/icoventas.png',
+                        width: '40px',
+						height:'40px',
+						scale:'large',
+						enlace:'movimientos/compras',
+                        tooltip: 'Administrador de Compras',
+						handler: onItemClick						
+                    });
+					tbAbajo.add({
+                        icon: 'images/iconos/icocompras.png',
+                        width: '40px',
+						height:'40px',
+						scale:'large',
+						enlace:'movimientos/ventas',
+                        tooltip: 'Administrador de Ventas',
+						handler: onItemClick						
+                    });
+					tbAbajo.add({
+                        icon: 'images/iconos/icokardex.png',
+                        width: '40px',
+						height:'40px',
+						scale:'large',
+						enlace:'maestros/kardex',
+                        tooltip: 'Kardex por Productos',
+						handler: onItemClick						
+                    });
+					tbAbajo.add({
+                        icon: 'images/iconos/Standby.png',
+                        width: '40px',
+						height:'40px',
+						scale:'large',
+                        tooltip: 'Cerrar Sesión',
+						handler: onCerrarSesion						
+                    });
+					
+					
+					
+					
+					
+                    Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
+                        initComponent : function(){
+                            if(!this.store.baseParams){
+                                this.store.baseParams = {};
+                            }
+                            Ext.app.SearchField.superclass.initComponent.call(this);
+                            this.on('specialkey', function(f, e){
+                                if(e.getKey() == e.ENTER){
+                                    this.onTrigger2Click();
+                                }
+                            }, this);
+                        },
+					
+                        validationEvent:false,
+                        validateOnBlur:false,
+                        trigger1Class:'x-form-clear-trigger',
+                        trigger2Class:'x-form-search-trigger',
+                        hideTrigger1:true,
+                        width:180,
+                        hasSearch : false,
+                        paramName : 'query',
+					
+                        onTrigger1Click : function(){
+                            if(this.hasSearch){
+                                this.store.baseParams[this.paramName] = '';
+                                this.store.removeAll();
+                                this.el.dom.value = '';
+                                this.triggers[0].hide();
+                                this.hasSearch = false;
+                                this.focus();
+				
+                            }
+                            //win.show({vurl:'/logistica/tracking/getForm_tracking/?&formNuevo=',mask:'inicio-tabContent'});
+                        }	
+                    });
+                    
+                    var view = new Ext.Viewport({
+                        layout:'border',
+                        items:[
+                            
+							{
+                                xtype:'panel',
+                                region:'north',
+                                height:73,
+                                border:false,
+                                items:[tb, tbAbajo
+                                ]	
+                            },
+							{
+                                xtype:'panel',
+                                region:'center',
+								y:73,
+								width:'100%',
+                                html:vhtmlTop,
+                                border:false,
+                                items:[
+                                    {
+                                        xtype:'panel',
+                                        id:'index_weburbano_carga',
+                                        hidden:true,
+                                        hideMode:'offsets'
+                                    }
+                                ]	
+                            },
+                            {
+                                xtype:'panel',
+                                id:inicio.id+'-tabContent',
+                                region:'center',
+								width:'100%',
+                                enableTabScroll:true,
+                                //padding:1,
+                                border:false,
+                                bodyCssClass:'fondo_principal',
+                            },
+                            {
+                                xtype:'panel',
+                                region:'south',
+                                height:50,
+                                html:vhtmlFooter,
+                                border:false	
+                            }
+                        ],
+                        listeners:{
+                            'afterrender':function(obj){
+                                $('#div_cont_menu').docklr({
+                                    alignment   : 'bottom'
+                                });
+                                inicio.status_session();
+                                  	
+                            }
+                        }
+                    });
+					
+					<?php 
+						if($this->se_age_id==1 or $this->se_age_id==2){?>
+						inicio.getForm('usuarios/seleccion','Seleccionar tienda y Tipo de Cambio');
+					<?php 
+						}else{
+							if($this->sesion->se_tc_c==0){?>
+						inicio.getForm('usuarios/selecciontc','Ingrese Tipo de Cambio');
+					<?php 	}
+						}?>
+                },
+                getForm:function(vurl,menu){
+                    //var tab = Ext.getCmp(inicio.id+'-tabContent');
+                    //tab.removeAll();
+                    var tab = Ext.getCmp(inicio.id+'-tabContent');
+                    if(!Ext.isEmpty(vurl)){
+                        if(vurl.split('.php').length != 2){
+							tab.removeAll();
+							win.show({vurl:vurl});
+                        }else{
+                            Ext.MessageBox.alert('Alerta', 'PAGINA EN CONSTRUCCION.');
+                        }
+                    }else{
+                        Ext.MessageBox.alert('Alerta', 'PAGINA EN CONSTRUCCION.');
+                    }
+
+                },
+                expire:function(){
+                    var vurl = 'login/expire/';
+                    Ext.Ajax.request({
+                        url     :vurl,
+                        success :function(response, options)
+                        {
+                           window.location = 'login/';
+                        }
+                    });
+                },
+
+                showTabsMenu:function(){
+                    if(inicio.bcollapse){
+                        var panel = Ext.getCmp(inicio.id+'-panel_accordion');
+                        panel.el.setStyle('z-index', 102);
+                        panel.el.replaceClass('x-panel-collapsed', 'x-panel-floating');
+                        panel.el.slideIn('l',{
+                            callback: function(){
+                                inicio.initAutoHide();
+                                inicio.autoHide = true;
+                            }
+                        });
+                    }
+                },
+                initAutoHide:function(){
+                    var panel = Ext.getCmp(inicio.id+'-panel_accordion');
+                    var autoHideSlideTask = new Ext.util.DelayedTask(inicio.slideIn, this);
+                    panel.el.on('mouseout',function(e){
+                        autoHideSlideTask.delay(500);
+                    });
+                    panel.el.on('mouseover',function(e){
+                        autoHideSlideTask.cancel();
+                    });
+                },
+                slideIn:function(){
+                    var panel = Ext.getCmp(inicio.id+'-panel_accordion');
+                    if(inicio.autoHide){
+                        panel.el.slideOut('l', {
+                            callback: function(){
+                                panel.el.hide();
+                                inicio.autoHide = false;
+                            },
+                            scope: this,
+                            block: true
+                        });
+                    }
+                },
+                status_session:function(){
+                    /*inicio.taskSess = {
+                        run:function(){
+                            inicio.getStatusSession();
+                        },
+                        interval:(1000 * 35)
+                    }
+                    Ext.TaskMgr.start(inicio.taskSess);*/
+                },
+                getStatusSession:function(){
+                    /*Ext.Ajax.request({
+                        url:'login/get-status-session/',
+                        params:{},
+                        success:function(response, options){
+                            var res = Ext.decode(response.responseText);
+                            
+                            if (!res.status_time){
+                                Ext.Msg.alert("Alerta","Su sesi&oacute;n ha terminado",
+                                    function()
+                                    {
+                                        window.location = 'login/';
+                                    }
+                                );
+                            }
+                        }
+                    });*/
+                },
+					
+            }
+			function onItemClick(item){
+				//alert('Menu Click' + item.enlace);
+				inicio.getForm( item.enlace,item.title)
+			}
+			function onCerrarSesion(item){
+				//alert('Menu Click' + item.enlace);
+				inicio.expire()
+			}
+            Ext.onReady(inicio.init, inicio);
+        </script>  
+    </head>
+    <body>
+      
+    </body>
+</html>

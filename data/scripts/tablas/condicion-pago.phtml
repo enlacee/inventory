@@ -1,0 +1,746 @@
+<form id="frmReporte-condiciones-pago" name="frmReporte-condiciones-pago" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('condiciones_pago');
+    condiciones_pago={
+        id:'condiciones_pago',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:condiciones_pago.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(condiciones_pago.id+'-panel_derecho').expand();
+				Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(true);
+                            condiciones_pago.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:condiciones_pago.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            condiciones_pago.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:condiciones_pago.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            condiciones_pago.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:condiciones_pago.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            condiciones_pago.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:condiciones_pago.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(condiciones_pago.id+'-panel_derecho').collapse();
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(false);
+                            condiciones_pago.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:condiciones_pago.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							condiciones_pago.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:condiciones_pago.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    condiciones_pago.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_condiciones_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cpa_id','codigo','descripcion','dias','letras']
+            });
+            
+            store_condiciones_pago_lista.load();
+
+            var store_condiciones_pago_describe=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_condiciones_pago_describe.load({params:{table:'condiciones_pago'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:condiciones_pago.id+'-combo_describe',
+                store:store_condiciones_pago_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_condiciones_pago_lista = new Ext.grid.GridPanel({
+                id:condiciones_pago.id+'-grid_lista',
+                store: store_condiciones_pago_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'cpa_id',width:25},
+                    {header:'Código',sortable :true,dataIndex:'codigo',width:100},
+                    {header:'Descripción',sortable :true,dataIndex:'descripcion',width:250},
+                    {header:'Letras',sortable :true,dataIndex:'letras',width:50},
+					{header:'Días',sortable :true,dataIndex:'dias',width:200},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(condiciones_pago.id+'-btn_editar').isVisible()){
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').expand();
+				Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(true);
+                        	condiciones_pago.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(condiciones_pago.id+'-btn_editar').enable();
+						Ext.getCmp(condiciones_pago.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:condiciones_pago.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:condiciones_pago.id+'-cpa_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:condiciones_pago.id+'-codigo',
+                                fieldLabel:'Código',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:condiciones_pago.id+'-descripcion',
+                                fieldLabel:'Descripción',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:condiciones_pago.id+'-letras',
+                                fieldLabel:'Nro. Letras',
+                                itemCls: 'label01',
+								style:{marginLeft:'7px', textAlign:'right'},
+                                width:50
+                            }
+                        ]
+                    },  
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:condiciones_pago.id+'-dias',
+                                fieldLabel:'Días',
+                                itemCls: 'label01',
+								style:{marginLeft:'7px'},
+                                width:300,
+								listeners : {
+									blur:function(){
+										vCon = 0;
+										vNro = Number(Ext.getCmp(condiciones_pago.id+'-letras').getValue());
+										vValor = Ext.getCmp(condiciones_pago.id+'-dias').getValue();
+										//alert(vValor);
+										vPos = vValor.indexOf(",");
+										vletra = "";
+										vTmp = 0;
+										vBien = true;
+										while(vPos>0){
+											vDia = vValor.substring(0,vPos);
+											if(vTmp<Number(vDia)){
+												vTmp = Number(vDia);
+											}else{
+												vBien = false;
+												break;
+											}
+											
+											var numero="000"+Number(vDia).toString();
+											
+                        					var vletra = vletra + numero.substr(numero.length-3,3) + ",";					
+											
+											vValor = vValor.substring(vPos+1);
+											vPos = vValor.indexOf(",");
+											vCon = vCon +1;
+										}
+										if(vBien){
+											if(vValor.length>0){
+												vCon = vCon +1;
+												if(vTmp<Number(vValor)){
+													vTmp = Number(vValor);
+													var numero="000"+Number(vValor).toString();
+													var vletra = vletra + numero.substr(numero.length-3,3) + ",";	
+												}else{
+													vBien = false;
+												}
+											}
+											if(vNro!=vCon){
+												vBien=false;
+											}	
+										}
+										if(vBien){
+											Ext.getCmp(condiciones_pago.id+'-dias').setValue(vletra.substring(0,vletra.length-1));
+										}else{
+											alert("Letras no validas");
+											Ext.getCmp(condiciones_pago.id+'-dias').focus(true,10);
+										}										
+									}	
+								}
+                            }
+                        ]
+                    },            
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:10px;',
+            border:false,
+            items:
+            [
+                {
+                    region: 'west',
+                    layout:'fit',
+                    xtype: 'panel',
+                    width:'760',
+                    autoScroll: true,  
+                    border:false,
+                    items:
+                    [
+                        grid_condiciones_pago_lista
+                    ]
+                }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:condiciones_pago.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'790',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_condiciones_pago',
+                                        title:'Condiciones de Pago', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:condiciones_pago.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_condiciones_pago_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									condiciones_pago.fn_habilitar(false,0);
+                                store_condiciones_pago_lista.load({params:{campo:Ext.getCmp(condiciones_pago.id+'-combo_describe').getValue(),query:Ext.getCmp(condiciones_pago.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+                                        onEsc:function(){Ext.getCmp('win_condiciones_pago').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_condiciones_pago').show();
+                Ext.getCmp('win_condiciones_pago').center();
+                Ext.getCmp('win_condiciones_pago').toFront();
+                condiciones_pago.fn_habilitar(false,0);
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando código de Condición de Pago... por favor espere!');
+			Ext.Ajax.request({
+				url:'tablas/condiciones-pago-codigo',
+				params:
+				{
+					table:'condiciones_pago'
+				},
+				success:function(response,options)
+				{     
+					Ext.Msg.hide();        
+					var res = Ext.decode(response.responseText);
+					var numero="000000"+res.AUTO_INCREMENT;
+					var codigo="CP"+numero.substr(numero.length-6,6)
+					Ext.getCmp(condiciones_pago.id+'-codigo').setValue(codigo);
+				}
+			});
+				
+            Ext.getCmp(condiciones_pago.id+'-cpa_id').setValue('');
+            Ext.getCmp(condiciones_pago.id+'-codigo').setValue('');
+			Ext.getCmp(condiciones_pago.id+'-descripcion').setValue('');
+			Ext.getCmp(condiciones_pago.id+'-dias').setValue('');
+			Ext.getCmp(condiciones_pago.id+'-letras').setValue('');
+            
+            condiciones_pago.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(condiciones_pago.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(condiciones_pago.id+'-panel_derecho').expand();
+				Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(condiciones_pago.id+'-cpa_id').setValue(rs.get('cpa_id'));
+                Ext.getCmp(condiciones_pago.id+'-codigo').setValue(rs.get('codigo'));
+                Ext.getCmp(condiciones_pago.id+'-descripcion').setValue(rs.get('descripcion'));
+				Ext.getCmp(condiciones_pago.id+'-dias').setValue(rs.get('dias'));
+                Ext.getCmp(condiciones_pago.id+'-letras').setValue(rs.get('letras'));
+                
+                condiciones_pago.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(condiciones_pago.fn_validar())
+            {
+				Ext.getCmp(condiciones_pago.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/condiciones-pago-actualizar',
+					params:{ 
+						cpa_id:Ext.getCmp(condiciones_pago.id+'-cpa_id').getValue(),
+						codigo:Ext.getCmp(condiciones_pago.id+'-codigo').getValue(),
+						descripcion:Ext.getCmp(condiciones_pago.id+'-descripcion').getValue().toUpperCase(),
+						dias:Ext.getCmp(condiciones_pago.id+'-dias').getValue(),
+						letras:Ext.getCmp(condiciones_pago.id+'-letras').getValue()
+					},
+					waitTitle: 'Guardando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').collapse();
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							condiciones_pago.fn_habilitar(false,0);
+							Ext.getCmp(condiciones_pago.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(condiciones_pago.id+'-combo_describe').getValue(),query:Ext.getCmp(condiciones_pago.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(condiciones_pago.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(condiciones_pago.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(condiciones_pago.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/condiciones-pago-actualizar',
+					params:
+					{
+						cpa_id:Ext.getCmp(condiciones_pago.id+'-cpa_id').getValue(),
+						codigo:Ext.getCmp(condiciones_pago.id+'-codigo').getValue(),
+						descripcion:Ext.getCmp(condiciones_pago.id+'-descripcion').getValue().toUpperCase(),
+						dias:Ext.getCmp(condiciones_pago.id+'-dias').getValue(),
+						letras:Ext.getCmp(condiciones_pago.id+'-letras').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').collapse();
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							condiciones_pago.fn_habilitar(false,0);
+							Ext.getCmp(condiciones_pago.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(condiciones_pago.id+res.campo).focus(true,10);							
+						}	
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+			if(condiciones_pago.fn_validar())
+            {
+				Ext.getCmp(condiciones_pago.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/condiciones-pago-guardar',
+					params:{ 
+						codigo:Ext.getCmp(condiciones_pago.id+'-codigo').getValue(),
+						descripcion:Ext.getCmp(condiciones_pago.id+'-descripcion').getValue().toUpperCase(),
+						dias:Ext.getCmp(condiciones_pago.id+'-dias').getValue(),
+						letras:Ext.getCmp(condiciones_pago.id+'-letras').getValue()
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').collapse();
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							condiciones_pago.fn_habilitar(false,0);
+							Ext.getCmp(condiciones_pago.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(condiciones_pago.id+'-combo_describe').getValue(),query:Ext.getCmp(condiciones_pago.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(condiciones_pago.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(condiciones_pago.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(condiciones_pago.id+res.campo).focus(true,10);
+					}
+				});
+				
+				/*Ext.Ajax.request({
+					url:'tablas/condiciones-pago-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(condiciones_pago.id+'-codigo').getValue(),
+						descripcion:Ext.getCmp(condiciones_pago.id+'-descripcion').getValue().toUpperCase(),
+						dias:Ext.getCmp(condiciones_pago.id+'-dias').getValue(),
+						letras:Ext.getCmp(condiciones_pago.id+'-letras').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').collapse();
+							Ext.getCmp(condiciones_pago.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							condiciones_pago.fn_habilitar(false,0);
+							Ext.getCmp(condiciones_pago.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(condiciones_pago.id+res.campo).focus(true,10);							
+						}							
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(condiciones_pago.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Condicion de Pago :<br>' + rs.get('descripcion'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando condición de pago... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/condiciones-pago-eliminar',
+							params:
+							{
+								cpa_id:rs.get('cpa_id')
+							},
+							success:function(response,options)
+							{          
+								Ext.Msg.hide();   
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									condiciones_pago.fn_habilitar(false,0);
+									Ext.getCmp(condiciones_pago.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(condiciones_pago.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-condiciones-pago').action="tablas/condiciones-pago-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(condiciones_pago.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(condiciones_pago.id+'-buscar').getValue();
+            document.getElementById('frmReporte-condiciones-pago').submit();
+        },		
+		fn_validar:function()
+		{
+			if(!Ext.getCmp(condiciones_pago.id+'-descripcion').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombres");
+                Ext.getCmp(condiciones_pago.id+'-descripcion').focus(true,10);
+                return false;
+            }
+			
+			vCon = 0;
+			vNro = Number(Ext.getCmp(condiciones_pago.id+'-letras').getValue());
+			vValor = Ext.getCmp(condiciones_pago.id+'-dias').getValue();
+			vPos = vValor.indexOf(",");
+			vletra = "";
+			vTmp = 0;
+			vBien = true;
+			while(vPos>0){
+				vDia = vValor.substring(0,vPos);
+				if(vTmp<Number(vDia)){
+					vTmp = Number(vDia);
+				}else{
+					vBien = false;
+					break;
+				}
+				
+				var numero="000"+Number(vDia).toString();
+				
+				var vletra = vletra + numero.substr(numero.length-3,3) + ",";					
+				
+				vValor = vValor.substring(vPos+1);
+				vPos = vValor.indexOf(",");
+				vCon = vCon +1;
+			}
+			if(vBien){
+				if(vValor.length>0){
+					vCon = vCon +1;
+					if(vTmp<Number(vValor)){
+						vTmp = Number(vValor);
+						var numero="000"+Number(vValor).toString();
+						var vletra = vletra + numero.substr(numero.length-3,3) + ",";	
+					}else{
+						vBien = false;
+					}
+				}
+				if(vNro!=vCon){
+					vBien=false;
+				}	
+			}
+			if(vBien){
+				Ext.getCmp(condiciones_pago.id+'-dias').setValue(vletra.substring(0,vletra.length-1));
+			}else{
+				alert("Letras no validas");
+				Ext.getCmp(condiciones_pago.id+'-dias').focus(true,10);
+			}
+			if(!vBien){
+				return false;
+			}
+			return true;	
+		},
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(condiciones_pago.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(condiciones_pago.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(condiciones_pago.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(condiciones_pago.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(condiciones_pago.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(condiciones_pago.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(condiciones_pago.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(condiciones_pago.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(condiciones_pago.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(condiciones_pago.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(condiciones_pago.id+'-btn_editar').disable();
+			Ext.getCmp(condiciones_pago.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(condiciones_pago.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(condiciones_pago.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(condiciones_pago.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(condiciones_pago.init,condiciones_pago);
+
+</script>

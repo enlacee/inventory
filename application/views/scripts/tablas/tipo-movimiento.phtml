@@ -1,0 +1,646 @@
+<form id="frmReporte-tipo_movimiento" name="frmReporte-tipo_movimiento" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('tipo_movimiento');
+    tipo_movimiento={
+        id:'tipo_movimiento',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:tipo_movimiento.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(tipo_movimiento.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(true);
+                            tipo_movimiento.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:tipo_movimiento.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            tipo_movimiento.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:tipo_movimiento.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            tipo_movimiento.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:tipo_movimiento.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            tipo_movimiento.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:tipo_movimiento.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(tipo_movimiento.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(false);
+                            tipo_movimiento.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:tipo_movimiento.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            tipo_movimiento.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:tipo_movimiento.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    tipo_movimiento.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_tipo_movimiento_lista=new Ext.data.JsonStore({
+                url:'tablas/tipo-movimiento-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tmv_id', 'codigo', 'nombre', 'indicador']
+            });
+            
+            store_tipo_movimiento_lista.load();
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'tipo_movimiento'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:tipo_movimiento.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_tipo_movimiento_lista = new Ext.grid.GridPanel({
+                id:tipo_movimiento.id+'-grid_lista',
+                store: store_tipo_movimiento_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'tmv_id',width:25},
+                    {header:'Codigo',sortable :true,dataIndex:'codigo',width:150},
+                    {header:'Nombre',sortable :true,dataIndex:'nombre',width:150},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(tipo_movimiento.id+'-btn_editar').isVisible()){
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(true);
+                        	tipo_movimiento.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(tipo_movimiento.id+'-btn_editar').enable();
+						Ext.getCmp(tipo_movimiento.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:tipo_movimiento.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:tipo_movimiento.id+'-tmv_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:tipo_movimiento.id+'-codigo',
+                                fieldLabel:'Código',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Indicador",
+                                id: tipo_movimiento.id+'-indicador',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "indicador"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:tipo_movimiento.id+'-indicador_i',
+                                        boxLabel: "Ingreso",name: "indicador",
+                                        inputValue: "I",
+                                        checked:true
+                                    },
+                                    {
+                                        id:tipo_movimiento.id+'-indicador_s',
+                                        boxLabel: "Salida",name: "indicador",
+                                        inputValue: "S"
+                                    }
+                                ],
+								listeners : {
+									change : function(){
+										vCodigo = Ext.getCmp(tipo_movimiento.id+'-codigo').getValue();
+										if(Ext.getCmp(tipo_movimiento.id+'-indicador').getValue().getGroupValue()=="I"){
+											vCodigo = vCodigo.substring(0,2) + 'IN' + vCodigo.substring(4,7);
+										}else{
+											vCodigo = vCodigo.substring(0,2) + 'SA' + vCodigo.substring(4,7);
+										}
+										Ext.getCmp(tipo_movimiento.id+'-codigo').setValue(vCodigo);
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:tipo_movimiento.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    }
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:10px;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'760',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_tipo_movimiento_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:tipo_movimiento.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'790',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_tipo_movimiento',
+                                        title:'Tipos de Movimiento', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:tipo_movimiento.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_tipo_movimiento_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									tipo_movimiento.fn_habilitar(false,0);
+                                store_tipo_movimiento_lista.load({params:{campo:Ext.getCmp(tipo_movimiento.id+'-combo_describe').getValue(),query:Ext.getCmp(tipo_movimiento.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+                                        onEsc:function(){Ext.getCmp('win_tipo_movimiento').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_tipo_movimiento').show();
+                Ext.getCmp('win_tipo_movimiento').center();
+                Ext.getCmp('win_tipo_movimiento').toFront();
+                tipo_movimiento.fn_habilitar(false,0);
+        },
+        fn_nuevo:function()
+        {
+            Ext.Msg.wait('Generando código de Tipo de Movimiento... por favor espere!');
+            Ext.Ajax.request({
+                    url:'tablas/tipo-movimiento-codigo',
+                    params:
+                    {
+                        table:'tipo_movimiento'
+                    },
+                    success:function(response,options)
+                    {       
+						Ext.Msg.hide();      
+                        var res = Ext.decode(response.responseText);
+                        var numero="000"+res.AUTO_INCREMENT;
+                        var codigo="MVIN"+numero.substr(numero.length-3,3)
+                        Ext.getCmp(tipo_movimiento.id+'-codigo').setValue(codigo);
+                    }
+                });
+            Ext.getCmp(tipo_movimiento.id+'-tmv_id').setValue(''); 
+			Ext.getCmp(tipo_movimiento.id+'-nombre').setValue('');     
+		    Ext.getCmp(tipo_movimiento.id+'-indicador').setValue('I'); 
+			Ext.getCmp(tipo_movimiento.id+'-indicador').setDisabled(false);    
+            tipo_movimiento.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(tipo_movimiento.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(tipo_movimiento.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(tipo_movimiento.id+'-tmv_id').setValue(rs.get('tmv_id'));
+                Ext.getCmp(tipo_movimiento.id+'-codigo').setValue(rs.get('codigo'));
+				Ext.getCmp(tipo_movimiento.id+'-nombre').setValue(rs.get('nombre'));
+				Ext.getCmp(tipo_movimiento.id+'-indicador').setValue(rs.get('indicador'));
+				Ext.getCmp(tipo_movimiento.id+'-indicador').setDisabled(true);
+                
+                tipo_movimiento.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(tipo_movimiento.fn_validar()){
+				Ext.getCmp(tipo_movimiento.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/tipo-movimiento-actualizar',
+					params:{ 
+						tmv_id:Ext.getCmp(tipo_movimiento.id+'-tmv_id').getValue(),
+						codigo:Ext.getCmp(tipo_movimiento.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(tipo_movimiento.id+'-nombre').getValue().toUpperCase(),
+						indicador:Ext.getCmp(tipo_movimiento.id+'-indicador').getValue().getGroupValue()
+						
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							tipo_movimiento.fn_habilitar(false,0);
+							Ext.getCmp(tipo_movimiento.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(tipo_movimiento.id+'-combo_describe').getValue(),query:Ext.getCmp(tipo_movimiento.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_movimiento.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(tipo_movimiento.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(tipo_movimiento.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/tipo-movimiento-actualizar',
+					params:
+					{
+						tmv_id:Ext.getCmp(tipo_movimiento.id+'-tmv_id').getValue(),
+						codigo:Ext.getCmp(tipo_movimiento.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(tipo_movimiento.id+'-nombre').getValue().toUpperCase()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							tipo_movimiento.fn_habilitar(false,0);
+							Ext.getCmp(tipo_movimiento.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_movimiento.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+            
+			if(tipo_movimiento.fn_validar()){
+				Ext.getCmp(tipo_movimiento.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/tipo-movimiento-guardar',
+					params:{ 
+						codigo:Ext.getCmp(tipo_movimiento.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(tipo_movimiento.id+'-nombre').getValue().toUpperCase(),
+						indicador:Ext.getCmp(tipo_movimiento.id+'-indicador').getValue().getGroupValue()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							tipo_movimiento.fn_habilitar(false,0);
+							Ext.getCmp(tipo_movimiento.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(tipo_movimiento.id+'-combo_describe').getValue(),query:Ext.getCmp(tipo_movimiento.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_movimiento.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(tipo_movimiento.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(tipo_movimiento.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/tipo-movimiento-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(tipo_movimiento.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(tipo_movimiento.id+'-nombre').getValue().toUpperCase()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_movimiento.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							tipo_movimiento.fn_habilitar(false,0);
+							Ext.getCmp(tipo_movimiento.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_movimiento.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(tipo_movimiento.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Documento :<br>' + rs.get('nombre'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando tipo de movimiento... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/tipo-movimiento-eliminar',
+							params:
+							{
+								tmv_id:rs.get('tmv_id')
+							},
+							success:function(response,options)
+							{       
+								Ext.Msg.hide();      
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									tipo_movimiento.fn_habilitar(false,0);
+									Ext.getCmp(tipo_movimiento.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(tipo_movimiento.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(tipo_movimiento.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombres");
+                Ext.getCmp(tipo_movimiento.id+'-nombre').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-tipo_movimiento').action="tablas/tipo-movimiento-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(tipo_movimiento.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(tipo_movimiento.id+'-buscar').getValue();
+            document.getElementById('frmReporte-tipo_movimiento').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(tipo_movimiento.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(tipo_movimiento.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(tipo_movimiento.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(tipo_movimiento.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(tipo_movimiento.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(tipo_movimiento.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(tipo_movimiento.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(tipo_movimiento.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(tipo_movimiento.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(tipo_movimiento.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(tipo_movimiento.id+'-btn_editar').disable();
+			Ext.getCmp(tipo_movimiento.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(tipo_movimiento.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(tipo_movimiento.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(tipo_movimiento.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(tipo_movimiento.init,tipo_movimiento);
+
+</script>

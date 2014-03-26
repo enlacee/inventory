@@ -1,0 +1,220 @@
+<form id="frmReporte-buscacompras" name="frmReporte-buscacompras" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('buscacompras');
+    buscacompras={
+        id:'buscacompras',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+			
+			var btn_seleccionar=new Ext.Button({
+                id:buscacompras.id+'-btn_seleccionar',
+                text:'Seleccionar',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert("HOLA");
+                            buscacompras.fn_seleccionar();
+                        }
+                    }
+            });
+			            
+            var store_buscacompras_lista=new Ext.data.JsonStore({
+                url:'movimientos/compras-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['nombre_proveedor','descripcion_documento','mco_id','codigo','prv_id','tipo_ingreso','doc_id','doc_n','n_guia','cpa_id','mon_id','valor_compra','impuesto_igv','total_compra', 'fec_ven', 'fec_mov', 'moneda', 'prv_codigo', 'ruc', 'anulado', 'afecta', 'formato', 'observacion', 'proveedor', 'prv_ruc', 'condicion', 'saldo', 'dias', 'letras', 'fec_ori', 'tipo'],
+				remoteSort:true,				
+				sortInfo: {field:'fec_mov', direction:'desc'}
+            });            
+			
+			var pager = new Ext.PagingToolbar({
+                id:buscacompras.id+'_pager',
+                store:store_buscacompras_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(buscacompras.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(buscacompras.id+'-buscar').getValue();
+				params.modo = '1';
+				params.prv_id = vgId;
+			});
+			
+            var store_buscacompras_describe=new Ext.data.JsonStore({
+                url:'movimientos/compras-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_buscacompras_describe.load({params:{table:'movimientos_compras'}});
+            
+            var combo_buscacompras_describe=new Ext.form.ComboBox({
+                id:buscacompras.id+'-combo_describe',
+                store:store_buscacompras_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_buscacompras_lista = new Ext.grid.GridPanel({
+                id:buscacompras.id+'-grid_lista',
+                store: store_buscacompras_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mco_id',width:25},
+					{header:'Fecha',sortable :true,dataIndex:'fec_ven',width:70},
+                    {header:'Documento',sortable :true,dataIndex:'descripcion_documento',width:80},
+					{header:'Número',sortable :true,dataIndex:'doc_n',width:80, align:'center'},
+					{header:'Proveedor',sortable :true,dataIndex:'nombre_proveedor',width:200},
+                    {header:'Saldo',sortable :true,dataIndex:'saldo',width:80, align:'right'},
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:70, align:'left'},
+                ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+						//alert("DOBLE");
+						buscacompras.fn_seleccionar();
+                    },
+                }
+            });
+            
+			var panel = new Ext.Panel({  
+				layout: 'border',
+				tbar:[
+					{
+						xtype: 'toolbar',
+						dock: 'top',
+						items: [
+							'Buscar','-',combo_buscacompras_describe,'-',
+							new Ext.app.SearchField({
+								id:buscacompras.id+'-buscar', 
+								emptyText : 'Valor a buscar...',
+								enableKeyEvents: true,
+								store: store_buscacompras_lista,
+								hasSearch : false,
+								width: 120,
+								listeners:
+								{
+									specialkey:function(obj,e)
+									{
+										if(e.getKey() == 13)
+										{
+											store_buscacompras_lista.load({params:{campo:Ext.getCmp(buscacompras.id+'-combo_describe').getValue(),query:Ext.getCmp(buscacompras.id+'-buscar').getValue(),modo:'1', prv_id:vgId}});
+										}
+									}
+								}
+							}), '-',btn_seleccionar
+					
+						]
+					}],
+				bodyStyle:'height:auto;width:70%;margin:auto;',
+				border:false,
+				items: [
+					{  
+						region: 'west',
+						layout:'fit',
+						xtype: 'panel',
+						width:'96%',
+						autoScroll: true,  
+						border:false,
+						items:
+						[
+							grid_buscacompras_lista
+							
+						]
+					}
+					,
+					{
+						region:'center',
+						width:'0',
+						height:'0'
+					},
+					{  
+						region: 'east',
+						width:'0',
+						height:'0'
+					}
+		  		]  
+	    	});
+            
+        	new Ext.Window({
+				id:'win_buscacompras',
+				title:'Busqueda de Compras', 
+				width: 650,
+				height:450,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:true,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_buscacompras').close();}, resizable:true,
+                items:panel,
+                buttonAlign:'center',
+				listeners: {
+					'beforeclose': function(){ inicio.setActiveStyleSheet('gray'); }
+				}
+            });
+            
+            Ext.getCmp('win_buscacompras').show();
+            Ext.getCmp('win_buscacompras').center();
+            Ext.getCmp('win_buscacompras').toFront();
+			inicio.setActiveStyleSheet('blue');               
+            
+        },
+		fn_seleccionar:function(){
+			//alert("HOLAAA");
+			var rs=Ext.getCmp(buscacompras.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {                
+				//alert(vgVentana);
+				if(vgVentana=='canje'){
+					canje.fn_ubicacompra(rs.get('mco_id'), rs.get('descripcion_documento'),rs.get('doc_n'),rs.get('fec_ven'),rs.get('mon_id'),rs.get('moneda'), rs.get('saldo'), rs.get('tipo') );
+					Ext.getCmp('win_buscacompras').close();
+				}
+				
+				if(vgVentana=='compromisocompras'){
+					compromisocompras.fn_ubicacompra(rs.get('mco_id'), rs.get('descripcion_documento'),rs.get('doc_n'),rs.get('fec_ven'),rs.get('mon_id'),rs.get('moneda'), rs.get('saldo'), rs.get('tipo') );
+					Ext.getCmp('win_buscacompras').close();
+				}
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+			
+		},
+    }
+	Ext.onReady(buscacompras.init,buscacompras);
+</script>

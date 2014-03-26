@@ -1,0 +1,225 @@
+<form id="frmReporte-compras_excel" name="frmReporte-compras_excel" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+  <input type="hidden" name="txtfile" id="txtfile" />
+  <input type="hidden" name="tie_id" id="tie_id" />
+  <input type="hidden" name="fec_ini" id="fec_ini" />
+  <input type="hidden" name="fec_fin" id="fec_fin" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('rptcompras');
+    rptcompras={
+        id:'rptcompras',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_guardar=new Ext.Button({
+                id:rptcompras.id+'-btn_guardar',
+                text:'Exportar a Excel',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            rptcompras.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_mcdet=new Ext.Button({
+                id:rptcompras.id+'-btn_mcdet',
+                text:'Exportar a Excel (Detallado)',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            rptcompras.fn_emcdet();
+                        }
+                    }
+            });
+            
+            var store_tienda_lista=new Ext.data.JsonStore({
+                url:'maestros/tiendas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tie_id','nombre','descripcion','telefono','direccion','precio','suc_id','estado']
+            });
+
+            store_tienda_lista.load({params:{quitar:'SI'}});
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                xtype:'panel',
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:rptcompras.id+'-usr_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_tienda_lista,
+                                id:rptcompras.id+'-tie_id',
+                                fieldLabel:'Elegir Tienda a reportar',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'tie_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								value:(vgIdTienda==1 || vgIdTienda==2?3:vgIdTienda),
+								readOnly:(vgIdTienda==1 || vgIdTienda==2?false:true),
+								disabled:(vgIdTienda==1 || vgIdTienda==2?false:true)
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:127,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:rptcompras.id+'-fecha_ini',
+                                emptyText:'Fecha Inicio',
+                                width:120,
+                                fieldLabel:'Fecha',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                itemCls: 'label01',
+								allowBlank:false,
+								value:'<?=date('d/m/Y')?>',
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:127,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:rptcompras.id+'-fecha_fin',
+                                emptyText:'Fecha',
+                                width:120,
+                                fieldLabel:'Fecha Fin',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                itemCls: 'label01',
+								allowBlank:false,
+								value:'<?=date('d/m/Y')?>',
+                            }
+                        ]
+                    }
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_guardar,
+                            btn_mcdet,
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'form',
+                xtype: 'panel',
+                width:'100%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    panel_form
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_rptcompras',
+                                        title:'Reporte de Compras', 
+                                        width: 400,
+                                        height:200,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+										modal:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_rptcompras').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_rptcompras').show();
+                Ext.getCmp('win_rptcompras').center();
+                Ext.getCmp('win_rptcompras').toFront();
+                btn_guardar.setVisible(true);
+                btn_mcdet.setVisible(true);
+				Ext.getCmp(rptcompras.id+'-tie_id').setRawValue(vgTienda);
+        },
+        fn_guardar:function()
+        {
+         	document.getElementById('frmReporte-compras_excel').action="movimientos/compras-excel";
+			document.getElementById('txtpar1').value = Ext.getCmp(rptcompras.id+'-tie_id').getValue();
+			document.getElementById('txtpar2').value = Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_ini').getValue(),'Y-m-d');
+			document.getElementById('txtpar3').value = Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_fin').getValue(),'Y-m-d');
+			document.getElementById('txtfile').value = Ext.getCmp(rptcompras.id+'-tie_id').getValue() + '_' + Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_ini').getValue(),'Y_m_d') + '_' + Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_fin').getValue(),'Y_m_d');
+            document.getElementById('frmReporte-compras_excel').submit();
+        },
+        fn_emcdet:function(){
+            document.getElementById('frmReporte-compras_excel').action="movimientos/compras-detallado-excel";
+            document.getElementById('tie_id').value = Ext.getCmp(rptcompras.id+'-tie_id').getValue();
+            document.getElementById('fec_ini').value = Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_ini').getValue(),'Y-m-d');
+            document.getElementById('fec_fin').value = Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_fin').getValue(),'Y-m-d');
+            document.getElementById('txtfile').value = Ext.getCmp(rptcompras.id+'-tie_id').getValue() + '_' + Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_ini').getValue(),'Y_m_d') + '_' + Ext.util.Format.date(Ext.getCmp(rptcompras.id+'-fecha_fin').getValue(),'Y_m_d');
+            document.getElementById('frmReporte-compras_excel').submit();
+        }
+         
+    }
+    Ext.onReady(rptcompras.init,rptcompras);
+
+</script>

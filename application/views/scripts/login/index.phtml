@@ -1,0 +1,137 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>.:Login -> Inventario :.</title>
+        <link href="<?php echo PUBLIC_PATH;?>/images/favicon.ico" type="image/x-icon" rel="shortcut icon" />
+        <link rel="stylesheet" href="<?php echo PUBLIC_PATH;?>/css/login.css" type="text/css" media="screen" title="no title" charset="utf-8">
+        <style type="text/css">
+            .text-center{
+                text-align:center
+            }
+        </style>
+        <script type="text/javascript" src="<?php echo PUBLIC_PATH;?>/js/ext-3.4.0/ext-all.js"></script>
+        <script type="text/javascript" src="<?php echo PUBLIC_PATH;?>/js/ext-3.4.0/ext-core.js"></script>
+        <script type="text/javascript" src="<?php echo PUBLIC_PATH;?>/js/jquery/jquery-1.6.4.min.js"></script>
+        <script type="text/javascript">
+            Ext.ns('login');
+            login={
+                msn:'<?echo $_GET["msn"]; ?>',
+                init:function(){
+                    Ext.select('div[class=enviar]').hover(
+                        function(e,t){
+                            Ext.get(this).addClass('enviar_hover');
+                        },
+                        function(e,t){
+                            Ext.get(this).removeClass('enviar_hover');
+                        }
+                    );
+                    Ext.get('user').on('change',function(e, t, o){
+                        //login.getSistemas();
+                    });
+                    Ext.get('user').on('keypress',function(e, t, o){
+						
+                        if(e.getKey()==13){
+                            Ext.fly('password').focus();
+                        }
+                    });
+					/*Ext.get('user').on('blur',function(e,t){
+						alert("aqui");
+						Ext.Ajax.request({
+							url:'/login/obtener-usuario/',
+							params:
+							{
+								user:Ext.fly('user').getValue(),
+							},
+							success:function(response,options)
+							{         
+								alert(response.responseText);
+							}
+						});
+                    });*/
+                    Ext.get('acceder_boton').on('click',function(obj, e){
+                        login.acceder();
+                    });
+                    Ext.get('password').on('keypress',function(e, t, o){
+                        if(e.getKey()==13){
+                            login.acceder();
+                        }
+                    });
+                    if(login.msn>0){
+						if(login.msn==2){
+							Ext.get('error-sistema-login').update('Error: Usted no tiene permiso en este horario');	
+						}
+						Ext.get('error-sistema-login').slideIn();
+					}
+					Ext.fly('user').setValue(cookie_usuario);
+                    document.getElementById('password').focus();
+                },
+                acceder:function(){
+                    var nombre = Ext.get('user').getValue();
+					document.cookie = 'cookie_usuario=' + nombre;
+                    var clave = Ext.get('password').getValue();
+                    if(nombre!='' && clave!='')
+                        {
+                        document.formulario_login.submit();
+                        }
+                    else{
+                        if(nombre=='') Ext.get('error-user').slideIn();
+                        if(clave=='') Ext.get('error-password').slideIn();
+                    }
+                }
+            }
+            Ext.onReady(login.init,login);
+			document.getElementById('password').focus();
+        </script>
+    </head>
+    <body>
+        <div id="error-sistema-login"><b>Error: Usuario y/o contraseña no coinciden...</b></div>
+        <div id="pantalla_fondo_login"></div>
+            <div id="cuadro_login_01">
+            <div class="adentro">
+                <div class="adentro_texto">
+                    <form action="<?php echo PUBLIC_PATH;?>/login/validar-usuario/" id="formulario_login" name="formulario_login" method="POST" accept-charset="utf-8">
+                    <input type="hidden" name="estado" value="autentica" id="estado">
+                    Ingrese sus datos para acceder al sistema.
+                    <p>
+                        <label>Usuario:</label>
+                        <input type="text" name="user" class="campo" value="<?php echo $HTTP_COOKIE_VARS["cookie_usuario"].$_COOKIE["cookie_usuario"];?>" id="user" autocomplete="off">
+                        <div class="error" id="error-nombre">
+                            Ingrese su nombre de Usuario
+                        </div>
+                    </p>
+                    <p>
+                        <label>Contrase&ntilde;a:</label>
+                        <input type="password" name="password" class="campo" value="" id="password" autocomplete="off">
+                        <div class="error" id="error-password">
+                            Ingrese su password
+                        </div>
+                    </p>
+                    <p style="padding-left:50%; font-size:12px">
+                    	<?php 
+						function hora_local($zona_horaria = 0)
+						{
+							if ($zona_horaria > -12.1 and $zona_horaria < 12.1)
+							{
+								$hora_local = time() + ($zona_horaria * 3600);
+								return $hora_local;
+							}
+							return 'error';
+						}
+						
+						$otro = gmdate('d/m/Y H:i:s', hora_local(-5));
+						?>
+                        Fecha y Hora: <?=$otro?>
+                    </p>
+                    <p align="center">
+                        <div class="enviar" id="acceder_boton" ></div>
+                    </p>
+                    <p align="center">
+                        <small>Copyright - Inventario<br>
+                        Derechos Reservados</small>
+                    </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

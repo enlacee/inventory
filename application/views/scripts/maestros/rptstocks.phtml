@@ -1,0 +1,190 @@
+<form id="frm-rptstocks" name="frm-rptstocks" method="post" action="" target="_blank">
+  <input type="hidden" name="dato1" id="dato1" />
+  <input type="hidden" name="dato2" id="dato2" />
+  <input type="hidden" name="dato3" id="dato3" />
+</form>
+<script type="text/javascript">
+    Ext.ns('rptstocks');
+    rptstocks={
+        id:'rptstocks',
+		vwidth:570,
+		vheight:200,
+                init:function(){		
+                    Ext.QuickTips.init();
+                    var btn_rptstocks_guardar=new Ext.Button({
+                        id:rptstocks.id+'-btn_guardar',
+                        text:'Exportar a Excel',
+                        iconCls:'btn_save_log',
+                        listeners:
+                            {
+                                click:function()
+                                {
+                                    rptstocks.fn_exportarExcel();
+                                }
+                            }
+                    });
+			
+                    var store_documentos_lista=new Ext.data.JsonStore({
+                        url:'tablas/documentos-lista',
+                        root:'data',
+                        totalProperty:'total',
+                        fields:['doc_id','abrev','descripcion','ventas','compras','n_ventas','n_compras','nn_credito','nn_debito','str_serie_n_compras','str_n_compras','str_serie_n_ventas','str_n_ventas','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito']
+                    });
+            
+                    store_documentos_lista.load({params:{campo:'ventas',query:'SI',vacio:'TODOS'}});
+				
+			var form_rptstocks_mant = new Ext.form.FormPanel({
+				id:rptstocks.id+'-form_mant',
+				layout:'column',
+				frame:true,
+				url:'save-form.php',
+				defaultType: 'textfield',
+				title:'Datos de Reporte',
+				labelWidth: 75,
+				width: '100%',
+				bodyStyle:'height:auto;margin:auto;padding:10px;',
+				autoScroll: true,
+				items: [
+					{
+                                            xtype:'panel',labelWidth:100,layout:'form',
+                                            border:false,columnWidth:1,
+                                            items:
+                                            [
+                                                {
+                                                    xtype: "radiogroup",
+                                                    fieldLabel: "Tipo de Stock",
+                                                    id: rptstocks.id+'-tip_doc',
+                                                    defaults: {xtype: "radio",name: "tip_doc"},
+                                                    columns: [110, 110, 110, 48],
+                                                    items: [
+                                                        {
+                                                            id:rptstocks.id+'-tip_doc_v',
+                                                            boxLabel: "Stock Negativo",name: "tip_doc",
+                                                            inputValue: "N",
+                                                            checked:true
+                                                        },
+                                                        {
+                                                            id:rptstocks.id+'-tip_doc_c',
+                                                            boxLabel: "Stock M&iacute;nimo",name: "tip_doc",
+                                                            inputValue: "M"
+                                                        },
+                                                        {
+                                                            id:rptstocks.id+'-tip_doc_i',
+                                                            boxLabel: "Menor o Igual a",name: "tip_doc",
+                                                            inputValue: "S",
+                                                            listeners:
+                                                            {
+                                                                check:function(){
+                                                                    var disabled = (this.checked ? false : true);
+                                                                    $('#'+rptstocks.id+'-stock').attr('disabled', disabled);
+                                                                    if(this.checked)
+                                                                        $('#'+rptstocks.id+'-stock').focus();
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            xtype: "numberfield",
+                                                            id: rptstocks.id+'-stock',
+                                                            name: rptstocks.id+'-stock',
+                                                            disabled: true
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    xtype: "radiogroup",
+                                                    fieldLabel: "Orden",
+                                                    id: rptstocks.id+'-ord_doc',
+                                                    defaults: {xtype: "radio",name: "ord_doc"},
+                                                    columns: [110, 110],
+                                                    items: [
+                                                        {
+                                                            id:rptstocks.id+'-ord_doc_c',
+                                                            boxLabel: "Codigo1",name: "ord_doc",
+                                                            inputValue: "C"
+                                                        },
+                                                        {
+                                                            id:rptstocks.id+'-ord_doc_n',
+                                                            boxLabel: "Alfab&eacute;tico",name: "ord_doc",
+                                                            inputValue: "N",
+                                                            checked:true
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                       ]
+                                  });		
+			
+			tabGen = new Ext.TabPanel({
+				id:rptstocks.id+'-tab',
+				width: '100%',
+				region: 'center',
+				bodyStyle:'height:auto;margin:auto;padding:0px;',
+				activeTab: 0,
+				tabPosition: 'top',
+				items:[
+					form_rptstocks_mant
+				]
+			});			
+			
+			var panel = new Ext.Panel({
+				layout: 'border',
+				viewConfig: {
+                            forceFit:true
+                        },
+				width: '100%',
+				bodyStyle:'height:auto;margin:auto;padding:0px;',
+		
+				tbar: [
+					btn_rptstocks_guardar
+				],
+		
+				items: [
+				   tabGen
+				]
+			});
+			
+			var window = new Ext.Window({
+				id:'win_rptstocks',
+				title: 'Stock Negativos, M&iacute;nimos',				
+				width: rptstocks.vwidth,
+				height:rptstocks.vheight,
+				layout: 'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: true,
+				closable:true,
+				modal:true,
+				collapsible:false,
+				draggable:true,
+				shim:false,
+                                animCollapse:false,
+                                constrainHeader:true,
+				onEsc:function(){
+                                    //Ext.getCmp('win_rptstocks').close();
+                                }, resizable:true,
+				items: panel
+			});
+		
+			window.show();
+			window.center();
+                        window.toFront();
+			
+                        //Ext.getCmp(rptstocks.id+'-form_mant').setVisible(true);
+			//Ext.getCmp(rptstocks.id+'-doc_id').setRawValue('TODOS');
+
+        },
+		fn_exportarExcel:function()
+                {
+			$('#frm-rptstocks').attr('action', "maestros/rptstocks-excel");
+			$('#dato1').val($('input[name="tip_doc"]:checked').val());
+                        $('#dato2').val($('#'+rptstocks.id+'-stock').val());
+                        $('#dato3').val($('input[name="ord_doc"]:checked').val());
+			$('#frm-rptstocks').submit();
+		}
+    }
+    Ext.onReady(rptstocks.init,rptstocks);
+</script>

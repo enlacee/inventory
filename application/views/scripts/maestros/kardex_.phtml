@@ -1,0 +1,546 @@
+<form id="frmReporte-kardex" name="frmReporte-kardex" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    Ext.ns('kardex');
+    kardex={
+        id:'kardex',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+			
+			//Panel 1 >>>
+			
+			var txt_anio = new Ext.form.NumberField({   
+				id:kardex.id+'-txt_anio' , 
+                value:'2012',
+				width:80,
+				maxValue:2030,
+				minValue:1990,
+				listeners:{
+					specialkey:function(obj, e)
+					{
+						if (e.getKey() == 13)
+						{
+							if(obj.getValue()<0){
+								return;
+							}
+							if(Ext.getCmp(kardex.id+'-combo_monedas').getValue()==''){
+								return;
+							}
+							if(Ext.getCmp(kardex.id+'-mcd_id').getValue()=='0'){
+								return;
+							}
+							Ext.getCmp(kardex.id+'-grid_lista').store.removeAll();
+								Ext.getCmp(kardex.id+'-grid_lista').store.load({params:{anio:obj.getValue(), mon_id:Ext.getCmp(kardex.id+'-combo_monedas').getValue(),pro_id:Ext.getCmp(kardex.id+'-mcd_id').getValue(),start:0,limit:100}});
+						}
+					}
+				}
+			});
+			
+			var txt_producto = new Ext.form.TextField({   
+				id:kardex.id+'-txt_producto' , 
+                value:'',
+				width:150,
+				readOnly:true
+			});
+			
+			var btn_producto=new Ext.Button({
+                id:kardex.id+'-btn_producto',
+                text:'Producto...',
+                icon:'images/icon/ver.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							kardex.fn_producto();                            
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:kardex.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    kardex.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+			
+			var combo_monedas=new Ext.form.ComboBox({
+                id:kardex.id+'-combo_monedas',
+                store:store_monedas_lista,
+				width:120,
+				mode:'local',
+				valueField:'mon_id',
+				displayField:'nombre',
+				triggerAction:'all',
+				forceSelection:true,
+				allowBlank:false,
+				value:'1',
+				rawValue:'SOLES',
+				editable:false,
+				listeners:{
+					select:function(obj){
+						alert(obj.getValue());
+						if(Ext.getCmp(kardex.id+'-txt_anio').getValue()<0){
+							return;
+						}
+						if(obj.getValue()==''){
+							return;
+						}
+						if(Ext.getCmp(kardex.id+'-mcd_id').getValue()=='0'){
+							return;
+						}
+						//alert(Ext.getCmp(kardex.id+'-txt_anio').getValue() +  '-'+Ext.getCmp(kardex.id+'-mcd_id').getValue());
+						Ext.getCmp(kardex.id+'-grid_lista').store.removeAll();
+						Ext.getCmp(kardex.id+'-grid_lista').store.load({params:{anio:Ext.getCmp(kardex.id+'-txt_anio').getValue(), mon_id:obj.getValue(),pro_id:Ext.getCmp(kardex.id+'-mcd_id').getValue(),start:0,limit:100}});
+					}
+				}
+            });
+            
+            var store_kardex_lista=new Ext.data.JsonStore({
+                url:'maestros/kardex-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['fecha','operacion','tip_doc','nro_doc','entrada','salida','saldo','precio','razonsocial','observacion'],
+				remoteSort:true,
+				sortInfo: {field:'fecha', direction:'asc'}
+            });
+			
+			var pager = new Ext.PagingToolbar({
+                id:kardex.id+'_pager',
+                store:store_kardex_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.anio = Ext.getCmp(kardex.id+'-txt_anio').getValue();
+				params.mon_id = Ext.getCmp(kardex.id+'-combo_monedas').getValue();
+				params.pro_id = Ext.getCmp(kardex.id+'-mcd_id').getValue();
+			}); 
+            		            
+            var grid_kardex_lista = new Ext.grid.GridPanel({
+                id:kardex.id+'-grid_lista',
+                store: store_kardex_lista,
+				 clicksToEdit: 1,
+				 singleSelect:true,
+				 columnLines:true,
+				 monitorResize:true,
+				 enableKeyEvents: true,
+				 /*viewConfig:{forceFit:true},*/
+				 enableHdMenu:false,				 
+				 autoScroll:true,
+				 autoHeight:true,
+				 height:'100%',
+				 loadMask:true,
+				 bbar:pager,
+                columns:
+                [
+                    {header:'Fecha',sortable :true,dataIndex:'fecha',width:50},
+                    {header:'Operacion',sortable :true,dataIndex:'operacion',width:80},
+                    {header:'Tipo Doc',sortable :true,dataIndex:'tip_doc',width:60},
+                    {header:'Nro de Doc',sortable :true,dataIndex:'nro_doc',width:80},
+                    {header:'Ingreso',sortable :true,dataIndex:'entrada',width:70,align:'right'},
+                    {header:'Egreso',sortable :true,dataIndex:'salida',width:70,align:'right'},
+                    {header:'Saldo',sortable :true,dataIndex:'saldo',width:70,align:'right'},
+					{header:'Precio',sortable :true,dataIndex:'precio',width:70,align:'right'},
+                    {header:'Razon Social',sortable :true,dataIndex:'razonsocial',width:120},
+                    {header:'Observacion',sortable :true,dataIndex:'observacion',width:120},
+                    ]
+            });
+			//<<<
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+			tbar:[{
+				xtype: 'toolbar',
+				dock: 'top',
+				items: [{
+						  xtype:'hidden',
+						  id:kardex.id+'-mcd_id',
+						  value:'0'
+						}, txt_anio, combo_monedas, 'Buscar por producto :',txt_producto,btn_producto,btn_imprimir]
+			}],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            	{  
+					region: 'west',
+					layout:'form',
+					xtype: 'panel',
+					width:'100%',
+					height:'100%',
+					border:false,
+					items:
+                	[
+                    
+						grid_kardex_lista,
+						{
+							id:kardex.id+'-formulario',
+							xtype:'form',
+							frame: true,
+							layout:'column',
+							border:false,
+							items:
+							[
+								{
+									xtype:'panel',labelWidth:80,layout:'form',
+									border:false,columnWidth:.3,
+									items:
+									[        
+										{
+											xtype:'textfield',
+											id:kardex.id+'-saldo_anterior',
+											fieldLabel:'Saldo Anterior',
+											itemCls: 'label01',
+											style:{marginLeft:'0px',textAlign:'right'},
+											width:76,
+											readOnly:true
+										}
+									]
+								},
+								{
+									xtype:'panel',labelWidth:58,layout:'form',
+									border:false,columnWidth:.18,
+									items:
+									[        
+										{
+											xtype:'textfield',
+											id:kardex.id+'-total_ingresos',
+											fieldLabel:'Total Ingresos',
+											itemCls: 'label01',
+											style:{marginLeft:'0px',textAlign:'right'},
+											width:76,
+											readOnly:true
+										}
+									]
+								},
+								{
+									xtype:'panel',labelWidth:58,layout:'form',
+									border:false,columnWidth:.18,
+									items:
+									[        
+										{
+											xtype:'textfield',
+											id:kardex.id+'-total_egreso',
+											fieldLabel:'Total Egresos',
+											itemCls: 'label01',
+											style:{marginLeft:'0px',textAlign:'right'},
+											width:76,
+											readOnly:true
+										}
+									]
+								},
+								{
+									xtype:'panel',labelWidth:58,layout:'form',
+									border:false,columnWidth:.18,
+									items:
+									[        
+										{
+											xtype:'textfield',
+											id:kardex.id+'-nuevo_saldo',
+											fieldLabel:'Nuevo Saldo',
+											itemCls: 'label01',
+											style:{marginLeft:'0px',textAlign:'right'},
+											width:76,
+											readOnly:true
+										}
+									]
+								},
+							]
+						}
+                    
+                	]
+            	},
+            {
+            region:'center',
+            height:'0'
+            }
+      		]  
+    		});
+            
+			new Ext.Window({
+				id:'win_kardex',
+				title:'kardex por Producto',
+				width: 900,
+				height:600,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:true,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_kardex').close();}, resizable:true,
+				items:panel,
+				buttonAlign:'center'
+			});
+			
+			Ext.getCmp('win_kardex').show();
+			Ext.getCmp('win_kardex').center();
+			Ext.getCmp('win_kardex').toFront();		
+			Ext.getCmp(kardex.id+'-combo_monedas').setValue('1');
+			Ext.getCmp(kardex.id+'-combo_monedas').setRawValue('SOLES');
+        },
+				
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-kardex').action="maestros/kardex-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(kardex.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(kardex.id+'-buscar').getValue();
+            document.getElementById('frmReporte-kardex').submit();
+        },        
+		
+		fn_producto:function()
+        {
+			//Panel 2>>>
+			var btn_cerrar=new Ext.Button({
+                id:kardex.id+'-btn_cerrar',
+                text:'Cerrar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp('win_buscar_mercaderias_kardex').close();
+                        }
+                    }
+            });
+            
+            var store_mercaderias_lista_kardex=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mcd_id','codigo1','codigo2','codigo3','nombre','ume_id','mar_id','lin_id','precio_costo','precio_venta','stock_minimo','stock_actual', 'utilidad', 'desc1', 'desc2', 'desc3', 'desc4','activo', 'fam_id', 'ume_nom', 'precio_compra', 'ind_calculo','mar_nom', 'stock_pro'],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+
+            var store_mercaderias_describe=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });            
+            store_mercaderias_describe.load({params:{table:'maestros_mercaderias'}});
+			
+			var store_lineasbusq_lista=new Ext.data.JsonStore({
+                url:'tablas/lineas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['lin_id','nombre']
+            });
+			store_lineasbusq_lista.load();
+			var combo_lineas_busq=new Ext.form.ComboBox({
+                id:kardex.id+'-combo_lineas_busq',
+                store:store_lineasbusq_lista,
+                valueField:'lin_id',
+                displayField:'nombre',
+                triggerAction:'all',
+                emptyText:'Linea',
+                mode:'local',
+                width:200,
+                editable:false,
+				listeners:
+					{
+						select:function(cmb,record,index)
+						{
+							store_mercaderias_lista_kardex.load({params:{lin_id:cmb.getValue(),campo:Ext.getCmp(kardex.id+'-combo_describe_mercaderias').getValue(),query:Ext.getCmp(kardex.id+'-buscar_mercaderia').getValue(),start:0,limit:100}});
+						}
+					}
+            });
+            
+            var pagerProStock = new Ext.PagingToolbar({
+                id:kardex.id+'_pager_kardex',
+                store:store_mercaderias_lista_kardex,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerProStock.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(kardex.id+'-combo_describe_mercaderias').getValue();
+				params.query = Ext.getCmp(kardex.id+'-buscar_mercaderia').getValue();
+				params.lin_id = Ext.getCmp(kardex.id+'-combo_lineas_busq').getValue();
+			}); 
+            
+            var combo_mercaderias_describe=new Ext.form.ComboBox({
+                id:kardex.id+'-combo_describe_mercaderias',
+                store:store_mercaderias_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+			
+			var txt_busqueda_mercaderia = new Ext.app.SearchField({
+				id:kardex.id+'-buscar_mercaderia', 
+				emptyText : 'Valor a buscar...',
+				enableKeyEvents: true,
+				store: store_mercaderias_lista_kardex,
+				hasSearch : false,
+				width: 200,
+				listeners:
+				{
+					specialkey:function(obj, e)
+					{
+						if (e.getKey() == 13)
+						{
+						store_mercaderias_lista_kardex.load({params:{lin_id:Ext.getCmp(kardex.id+'-combo_lineas_busq').getValue(),campo:Ext.getCmp(kardex.id+'-combo_describe_mercaderias').getValue(),query:Ext.getCmp(kardex.id+'-buscar_mercaderia').getValue(),start:0,limit:100}});
+						}
+					}
+				}
+			});
+            
+            var grid_mercaderias_lista_kardex = new Ext.grid.GridPanel({
+                id:kardex.id+'-grid_mercaderias_lista_kardex',
+                store: store_mercaderias_lista_kardex,
+                singleSelect:true,
+                forceSelection:true,
+                columnLines:true,
+                monitorResize:true,
+                width:580,
+                stateful: true,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                bbar:pagerProStock,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mcd_id',width:25},
+                    {header:'Código 1',sortable :true,dataIndex:'codigo1',width:100},
+                    {header:'Código 2',sortable :true,dataIndex:'codigo2',width:100},
+                    {header:'Código 3',sortable :true,dataIndex:'codigo3',width:100,hidden:true},
+                    {header:'Descripción',sortable :true,dataIndex:'nombre',width:250},
+                    {header:'Marca',sortable :true,dataIndex:'mar_nom',width:100},
+					{header:'Unidad de Medida',sortable :true,dataIndex:'ume_nom',width:100,hidden:true},
+					{header:'Stock Actual',sortable :true,dataIndex:'stock_pro',width:100,align:'right'},
+                    {header:'Precio Compra',sortable :true,dataIndex:'precio_compra',width:100,align:'right',hidden:true},
+					{header:'Precio Costo',sortable :true,dataIndex:'precio_costo',width:100,align:'right'},
+                    {header:'Precio Venta',sortable :true,dataIndex:'precio_venta',width:100,align:'right'},
+                    {header:'Stock Mínimo',sortable :true,dataIndex:'stock_minimo',width:100,align:'right',hidden:true},
+					{header:'% Incremento',sortable :true,dataIndex:'utilidad',width:100,align:'right',hidden:true},
+					{header:'% Desc 1',sortable :true,dataIndex:'desc1',width:100,align:'right',hidden:true},
+					{header:'% Desc 2',sortable :true,dataIndex:'desc2',width:100,align:'right',hidden:true},
+					{header:'% Desc 3',sortable :true,dataIndex:'desc3',width:100,align:'right',hidden:true},
+					{header:'% Desc 4',sortable :true,dataIndex:'desc4',width:100,align:'right',hidden:true},
+                    {header:'Estado',sortable :true,dataIndex:'activo',width:100,hidden:true}
+                    ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        var rs=Ext.getCmp(kardex.id+'-grid_mercaderias_lista_kardex').getSelectionModel().getSelected();
+						
+						if(rs)
+			            {
+							Ext.getCmp(kardex.id+'-mcd_id').setValue(rs.get('mcd_id'));
+							Ext.getCmp(kardex.id+'-txt_producto').setValue(rs.get('nombre'));
+							Ext.getCmp('win_buscar_mercaderias_kardex').hide();
+							Ext.getCmp('win_buscar_mercaderias_kardex').close()
+							
+							if(Ext.getCmp(kardex.id+'-txt_anio').getValue()<0){
+								return;
+							}
+							if(Ext.getCmp(kardex.id+'-combo_monedas').getValue()==''){
+								return;
+							}
+							
+							Ext.getCmp(kardex.id+'-grid_lista').store.removeAll();
+							Ext.getCmp(kardex.id+'-grid_lista').store.load({params:{anio:Ext.getCmp(kardex.id+'-txt_anio').getValue(), mon_id:Ext.getCmp(kardex.id+'-combo_monedas').getValue(),pro_id:rs.get('mcd_id'),start:0,limit:100}});
+						}else{
+							alert('No ha seleccionado ningun producto');
+						}
+                    }
+                }
+            });            
+            
+            var panel2 = new Ext.Panel({  
+            	layout: 'border',
+				tbar:[
+					{
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [combo_lineas_busq,combo_mercaderias_describe,'-',txt_busqueda_mercaderia,'-',btn_cerrar]
+                    }
+				],
+            	bodyStyle:'height:auto;width:650px;margin:auto;',
+            	border:false,
+            	items: [
+            	{  
+					region: 'center',
+					layout:'fit',
+					xtype: 'panel',
+					width:'640',
+					autoScroll: true,  
+					border:false,
+					items:
+					[
+						grid_mercaderias_lista_kardex
+						
+					]
+				}
+				]  
+    		});
+				//<<<
+			new Ext.Window({
+				id:'win_buscar_mercaderias_kardex',
+				title:'Mercaderías',
+				width: 650,
+				height:450,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:false,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_buscar_mercaderias_kardex').close();},
+				resizable:true,
+				items:panel2,
+				buttonAlign:'center'
+			});
+			Ext.getCmp('win_buscar_mercaderias_kardex').show();
+			//Ext.getCmp(kardex.id+'-grid_mercaderias_lista_kardex').store.load({params:{start:0,limit:100}});
+        }
+    }
+    Ext.onReady(kardex.init,kardex);
+
+</script>

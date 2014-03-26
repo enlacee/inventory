@@ -1,0 +1,602 @@
+<form id="frmReporte-usuarios_perfil" name="frmReporte-usuarios_perfil" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('usuarios_perfil');
+    usuarios_perfil={
+        id:'usuarios_perfil',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:usuarios_perfil.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(usuarios_perfil.id+'-panel_derecho').expand();
+				Ext.getCmp(usuarios_perfil.id+'-panel_derecho').setVisible(true);
+                            usuarios_perfil.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:usuarios_perfil.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            usuarios_perfil.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:usuarios_perfil.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            usuarios_perfil.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:usuarios_perfil.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            usuarios_perfil.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:usuarios_perfil.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(usuarios_perfil.id+'-panel_derecho').collapse();
+							Ext.getCmp(usuarios_perfil.id+'-panel_derecho').setVisible(false);
+                            usuarios_perfil.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:usuarios_perfil.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							usuarios_perfil.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:usuarios_perfil.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    usuarios_perfil.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_usuarios_perfil_lista=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-perfil-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['usp_id','nombre','activo']
+            });
+            
+            store_usuarios_perfil_lista.load();
+			
+			 var store_usuarios_perfil_menu_lista=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-perfil-menu-lista',
+                root:'data',
+                groupField:'nombre_modulo',
+                totalProperty:'total',
+                fields:[{name:'nombre_modulo',type:'string'},{name:'nombre_menu',type:'string'}, {name: 'activo', type: 'bool'}, {name: 'agregar', type: 'bool'}, {name: 'editar', type: 'bool'}, {name: 'eliminar', type: 'bool'}, 'usm_id']
+            });
+			
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'usuarios_perfil'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:usuarios_perfil.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_usuarios_perfil_lista = new Ext.grid.GridPanel({
+                id:usuarios_perfil.id+'-grid_lista',
+                store: store_usuarios_perfil_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'usp_id',width:25},
+                    {header:'Nombres',sortable :true,dataIndex:'nombre',width:150},
+                    {header:'Activo',sortable :true,dataIndex:'activo',width:150,hidden:true},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+						if( Ext.getCmp(usuarios_perfil.id+'-btn_editar').isVisible()){
+							Ext.getCmp(usuarios_perfil.id+'-panel_derecho').expand();
+				Ext.getCmp(usuarios_perfil.id+'-panel_derecho').setVisible(true);
+							usuarios_perfil.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(usuarios_perfil.id+'-btn_editar').enable();
+						Ext.getCmp(usuarios_perfil.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+			
+			var grid_usuarios_perfil_menu_lista = new Ext.grid.EditorGridPanel({
+                id:usuarios_perfil.id+'-grid_menu_lista',
+                store: store_usuarios_perfil_menu_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:650,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Modulo',sortable :true,dataIndex:'nombre_modulo',width:200},
+                    {header:'Menu',sortable :true,dataIndex:'nombre_menu',width:200},
+                    {header:'Activo',sortable :true,width:60, xtype: 'checkcolumn', dataIndex: 'activo'},
+					{header:'Agregar',sortable :true,width:60, xtype: 'checkcolumn', dataIndex: 'agregar'},
+					{header:'Actualizar',sortable :true,width:60, xtype: 'checkcolumn', dataIndex: 'editar'},
+					{header:'Eliminar',sortable :true,width:60, xtype: 'checkcolumn', dataIndex: 'eliminar'}
+                ]
+                /*,
+                view : new Ext.grid.GroupingView({  
+                forceFit            : true,  
+                ShowGroupName       : true,  
+                enableNoGroup       : false,  
+                enableGropingMenu   : false,  
+                hideGroupedColumn   : false
+                })*/
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                xtype:'panel',
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:usuarios_perfil.id+'-usp_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:usuarios_perfil.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: usuarios_perfil.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:usuarios_perfil.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:usuarios_perfil.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            },
+            {
+                xtype:'panel',
+                layout:'column',
+                border:false,
+                items:
+                [
+                    grid_usuarios_perfil_menu_lista
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,'-',
+                    new Ext.app.SearchField({
+                        id:usuarios_perfil.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_usuarios_perfil_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+                                store_usuarios_perfil_lista.load({params:{campo:Ext.getCmp(usuarios_perfil.id+'-combo_describe').getValue(),query:Ext.getCmp(usuarios_perfil.id+'-buscar').getValue()}});
+                                }
+                            },
+                            keyup:function(obj,e)
+                            {
+                                store_usuarios_perfil_lista.load({params:{campo:Ext.getCmp(usuarios_perfil.id+'-combo_describe').getValue(),query:Ext.getCmp(usuarios_perfil.id+'-buscar').getValue()}});
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_usuarios_perfil_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:usuarios_perfil.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_usuarios_perfil',
+                                        title:'Perfiles de Usuario', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_usuarios_perfil').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_usuarios_perfil').show();
+                Ext.getCmp('win_usuarios_perfil').center();
+                Ext.getCmp('win_usuarios_perfil').toFront();
+                usuarios_perfil.fn_habilitar(false,0);
+        },
+        fn_nuevo:function()
+        {
+            Ext.getCmp(usuarios_perfil.id+'-usp_id').setValue('');
+            Ext.getCmp(usuarios_perfil.id+'-nombre').setValue('');            
+            Ext.getCmp(usuarios_perfil.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(usuarios_perfil.id+'-estado').items.items[1].setValue(false);
+            
+			Ext.getCmp(usuarios_perfil.id+'-grid_menu_lista').store.load({params:{usp_id:0}});	
+			
+            usuarios_perfil.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(usuarios_perfil.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(usuarios_perfil.id+'-panel_derecho').expand();
+				Ext.getCmp(usuarios_perfil.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(usuarios_perfil.id+'-usp_id').setValue(rs.get('usp_id'));
+                Ext.getCmp(usuarios_perfil.id+'-nombre').setValue(rs.get('nombre'));
+                Ext.getCmp(usuarios_perfil.id+'-estado').setValue(rs.get('activo'));
+				
+				Ext.getCmp(usuarios_perfil.id+'-grid_menu_lista').store.load({params:{usp_id:rs.get('usp_id')}});		
+                
+                usuarios_perfil.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(usuarios_perfil.fn_validar()){
+				var vData= new Array();
+				for(i=0;i<Ext.getCmp(usuarios_perfil.id+'-grid_menu_lista').store.getCount();i++)
+				{
+					//id'},{name:'cantidad'},{name:'codigo'},{name:'detalle'},{name:'precio'},{name:'descuento'},{name:'total
+					datos=Ext.getCmp(usuarios_perfil.id+'-grid_menu_lista').getStore(0).getAt(i);
+					vValore = datos.get('usm_id') + '.@.' + datos.get('activo') + '.@.' + datos.get('agregar') + '.@.' + datos.get('editar') + '.@.' + datos.get('eliminar');
+					vData[i] = vValore;
+				}
+				Ext.Msg.wait('Actualizando informacion de Perfil... por favor espere!');
+				Ext.Ajax.request({
+					url:'usuarios/usuarios-perfil-actualizar',
+					params:
+					{
+						usp_id:Ext.getCmp(usuarios_perfil.id+'-usp_id').getValue(),
+						nombre:Ext.getCmp(usuarios_perfil.id+'-nombre').getValue(),
+						estado:Ext.getCmp(usuarios_perfil.id+'-estado').getValue().getGroupValue(),
+						'vDetalle[]':vData
+					},
+					success:function(response,options)
+					{   
+						Ext.Msg.hide();          
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(usuarios_perfil.id+'-panel_derecho').collapse();
+							Ext.getCmp(usuarios_perfil.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							usuarios_perfil.fn_habilitar(false,0);
+							Ext.getCmp(usuarios_perfil.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(usuarios_perfil.id+res.campo).focus(true,10);							
+						}
+					}
+				});
+			}
+        },
+        fn_guardar:function()
+        {
+            if(usuarios_perfil.fn_validar()){
+				var vData= new Array();
+				for(i=0;i<Ext.getCmp(usuarios_perfil.id+'-grid_menu_lista').store.getCount();i++)
+				{
+					//id'},{name:'cantidad'},{name:'codigo'},{name:'detalle'},{name:'precio'},{name:'descuento'},{name:'total
+					datos=Ext.getCmp(usuarios_perfil.id+'-grid_menu_lista').getStore(0).getAt(i);
+					vValore = datos.get('usm_id') + '.@.' + datos.get('activo') + '.@.' + datos.get('agregar') + '.@.' + datos.get('editar') + '.@.' + datos.get('eliminar');
+					vData[i] = vValore;
+				}
+				Ext.Msg.wait('Guardando información de Perfil... por favor espere!');
+				Ext.Ajax.request({
+					url:'usuarios/usuarios-perfil-guardar',
+					params:
+					{
+						nombre:Ext.getCmp(usuarios_perfil.id+'-nombre').getValue(),
+						estado:Ext.getCmp(usuarios_perfil.id+'-estado').getValue().getGroupValue(),
+						'vDetalle[]':vData
+					},
+					success:function(response,options)
+					{     
+						Ext.Msg.hide();        
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(usuarios_perfil.id+'-panel_derecho').collapse();
+							Ext.getCmp(usuarios_perfil.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							usuarios_perfil.fn_habilitar(false,0);
+							Ext.getCmp(usuarios_perfil.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(usuarios_perfil.id+res.campo).focus(true,10);							
+						}	
+					}
+				});
+			}
+        },
+		fn_validar:function(){
+			if(Ext.getCmp(usuarios_perfil.id+'-nombre').getValue()=="")
+            {
+                og.msg("Error", "Ingrese el campo Nombres");
+                Ext.getCmp(usuarios_perfil.id+'-nombre').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(usuarios_perfil.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Tipo de Usuario :<br>' + rs.get('nombre'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando tipo de usuario... por favor espere!');
+						Ext.Ajax.request({
+							url:'usuarios/usuarios-perfil-eliminar',
+							params:
+							{
+								usp_id:rs.get('usp_id')
+							},
+							success:function(response,options)
+							{            
+								Ext.Msg.hide(); 
+								var res = Ext.decode(response.responseText);
+								og.msg("Ok","El registro se ha eliminado");
+								usuarios_perfil.fn_habilitar(false,0);
+								Ext.getCmp(usuarios_perfil.id+'-grid_lista').store.load();
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-usuarios_perfil').action="usuarios/usuarios-perfil-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(usuarios_perfil.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(usuarios_perfil.id+'-buscar').getValue();
+            document.getElementById('frmReporte-usuarios_perfil').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(usuarios_perfil.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(usuarios_perfil.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(usuarios_perfil.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(usuarios_perfil.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(usuarios_perfil.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(usuarios_perfil.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(usuarios_perfil.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(usuarios_perfil.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(usuarios_perfil.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(usuarios_perfil.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+			if(Ext.getCmp(usuarios_perfil.id+'-grid_lista').getSelectionModel().getSelected()){
+				Ext.getCmp(usuarios_perfil.id+'-btn_editar').enable();
+				Ext.getCmp(usuarios_perfil.id+'-btn_eliminar').enable();
+			}else{			
+				Ext.getCmp(usuarios_perfil.id+'-btn_editar').disable();
+				Ext.getCmp(usuarios_perfil.id+'-btn_eliminar').disable();
+			}
+			Ext.getCmp(usuarios_perfil.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(usuarios_perfil.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(usuarios_perfil.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(usuarios_perfil.init,usuarios_perfil);
+
+</script>

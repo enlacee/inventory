@@ -1,0 +1,1645 @@
+<form id="frmReporte-saldoventas" name="frmReporte-saldoventas" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('saldoventas');
+    saldoventas={
+        id:'saldoventas',
+        store_reader:new Ext.data.ArrayStore({  //step 1
+            id:saldoventas.id+'-reader_guiasasignadas',
+            fields:[{name:'itemid'},{name:'id'},{name:'cantidad'},{name:'codigo'},{name:'detalle'},{name:'marca'},{name:'precio'},{name:'descuento'},{name:'total'},{name:'ume_id'},{name:'valor_desc'},{name:'valor_bruto'}]  
+            }),
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:saldoventas.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(saldoventas.id+'-panel_derecho').expand();
+				Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(true);
+                            saldoventas.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:saldoventas.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            saldoventas.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:saldoventas.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            saldoventas.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:saldoventas.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            saldoventas.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:saldoventas.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(saldoventas.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(false);
+                            saldoventas.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_anular=new Ext.Button({
+                id:saldoventas.id+'-btn_anular',
+                text:'Anular',
+                icon:'images/icon/btn_cancelar.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							saldoventas.fn_anular();
+                        }
+                    }
+            });
+			
+			var btn_eliminar=new Ext.Button({
+                id:saldoventas.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							saldoventas.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:saldoventas.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    saldoventas.fn_imprimir();
+                                }
+                            });
+                        }
+                    }
+            });
+			
+            /*
+            var btn_imprimir_formato=new Ext.Button({
+                id:saldoventas.id+'-btn_imprimir_formato',
+                text:'Formato',
+                icon:'images/icon/preview_log.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Si desea imprimir Preimpreso (Click en SI), sino se imprimira formato general (Click en NO)', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    saldoventas.fn_imprimir_preimpreso();
+                                }else{
+									saldoventas.fn_imprimir_general();
+								}
+                            });
+                        }
+                    }
+            });
+            */
+			var btn_buscli=new Ext.Button({
+                id:saldoventas.id+'-btn_buscli',
+                text:'Buscar',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert(vgVentana);
+							vgVentana = 'saldoventas';
+                           inicio.getForm( 'maestros/buscaclientes','Busca Clientes')
+                        }
+                    }
+            });
+
+            var store_saldoventas_lista=new Ext.data.JsonStore({
+                url:'movimientos/saldoventas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['nombre_cliente','descripcion_documento','sve_id','codigo','cli_id','tipo_ingreso','doc_id','doc_n','n_guia','cpa_id','mon_id','valor_venta','impuesto_igv','total_venta', 'fec_ven', 'fec_mov', 'moneda', 'cli_codigo', 'ruc', 'anulado', 'afecta', 'formato', 'observacion', 'cliente', 'cli_ruc', 'saldo', 'saldo_inicial'],
+				remoteSort:true,				
+				sortInfo: {field:'fec_mov', direction:'desc'}
+            });
+            
+            
+			
+			var pager = new Ext.PagingToolbar({
+                id:saldoventas.id+'_pager',
+                store:store_saldoventas_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(saldoventas.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(saldoventas.id+'-buscar').getValue();
+			});
+			
+            
+            var vstore_clientes_lista=new Ext.data.JsonStore({
+                url:'maestros/clientes-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cli_id','nombre','ruc','codigo']
+            });
+            
+            //vstore_clientes_lista.load({params:{start:0,limit:100}});
+			
+			var pagerCmbCli = new Ext.PagingToolbar({
+                id:saldoventas.id+'_pagerCmbCli',
+                store:vstore_clientes_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerCmbCli.on('beforechange',function(bar,params){  
+				params.campo = 'nombre';
+				params.query = Ext.getCmp(saldoventas.id+'-cli_id').getValue();
+			});
+            
+            var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+
+            var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','abrev','descripcion','saldoventas','compras','n_saldoventas','n_compras','nn_credito','nn_debito','str_serie_n_compras','str_n_compras','str_serie_n_saldoventas','str_n_saldoventas','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito']
+            });
+            
+            store_documentos_lista.load({params:{campo:'ventas',query:'SI'}});
+            
+            var store_condiciones_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cpa_id','codigo','descripcion','dias','letras']
+            });
+            
+            store_condiciones_pago_lista.load();
+
+            var store_compras_describe=new Ext.data.JsonStore({
+                url:'movimientos/saldoventas-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_compras_describe.load({params:{table:'movimientos_saldoventas'}});
+            
+            var combo_compras_describe=new Ext.form.ComboBox({
+                id:saldoventas.id+'-combo_describe',
+                store:store_compras_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_saldoventas_lista = new Ext.grid.GridPanel({
+                id:saldoventas.id+'-grid_lista',
+                store: store_saldoventas_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'sve_id',width:25},
+                    {header:'Fecha Venc.',sortable :true,dataIndex:'fec_ven',width:90},                    
+                    {header:'Fecha Mov.',sortable :true,dataIndex:'fec_mov',width:80},
+                    {header:'Documento',sortable :true,dataIndex:'descripcion_documento',width:80},
+					{header:'Número',sortable :true,dataIndex:'doc_n',width:80, align:'center'},
+					{header:'Cliente',sortable :true,dataIndex:'nombre_cliente',width:200},
+                    {header:'Total Venta',sortable :true,dataIndex:'total_venta',width:80, align:'right'},
+					{header:'Saldo',sortable :true,dataIndex:'saldo_inicial',width:80, align:'right'},
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:70, align:'left'},
+					{header:'Anulado',sortable :true,dataIndex:'anulado',width:50, align:'left'}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        Ext.getCmp(saldoventas.id+'-panel_derecho').expand();
+				Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(true);
+                        saldoventas.fn_editar();
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(saldoventas.id+'-btn_editar').enable();
+						Ext.getCmp(saldoventas.id+'-btn_eliminar').enable();
+						Ext.getCmp(saldoventas.id+'-btn_anular').enable();
+                    }
+                }
+            });
+
+            
+            
+
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+				id:saldoventas.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+					{
+                      xtype:'hidden',
+                      id:saldoventas.id+'-sve_id',
+                      value:'0'
+                    },
+					{
+                      xtype:'hidden',
+                      id:saldoventas.id+'-tipo_ingreso',
+                      value:'1'
+                    },
+                    {
+                        xtype:'panel',labelWidth:150,layout:'form',
+                        border:false,columnWidth:.5,
+                        items:
+                        [        
+                            {
+                                xtype:'checkbox',
+                                hidden:true,
+                                id:saldoventas.id+'-clientes_varios',
+                                fieldLabel:'Indicar Clientes Varios',
+                                checked:false,
+								enableKeyEvents: true,
+								listeners:{
+									check:function(obj, even){
+										Ext.getCmp(saldoventas.id+'-cliente').setValue('CLIENTES VARIOS');
+										Ext.getCmp(saldoventas.id+'-cli_ruc').setDisabled(true);
+										Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(true);
+										Ext.getCmp(saldoventas.id+'-cli_ruc').setValue('');
+										Ext.getCmp(saldoventas.id+'-cli_id').setValue('');
+										Ext.getCmp(saldoventas.id+'-cli_codigo').setValue('');
+										if(obj.getValue()){
+											Ext.getCmp(saldoventas.id+'-btn_buscli').setVisible(false);
+											Ext.getCmp(saldoventas.id+'-cli_id').setVisible(false);
+											Ext.getCmp(saldoventas.id+'-cliente').setVisible(true);
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setDisabled(false);
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(false);
+											Ext.apply(Ext.getCmp(saldoventas.id+'-cli_id'),{allowBlank:true});
+											Ext.apply(Ext.getCmp(saldoventas.id+'-cliente'),{allowBlank:false});
+											//Ext.apply(Ext.getCmp(saldoventas.id+'-cli_ruc'),{allowBlank:false});
+										}else{
+											Ext.getCmp(saldoventas.id+'-btn_buscli').setVisible(true);
+											Ext.getCmp(saldoventas.id+'-cliente').setVisible(false);
+											Ext.getCmp(saldoventas.id+'-cli_id').setVisible(true);
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setDisabled(true);
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(true);
+											Ext.apply(Ext.getCmp(saldoventas.id+'-cli_id'),{allowBlank:false});
+											Ext.apply(Ext.getCmp(saldoventas.id+'-cliente'),{allowBlank:true});
+											//Ext.apply(Ext.getCmp(saldoventas.id+'-cli_ruc'),{allowBlank:true});
+										}
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.5,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-codigo',
+                                fieldLabel:'Operación',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								disabled:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:vstore_clientes_lista,
+                                id:saldoventas.id+'-cli_id',
+                                fieldLabel:'Cliente',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                valueField:'cli_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                allowBlank:false,
+                                pageSize:100,
+                                readOnly: true,
+                                /*listeners:
+                                    {
+                                        beforequery:function(obj){
+                                                vstore_clientes_lista.setBaseParam('campo', 'nombre');
+                                                vstore_clientes_lista.setBaseParam('query', Ext.getCmp(saldoventas.id+'-cli_id').getValue());						
+                                        },
+                                        specialkey:function(obj, e)
+                                        {
+                                                if (e.getKey() == 13)
+                                                {
+                                                        
+                                                        vstore_clientes_lista.load({params:{campo:'nombre',query:obj.getRawValue(),start:0,limit:100}});
+                                                        //}
+                                                }
+                                        },
+                                        select:function(cmb,record,index)
+                                        {
+                                            Ext.getCmp(saldoventas.id+'-cli_ruc').setValue(record.get('ruc'));
+                                            Ext.getCmp(saldoventas.id+'-cli_codigo').setValue(record.get('codigo'));
+                                        }
+                                    }*/
+                            } 
+                        ]
+                    },
+					{
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.07,
+                        items:
+                        [
+                            btn_buscli
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.40,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-cliente',
+                                fieldLabel:'Cliente',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:180,
+								hidden:true,
+								listeners : {
+									blur:function(obj){
+										vCadena = obj.getValue();
+										vCadena.replace(/^\s+|\s+$/g,"");
+										if(vCadena=="CLIENTES VARIOS"){
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setDisabled(true);
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(true);
+										}else{
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setDisabled(false);
+											Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(false);
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'RUC/DNI',
+                                id:saldoventas.id+'-cli_ruc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'Código',
+                                id:saldoventas.id+'-cli_codigo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:110,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_documentos_lista,
+                                id:saldoventas.id+'-doc_id',
+                                fieldLabel:'Documento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'doc_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+                				editable:false,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {				
+										Ext.Msg.wait('Obteniendo Nro de Documento... por favor espere!');
+										Ext.Ajax.request({
+											url:'tablas/numeracion-obtener-codigo',
+											params:
+											{
+												doc_id:record.get('doc_id'),
+												tipo:'2'
+											},
+											success:function(response,options)
+											{    
+												Ext.Msg.hide();    
+												var res = Ext.decode(response.responseText);
+												if(res.success){
+													var numero=(Math.pow(10,res.data[0]['lon'])).toString()+(Number(res.data[0]['nro'])+1);
+													var codigo=numero.substr(numero.length-res.data[0]['lon'],res.data[0]['lon'])
+													Ext.getCmp(saldoventas.id+'-numero').setValue(res.data[0]['serie']+ '-' + codigo);
+												}else{
+													Ext.getCmp(saldoventas.id+'-numero').setValue('');
+												}
+												
+											}
+										});
+										
+										/*if(record.get('doc_id')==1){
+											Ext.getCmp(saldoventas.id+'-afecta_almacen').setVisible(false);
+											Ext.getCmp(saldoventas.id+'-afecta_almacen').setValue(false);
+										}else{
+											Ext.getCmp(saldoventas.id+'-afecta_almacen').setVisible(true);
+											Ext.getCmp(saldoventas.id+'-afecta_almacen').setValue(true);
+										}*/											
+                                    }
+                                }
+                            } 
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.28,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-numero',
+                                fieldLabel:'Número',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vDoc = obj.getValue();
+										n=vDoc.indexOf("-");
+										
+										vSer = vDoc.substr(0,n);
+										vSer=(Math.pow(10,3)).toString()+(Number(vSer));
+										vSer=vSer.substr(vSer.length-3,3);
+										
+										vNro = vDoc.substr(n+1,vDoc.length - n);
+										var vNro=(Math.pow(10,7)).toString()+(Number(vNro));
+										var vNro=vNro.substr(vNro.length-7,7);
+										Ext.getCmp(saldoventas.id+'-numero').setValue(vSer+ '-' + vNro);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:saldoventas.id+'-fechaDocumento',                             
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha Documento',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                value:'<? echo date('d/m/Y');?>',
+                                style:'margin-left:7px'
+                            } 
+                                                               
+                        ]
+                    },                    
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:saldoventas.id+'-fecha',
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha Vencimiento',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                value:'<? echo date('d/m/Y');?>',
+                                style:'margin-left:7px'
+                            }
+                                                               
+                        ]
+                    },                    
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-guia_remision',
+                                fieldLabel:'Guía',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								hidden:true,
+								listeners : {
+									blur:function(obj){
+										vDoc = obj.getValue();
+										n=vDoc.indexOf("-");
+										
+										vSer = vDoc.substr(0,n);
+										vSer=(Math.pow(10,3)).toString()+(Number(vSer));
+										vSer=vSer.substr(vSer.length-3,3);
+										
+										vNro = vDoc.substr(n+1,vDoc.length - n);
+										var vNro=(Math.pow(10,7)).toString()+(Number(vNro));
+										var vNro=vNro.substr(vNro.length-7,7);
+										Ext.getCmp(saldoventas.id+'-guia_remision').setValue(vSer+ '-' + vNro);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_condiciones_pago_lista,
+                                id:saldoventas.id+'-cpa_id',
+                                fieldLabel:'Forma de Pago',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                mode:'local',
+                                valueField:'cpa_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								value:'2',
+                				editable:false,
+								readonly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.30,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_monedas_lista,
+                                id:saldoventas.id+'-mon_id',
+                                fieldLabel:'Moneda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                mode:'local',
+                                valueField:'mon_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								value:'<?=$sesion->se_moneda_almacen?>',
+                				editable:false,
+								listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+										if(cmb.getValue()=='1'){											
+											document.getElementById(Ext.getCmp(saldoventas.id+'-valor_bruto').label.id).innerHTML = 'Valor Bruto S/.';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-valor_descuento').label.id).innerHTML = 'Descuento S/.';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-valor_venta').label.id).innerHTML = 'Valor Compra S/.';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-impuesto_igv').label.id).innerHTML = 'Saldo S/.';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-total_venta').label.id).innerHTML = 'Total Compra S/.';
+											
+										}else{
+											document.getElementById(Ext.getCmp(saldoventas.id+'-valor_bruto').label.id).innerHTML = 'Valor Bruto $';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-valor_descuento').label.id).innerHTML = 'Descuento $';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-valor_venta').label.id).innerHTML = 'Valor Compra $';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-impuesto_igv').label.id).innerHTML = 'Saldo $';
+											document.getElementById(Ext.getCmp(saldoventas.id+'-total_venta').label.id).innerHTML = 'Total Compra $';
+										}										
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.28,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-tipocambio',
+                                fieldLabel:'Tipo de Cambio',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true,
+								value:vgTcC,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            /*{
+                                xtype:'datefield',
+                                id:saldoventas.id+'-fecha_vencimiento',
+                                emptyText:'Vencimiento',
+                                width:100,
+                                fieldLabel:'Vencimiento',
+                                format:'d/m/Y',
+                                altFormats : "d-m-Y",
+                                readOnly:true,
+                                style:'margin-left:7px'
+                            }*/
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:105,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+                                id:saldoventas.id+'-afecta_almacen',
+                                fieldLabel:'Afecta Almacén',
+                                checked:false,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [        
+                            {
+                                xtype:'checkbox',
+                                id:saldoventas.id+'-inc_igv',
+                                fieldLabel:'Incluye IGV',
+                                checked:true,
+								enableKeyEvents: true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.15,
+                        items:
+                        [        
+                            {
+                                xtype:'checkbox',
+                                id:saldoventas.id+'-jal_pro',
+                                fieldLabel:'Jalar Proforma',
+                                checked:false,
+								enableKeyEvents: true,
+								hidden:true,
+								listeners:{
+									check:function(obj, even){
+										if(obj.getValue()){
+											Ext.getCmp(saldoventas.id+'-proforma').enable();
+											Ext.getCmp(saldoventas.id+'-proforma').focus(true,0)
+										}else{
+											Ext.getCmp(saldoventas.id+'-proforma').disable();
+										}
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.2,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-valor_bruto',
+                                fieldLabel:'Valor Bruto S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.18,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-valor_descuento',
+                                fieldLabel:'Descuento S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:60,
+                                readOnly:true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.22,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-valor_venta',
+                                fieldLabel:'Valor Compra S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.22,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-total_venta',
+                                fieldLabel:'Total Documento S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.18,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldoventas.id+'-impuesto_igv',
+                                fieldLabel:'Saldo S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:60,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:0.6,
+                        items:
+                        [        
+                            {
+                                xtype:'textarea',
+                                hidden:true,
+                                id:saldoventas.id+'-observacion',
+                                fieldLabel:'Observacion',
+                                itemCls: 'label01',
+                                style:{marginLeft:'7px',textAlign:'left'},
+                                width:300,
+								height:40
+                            }
+                        ]
+                    }
+					,
+                    {
+                        xtype:'label',
+						id:saldoventas.id+'-msganulado',
+                        columnWidth:0.4,
+						text:'DOCUMENTO ANULADO',
+						style:{color:'#ff0000',fontSize:'20px'}
+                    }
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_anular,btn_eliminar,'-',btn_imprimir, '-',btn_cancelar,
+                            combo_compras_describe,'-',
+                    new Ext.app.SearchField({
+                        id:saldoventas.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_saldoventas_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj,e)
+                            {
+                                if(e.getKey() == 13)
+                                {
+                                    store_saldoventas_lista.load({params:{campo:Ext.getCmp(saldoventas.id+'-combo_describe').getValue(),query:Ext.getCmp(saldoventas.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_saldoventas_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:saldoventas.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_saldoventas',
+                                        title:'Saldos Iniciales por Cobrar', 
+                                        width: 900,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                        onEsc:function(){Ext.getCmp('win_saldoventas').close();}, resizable:true,
+                        items:panel,
+                        buttonAlign:'center'
+            });
+            
+            Ext.getCmp('win_saldoventas').show();
+            Ext.getCmp('win_saldoventas').center();
+            Ext.getCmp('win_saldoventas').toFront();
+            saldoventas.fn_habilitar(false,0);
+			//store_saldoventas_lista.load({params:{start:0,limit:100}});
+            Ext.getCmp(saldoventas.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(false);
+            
+            
+                
+            
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando código de Venta... por favor espere!');
+            Ext.Ajax.request({
+				url:'movimientos/saldoventas-codigo',
+				params:
+				{
+					table:'movimientos_saldoventas'
+				},
+				success:function(response,options)
+				{   
+				//alert(response.responseText);
+					Ext.Msg.hide();
+					var res = Ext.decode(response.responseText);						
+					var numero="000000000"+res.codigo;
+					//alert(numero);
+					var agencia= "000"+vgIdTienda;
+					//alert(agencia);
+					var codigo="SV"+agencia.substr(agencia.length-3,3)+numero.substr(numero.length-9,9)
+					Ext.getCmp(saldoventas.id+'-codigo').setValue(codigo);
+				}
+			});            
+            
+			Ext.getCmp(saldoventas.id+'-tipo_ingreso').setValue('1');
+			
+			Ext.getCmp(saldoventas.id+'-clientes_varios').setValue(false);
+			Ext.getCmp(saldoventas.id+'-cliente').setVisible(false);
+			Ext.getCmp(saldoventas.id+'-cli_id').setVisible(true);
+			Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(true);
+			Ext.apply(Ext.getCmp(saldoventas.id+'-cli_id'),{allowBlank:false});
+			Ext.apply(Ext.getCmp(saldoventas.id+'-cliente'),{allowBlank:true});
+			//Ext.apply(Ext.getCmp(saldoventas.id+'-cli_ruc'),{allowBlank:true});
+			
+			Ext.getCmp(saldoventas.id+'-cli_id').setValue('');
+			Ext.getCmp(saldoventas.id+'-cli_ruc').setValue('');
+			Ext.getCmp(saldoventas.id+'-cli_codigo').setValue('');
+			Ext.getCmp(saldoventas.id+'-doc_id').setValue('');
+			Ext.getCmp(saldoventas.id+'-numero').setValue('');
+			Ext.getCmp(saldoventas.id+'-guia_remision').setValue('');
+			Ext.getCmp(saldoventas.id+'-cpa_id').setValue('2');
+			Ext.getCmp(saldoventas.id+'-mon_id').setValue('1');
+			//Ext.getCmp(saldoventas.id+'-afecta_almacen').setValue(true);
+			Ext.getCmp(saldoventas.id+'-inc_igv').setValue(true);
+			Ext.getCmp(saldoventas.id+'-msganulado').setVisible(false);
+			Ext.getCmp(saldoventas.id+'-observacion').setValue('');
+			
+			saldoventas.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(saldoventas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				Ext.getCmp(saldoventas.id+'-panel_derecho').expand();
+				Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(true);
+				Ext.getCmp(saldoventas.id+'-msganulado').setVisible(false);
+                saldoventas.fn_habilitar(true,2);
+				if(rs.get('anulado')=='1'){
+					Ext.getCmp(saldoventas.id+'-btn_actualizar').setVisible(false);
+					Ext.getCmp(saldoventas.id+'-msganulado').setVisible(true);
+				}
+				
+				Ext.getCmp(saldoventas.id+'-sve_id').setValue(rs.get('sve_id'));
+								
+				var numero="000000000"+rs.get('codigo');
+				var agencia= "000"+vgIdTienda;
+				var codigo="SV"+agencia.substr(agencia.length-3,3)+numero.substr(numero.length-9,9)
+				Ext.getCmp(saldoventas.id+'-codigo').setValue(codigo);
+					
+				Ext.getCmp(saldoventas.id+'-tipo_ingreso').setValue(rs.get('tipo_ingreso'));
+				Ext.getCmp(saldoventas.id+'-fecha').setValue(rs.get('fec_ven'));
+				//alert(rs.get('cli_id'));
+				if(rs.get('cli_id')=='0'){
+					Ext.getCmp(saldoventas.id+'-clientes_varios').setValue(true);
+					//alert("Despues");
+					Ext.getCmp(saldoventas.id+'-cli_id').setVisible(false);
+					Ext.getCmp(saldoventas.id+'-cliente').setVisible(true);
+					Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(false);
+					Ext.apply(Ext.getCmp(saldoventas.id+'-cli_id'),{allowBlank:true});
+					Ext.apply(Ext.getCmp(saldoventas.id+'-cliente'),{allowBlank:false});
+					//Ext.apply(Ext.getCmp(saldoventas.id+'-cli_ruc'),{allowBlank:false});
+				}else{
+					Ext.getCmp(saldoventas.id+'-clientes_varios').setValue(false);
+					//alert("Despues");
+					Ext.getCmp(saldoventas.id+'-cliente').setVisible(false);
+					Ext.getCmp(saldoventas.id+'-cli_id').setVisible(true);
+					Ext.getCmp(saldoventas.id+'-cli_ruc').setReadOnly(true);
+					Ext.apply(Ext.getCmp(saldoventas.id+'-cli_id'),{allowBlank:false});
+					Ext.apply(Ext.getCmp(saldoventas.id+'-cliente'),{allowBlank:true});
+					//Ext.apply(Ext.getCmp(saldoventas.id+'-cli_ruc'),{allowBlank:true});
+				}
+				
+				Ext.getCmp(saldoventas.id+'-cliente').setValue(rs.get('nombre_cliente'));
+								
+				Ext.getCmp(saldoventas.id+'-cli_id').store.load({params:{campo:'cli_id',query:rs.get('cli_id'),start:0,limit:1}});
+				Ext.getCmp(saldoventas.id+'-cli_id').setValue(rs.get('cli_id'));
+				Ext.getCmp(saldoventas.id+'-cli_id').setRawValue(rs.get('nombre_cliente'));
+				
+				Ext.getCmp(saldoventas.id+'-cli_ruc').setValue(rs.get('ruc'));
+				Ext.getCmp(saldoventas.id+'-cli_codigo').setValue(rs.get('cli_codigo'));
+				Ext.getCmp(saldoventas.id+'-doc_id').setValue(rs.get('doc_id'));
+				Ext.getCmp(saldoventas.id+'-numero').setValue(rs.get('doc_n'));
+				Ext.getCmp(saldoventas.id+'-guia_remision').setValue(rs.get('n_guia'));
+				Ext.getCmp(saldoventas.id+'-cpa_id').setValue(rs.get('cpa_id'));
+				Ext.getCmp(saldoventas.id+'-mon_id').setValue(rs.get('mon_id'));
+				Ext.getCmp(saldoventas.id+'-observacion').setValue(rs.get('observacion'));
+				Ext.getCmp(saldoventas.id+'-total_venta').setValue(rs.get('total_venta'));
+				Ext.getCmp(saldoventas.id+'-impuesto_igv').setValue(rs.get('saldo_inicial'));
+				
+				/*if(rs.get('afecta')=='S'){
+					Ext.getCmp(saldoventas.id+'-afecta_almacen').setValue(true);
+				}else{
+					Ext.getCmp(saldoventas.id+'-afecta_almacen').setValue(false);
+				}
+				if(rs.get('formato')=='S'){
+					Ext.getCmp(saldoventas.id+'-inc_igv').setValue(true);
+				}else{
+					Ext.getCmp(saldoventas.id+'-inc_igv').setValue(false);	
+				}*/
+				
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			if(saldoventas.fn_validar()){
+				/*if(Ext.getCmp(saldoventas.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(saldoventas.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}*/
+				
+				if(Ext.getCmp(saldoventas.id+'-clientes_varios').getValue()){
+					vIdCli='0';
+					vCli = Ext.getCmp(saldoventas.id+'-cliente').getValue();
+					vRuc = Ext.getCmp(saldoventas.id+'-cli_ruc').getValue();
+				}else{
+					vIdCli = Ext.getCmp(saldoventas.id+'-cli_id').getValue();
+					vCli = Ext.getCmp(saldoventas.id+'-cli_id').getRawValue();
+					vRuc = Ext.getCmp(saldoventas.id+'-cli_ruc').getValue();
+				}
+				Ext.getCmp(saldoventas.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/saldoventas-actualizar',
+					params:{ 
+						sve_id:Ext.getCmp(saldoventas.id+'-sve_id').getValue(),
+						codigo:Ext.getCmp(saldoventas.id+'-codigo').getValue(),
+						cli_id:vIdCli,
+						cliente:vCli,
+						cli_ruc:vRuc,
+						tipo_ingreso:Ext.getCmp(saldoventas.id+'-tipo_ingreso').getValue(),
+						doc_id:Ext.getCmp(saldoventas.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldoventas.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldoventas.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldoventas.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldoventas.id+'-mon_id').getValue(),
+						valor_venta:Ext.getCmp(saldoventas.id+'-valor_venta').getValue(),
+						valor_bruto:Ext.getCmp(saldoventas.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(saldoventas.id+'-valor_descuento').getValue(),
+						saldo:Ext.getCmp(saldoventas.id+'-impuesto_igv').getValue(),
+						total_venta:Ext.getCmp(saldoventas.id+'-total_venta').getValue(),
+						fecha:Ext.getCmp(saldoventas.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldoventas.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(saldoventas.id+'-observacion').getValue(),
+						afecta_stock:'N',
+						formato:'S',
+						igv:18,
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(saldoventas.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldoventas.fn_habilitar(false,0);
+							Ext.getCmp(saldoventas.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldoventas.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(saldoventas.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(saldoventas.id+res.campo).focus(true,10);							
+					}
+				});				
+				/*Ext.Ajax.request({
+					url:'movimientos/saldoventas-guardar',
+					params:
+					{
+						sve_id:Ext.getCmp(saldoventas.id+'-sve_id').getValue(),
+						codigo:Ext.getCmp(saldoventas.id+'-codigo').getValue(),
+						cli_id:Ext.getCmp(saldoventas.id+'-cli_id').getValue(),
+						tipo_ingreso:Ext.getCmp(saldoventas.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(saldoventas.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldoventas.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldoventas.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldoventas.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldoventas.id+'-mon_id').getValue(),
+						valor_venta:Ext.getCmp(saldoventas.id+'-valor_venta').getValue(),
+						impuesto_igv:Ext.getCmp(saldoventas.id+'-impuesto_igv').getValue(),
+						total_venta:Ext.getCmp(saldoventas.id+'-total_venta').getValue(),
+						fecha:Ext.getCmp(saldoventas.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldoventas.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(saldoventas.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldoventas.fn_habilitar(false,0);
+							Ext.getCmp(saldoventas.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldoventas.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {	
+			if(saldoventas.fn_validar()){
+				/*if(Ext.getCmp(saldoventas.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(saldoventas.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}*/
+				
+				/*if(Ext.getCmp(saldoventas.id+'-clientes_varios').getValue()){
+					vIdCli='0';
+					vCli = Ext.getCmp(saldoventas.id+'-cliente').getValue();
+					vRuc = Ext.getCmp(saldoventas.id+'-cli_ruc').getValue();
+				}else{*/
+					vIdCli = Ext.getCmp(saldoventas.id+'-cli_id').getValue();
+					vCli = Ext.getCmp(saldoventas.id+'-cli_id').getRawValue();
+					vRuc = Ext.getCmp(saldoventas.id+'-cli_ruc').getValue();
+				//}
+				Ext.getCmp(saldoventas.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/saldoventas-guardar',
+					params:{ 
+						codigo:Ext.getCmp(saldoventas.id+'-codigo').getValue(),
+						cli_id:vIdCli,
+						cliente:vCli,
+						cli_ruc:vRuc,
+						tipo_ingreso:Ext.getCmp(saldoventas.id+'-tipo_ingreso').getValue(),
+						doc_id:Ext.getCmp(saldoventas.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldoventas.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldoventas.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldoventas.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldoventas.id+'-mon_id').getValue(),
+						valor_venta:Ext.getCmp(saldoventas.id+'-valor_venta').getValue(),
+						valor_bruto:Ext.getCmp(saldoventas.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(saldoventas.id+'-valor_descuento').getValue(),
+						saldo:Ext.getCmp(saldoventas.id+'-impuesto_igv').getValue(),
+						total_venta:Ext.getCmp(saldoventas.id+'-total_venta').getValue(),
+						fecha:Ext.getCmp(saldoventas.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldoventas.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(saldoventas.id+'-observacion').getValue(),
+						afecta_stock:'N',
+						formato:'S',
+						igv:18,
+					},
+					waitTitle: 'Guardando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){			
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(saldoventas.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldoventas.fn_habilitar(false,0);
+							Ext.getCmp(saldoventas.id+'-grid_lista').store.load();
+							
+							
+							if(Ext.getCmp(saldoventas.id+'-doc_id').getValue()==2 || Ext.getCmp(saldoventas.id+'-doc_id').getValue()==3){
+                                                                /*
+								Ext.Msg.confirm('Alerta', 'Desea imprimir Formato de Venta', function(btn) {
+									if(btn == 'yes')
+									{
+										saldoventas.fn_imprimir_formato(res.sve_id);
+									}
+								});
+                                                                */
+							}
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldoventas.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(saldoventas.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);		
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(saldoventas.id+res.campo).focus(true,10);							
+					}
+				});				
+
+				/*Ext.Ajax.request({
+					url:'movimientos/saldoventas-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(saldoventas.id+'-codigo').getValue(),
+						cli_id:Ext.getCmp(saldoventas.id+'-cli_id').getValue(),
+						tipo_ingreso:Ext.getCmp(saldoventas.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(saldoventas.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldoventas.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldoventas.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldoventas.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldoventas.id+'-mon_id').getValue(),
+						valor_venta:Ext.getCmp(saldoventas.id+'-valor_venta').getValue(),
+						impuesto_igv:Ext.getCmp(saldoventas.id+'-impuesto_igv').getValue(),
+						total_venta:Ext.getCmp(saldoventas.id+'-total_venta').getValue(),
+						fecha:Ext.getCmp(saldoventas.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldoventas.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(saldoventas.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldoventas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldoventas.fn_habilitar(false,0);
+							Ext.getCmp(saldoventas.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldoventas.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+		fn_anular:function()
+        {
+            var rs=Ext.getCmp(saldoventas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				if(rs.get('anulado')=='1'){
+					og.msg("Error","Documento ya esta anulado");
+					return;
+				}
+				Ext.Msg.confirm('Alerta', 'Desea Anular?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Anulando Venta... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/saldoventas-anular',
+							params:
+							{
+								sve_id:rs.get('sve_id')
+							},
+							success:function(response,options)
+							{           
+								Ext.Msg.hide();  
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha anulado");
+									saldoventas.fn_habilitar(false,0);
+									Ext.getCmp(saldoventas.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(saldoventas.id+'-combo_describe').getValue(),query:Ext.getCmp(saldoventas.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(saldoventas.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(saldoventas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando venta... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/saldoventas-eliminar',
+							params:
+							{
+								sve_id:rs.get('sve_id')
+							},
+							success:function(response,options)
+							{             			
+								Ext.Msg.hide();
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									saldoventas.fn_habilitar(false,0);
+									Ext.getCmp(saldoventas.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(saldoventas.id+'-combo_describe').getValue(),query:Ext.getCmp(saldoventas.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(saldoventas.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },	
+		fn_validar:function(){
+			if(Ext.getCmp(saldoventas.id+'-clientes_varios').getValue()){
+				if(!Ext.getCmp(saldoventas.id+'-cliente').isValid())
+				{
+					og.msg("Error", "Ingrese el Nombre del Cliente");
+					Ext.getCmp(saldoventas.id+'-cliente').focus(true,10);
+					return false;
+				}/*
+				if(!Ext.getCmp(saldoventas.id+'-cli_ruc').isValid())
+				{
+					og.msg("Error", "Ingrese el RUC/DNI del Cliente");
+					Ext.getCmp(saldoventas.id+'-cli_ruc').focus(true,10);
+					return false;
+				}*/
+			}else{
+				if(!Ext.getCmp(saldoventas.id+'-cli_id').isValid())
+				{
+					og.msg("Error", "Ingrese el Cliente");
+					Ext.getCmp(saldoventas.id+'-cli_id').focus(true,10);
+					return false;
+				}
+			}
+			//alert("Despueaz");
+			if(!Ext.getCmp(saldoventas.id+'-doc_id').isValid())
+            {
+                og.msg("Error", "Ingrese el Documento");
+                Ext.getCmp(saldoventas.id+'-doc_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(saldoventas.id+'-numero').isValid())
+            {
+                og.msg("Error", "Ingrese el Número del Documento");
+                Ext.getCmp(saldoventas.id+'-numero').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(saldoventas.id+'-cpa_id').isValid())
+            {
+                og.msg("Error", "Ingrese la Condición de Pago");
+                Ext.getCmp(saldoventas.id+'-cpa_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(saldoventas.id+'-mon_id').isValid())
+            {
+                og.msg("Error", "Ingrese la Moneda de Pago");
+                Ext.getCmp(saldoventas.id+'-mon_id').focus(true,10);
+                return false;
+            }
+            
+            if( Ext.getCmp(saldoventas.id+'-fecha').getValue() - Ext.getCmp(saldoventas.id+'-fechaDocumento').getValue() < 0)
+            {
+                 og.msg("Error", "Fecha de vencimiento no puede ser menor a fecha de Documento");
+                 return false;
+            }
+            
+            if( Ext.getCmp(saldoventas.id+'-total_venta').getValue() - Ext.getCmp(saldoventas.id+'-impuesto_igv').getValue() < 0)
+            {
+                 og.msg("Error", "Saldo Inicial no puede ser mayor al Total");
+                 Ext.getCmp(saldoventas.id+'-impuesto_igv').focus(true,10);                 
+                 return false;
+            }
+            
+            
+			return true;
+		},
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(saldoventas.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(saldoventas.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(saldoventas.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(saldoventas.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(saldoventas.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(saldoventas.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(saldoventas.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(saldoventas.id+'-btn_cancelar').setVisible(sw);
+			
+			Ext.getCmp(saldoventas.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(saldoventas.id+'-btn_eliminar').setVisible(!sw);
+			Ext.getCmp(saldoventas.id+'-btn_anular').setVisible(!sw);
+
+			Ext.getCmp(saldoventas.id+'-btn_editar').disable();
+			Ext.getCmp(saldoventas.id+'-btn_eliminar').disable();
+			Ext.getCmp(saldoventas.id+'-btn_anular').disable();
+			
+			Ext.getCmp(saldoventas.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(saldoventas.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(saldoventas.id+'-btn_imprimir').setVisible(!sw);			
+        },
+		
+		fn_ubicacliente:function(vcampo, vvalor, vcodigo, vnombre, vruc){
+			//alert('entra');
+			Ext.getCmp(saldoventas.id+'-cli_id').store.load({params:{campo:vcampo,query:vvalor,start:0,limit:100}});
+			Ext.getCmp(saldoventas.id+'-cli_id').setValue(vvalor);
+			Ext.getCmp(saldoventas.id+'-cli_id').setRawValue(vnombre);
+			Ext.getCmp(saldoventas.id+'-cli_ruc').setValue(vruc);
+			Ext.getCmp(saldoventas.id+'-cli_codigo').setValue(vcodigo);
+			
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-saldoventas').action="movimientos/saldoventas-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(saldoventas.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(saldoventas.id+'-buscar').getValue();
+			var activePage = Math.ceil((Ext.getCmp(saldoventas.id+'_pager').cursor + Ext.getCmp(saldoventas.id+'_pager').pageSize) / Ext.getCmp(saldoventas.id+'_pager').pageSize);
+			document.getElementById('txtpar3').value = activePage;
+            document.getElementById('frmReporte-saldoventas').submit();
+        },
+		
+		fn_imprimir_preimpreso:function()
+        {
+			var rs=Ext.getCmp(saldoventas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				document.getElementById('frmReporte-saldoventas').action="movimientos/formato-saldoventas";
+				document.getElementById('txtpar1').value = '1';
+				document.getElementById('txtpar2').value = rs.get('sve_id');
+				document.getElementById('frmReporte-saldoventas').submit();
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }			
+        },
+		
+		fn_imprimir_general:function()
+        {
+			var rs=Ext.getCmp(saldoventas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				document.getElementById('frmReporte-saldoventas').action="movimientos/formato-saldoventas";
+				document.getElementById('txtpar1').value = '2';
+				document.getElementById('txtpar2').value = rs.get('sve_id');
+				document.getElementById('frmReporte-saldoventas').submit();
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		fn_imprimir_formato:function(vid)
+        {
+				document.getElementById('frmReporte-saldoventas').action="movimientos/formato-saldoventas";
+				document.getElementById('txtpar1').value = '1';
+				document.getElementById('txtpar2').value = vid;
+				document.getElementById('frmReporte-saldoventas').submit();
+        },
+         
+    }
+    Ext.onReady(saldoventas.init,saldoventas);
+
+</script>

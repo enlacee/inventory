@@ -1,0 +1,1175 @@
+<form id="frmReporte-documentos" name="frmReporte-documentos" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('documentos');
+    documentos={
+        id:'documentos',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:documentos.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(documentos.id+'-panel_derecho').expand();
+				Ext.getCmp(documentos.id+'-panel_derecho').setVisible(true);
+                            documentos.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:documentos.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            documentos.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:documentos.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            documentos.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:documentos.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            documentos.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:documentos.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(documentos.id+'-panel_derecho').collapse();
+							Ext.getCmp(documentos.id+'-panel_derecho').setVisible(false);
+                            documentos.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:documentos.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							documentos.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:documentos.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    documentos.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+     
+            var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','abrev','descripcion','compras','ventas','n_compras','n_ventas','nn_credito','nn_debito','str_serie_n_compras','str_n_compras','str_serie_n_ventas','str_n_ventas','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito', 'codigo', 'altas', 'bajas', 'ncompras', 'nventas', 'tingresos', 'tsalidas']
+            });
+            
+            store_documentos_lista.load();
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'tablas/documentos-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'documentos'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:documentos.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_documentos_lista = new Ext.grid.GridPanel({
+                id:documentos.id+'-grid_lista',
+                store: store_documentos_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'doc_id',width:25},
+                    {header:'Codigo',sortable :true,dataIndex:'codigo',width:50},
+					{header:'Abreviación',sortable :true,dataIndex:'abrev',width:150},
+                    {header:'Descripción',sortable :true,dataIndex:'descripcion',width:150},
+                    {header:'Compra',sortable :true,dataIndex:'compras',width:100,hidden:true},
+                    {header:'Venta',sortable :true,dataIndex:'ventas',width:100,hidden:true},
+                    {header:'Nº Compras',sortable :true,dataIndex:'n_compras',width:100,hidden:true},
+                    {header:'Nº Ventas',sortable :true,dataIndex:'n_ventas',width:100,hidden:true},
+                    {header:'Nº Crédito',sortable :true,dataIndex:'nn_credito',width:100,hidden:true},
+                    {header:'Nº Débito',sortable :true,dataIndex:'nn_debito',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_serie_n_compras',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_n_compras',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_serie_n_ventas',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_n_ventas',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_serie_nn_credito',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_nn_credito',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_serie_nn_debito',width:100,hidden:true},
+                    {header:'',sortable :true,dataIndex:'str_nn_debito',width:100,hidden:true}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(documentos.id+'-btn_editar').isVisible()){
+							Ext.getCmp(documentos.id+'-panel_derecho').expand();
+				Ext.getCmp(documentos.id+'-panel_derecho').setVisible(true);
+                        	documentos.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(documentos.id+'-btn_editar').enable();
+						Ext.getCmp(documentos.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+                {
+                    id:documentos.id+'-formulario',
+					xtype:'form',
+					frame: true,
+                    layout:'column',
+                    border:false,
+                    items:
+                    [
+                        {
+                        xtype:'hidden',
+                        id:documentos.id+'-doc_id',
+                        value:'0'
+                        },
+						{
+							xtype:'panel',labelWidth:120,layout:'form',
+							border:false,columnWidth:1,
+							items:
+							[
+								{
+									xtype:'textfield',
+									id:documentos.id+'-codigo',
+									fieldLabel:'Código',
+									itemCls: 'label01',
+									style:'margin-left:7px',
+									width:80,
+									readOnly:true
+								}
+							]
+						},
+                        {
+                            xtype:'panel',labelWidth:100,layout:'form',
+                            border:false,columnWidth:1,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-abrev',
+                                    fieldLabel:'Abreviación',
+                                    itemCls: 'label01',
+									style: {textTransform: "uppercase", marginLeft:"7px"},
+                                    width:30,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '2', autocomplete: 'off'},
+									allowBlank:false
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:100,layout:'form',
+                            border:false,columnWidth:1,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-descripcion',
+                                    fieldLabel:'Descripción',
+                                    itemCls: 'label01',
+									style: {textTransform: "uppercase", marginLeft:"7px"},
+                                    width:350,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '200', autocomplete: 'off'},
+									allowBlank:false
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',layout:'form',columnWidth:1,
+                            border:false,
+                            items:
+                            [
+                                {
+                                    xtype:'fieldset',title:'Activar en:',labelWidth:100,layout:'form',
+                                    width:260,style:'padding:5px',
+                                    items:
+                                    [
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-compras',
+                                            fieldLabel:'Form. Compras',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        },
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-ventas',
+                                            fieldLabel:'Form. Ventas',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        },
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-altas',
+                                            fieldLabel:'Form. Altas',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        },
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-bajas',
+                                            fieldLabel:'Form. Bajas',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        },
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-ncompras',
+                                            fieldLabel:'NC. Compras',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        },
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-nventas',
+                                            fieldLabel:'NC. Ventas',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        },
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-tingresos',
+                                            fieldLabel:'TR. Ingresos',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        },
+                                        {
+                                            xtype:'checkbox',
+                                            id:documentos.id+'-tsalidas',
+                                            fieldLabel:'TR. Salidas',
+                                            itemCls: 'label01',
+                                            inputValue:'SI',
+                                            checked:true
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                        ,
+                        {
+                            xtype:'panel',labelWidth:100,layout:'form',
+                            border:false,columnWidth:.19,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-serie_n_compras',
+                                    fieldLabel:'Nº Compras',
+                                    itemCls: 'label01',
+                                    style:'margin-left:7px',
+                                    width:35,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '3', autocomplete: 'off'}
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',id:documentos.id+'-l4',
+                            border:false,columnWidth:.02,
+                            items:
+                            [
+                                {
+                                    xtype:'displayfield',
+                                    width:10,
+                                    value:'-'
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',
+                            border:false,columnWidth:.79,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-n_compras',
+                                    itemCls: 'label01',
+                                    width:100,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '7', autocomplete: 'off'}
+                                }   
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:100,layout:'form',
+                            border:false,columnWidth:.19,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-serie_n_ventas',
+                                    fieldLabel:'Nº Ventas',
+                                    itemCls: 'label01',
+                                    style:'margin-left:7px',
+                                    width:35,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '3', autocomplete: 'off'}
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',id:documentos.id+'-l1',
+                            border:false,columnWidth:.02,
+                            items:
+                            [
+                                {
+                                    xtype:'displayfield',
+                                    width:10,
+                                    value:'-'
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',
+                            border:false,columnWidth:.79,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-n_ventas',
+                                    itemCls: 'label01',
+                                    width:100,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '7', autocomplete: 'off'}
+                                }   
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:100,layout:'form',
+                            border:false,columnWidth:.19,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-serie_nn_credito',
+                                    fieldLabel:'Nº Crédito',
+                                    itemCls: 'label01',
+                                    style:'margin-left:7px',
+                                    width:35,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '3', autocomplete: 'off'}
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',id:documentos.id+'-l2',
+                            border:false,columnWidth:.02,
+                            items:
+                            [
+                                {
+                                    xtype:'displayfield',
+                                    width:10,
+                                    value:'-'
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',
+                            border:false,columnWidth:.79,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-nn_credito',
+                                    itemCls: 'label01',
+                                    width:100,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '7', autocomplete: 'off'}
+                                }   
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:100,layout:'form',
+                            border:false,columnWidth:.19,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-serie_nn_debito',
+                                    fieldLabel:'Nº Débito',
+                                    itemCls: 'label01',
+                                    style:'margin-left:7px',
+                                    width:35,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '3', autocomplete: 'off'}
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',id:documentos.id+'-l3',
+                            border:false,columnWidth:.02,
+                            items:
+                            [
+                                {
+                                    xtype:'displayfield',
+                                    width:10,
+                                    value:'-'
+                                }
+                            ]
+                        },
+                        {
+                            xtype:'panel',labelWidth:1,layout:'form',
+                            border:false,columnWidth:.79,
+                            items:
+                            [
+                                {
+                                    xtype:'textfield',
+                                    id:documentos.id+'-nn_debito',
+                                    itemCls: 'label01',
+                                    width:100,
+                                    autoCreate : {tag: 'input', type: 'text', maxlength: '7', autocomplete: 'off'}
+                                }   
+                            ]
+                        }
+                    ]
+                }
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,'-',
+                    new Ext.app.SearchField({
+                        id:documentos.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_documentos_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									documentos.fn_habilitar(false,0);
+                                store_documentos_lista.load({params:{campo:Ext.getCmp(documentos.id+'-combo_describe').getValue(),query:Ext.getCmp(documentos.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_documentos_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:documentos.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_documentos',
+                                        title:'Documentos', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_documentos').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_documentos').show();
+                Ext.getCmp('win_documentos').center();
+                Ext.getCmp('win_documentos').toFront();
+                documentos.fn_habilitar(false,0);
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando código de Documento... por favor espere!');
+			Ext.Ajax.request({
+				url:'tablas/documentos-codigo',
+				params:
+				{
+					table:'documentos'
+				},
+				success:function(response,options)
+				{       
+					Ext.Msg.hide();      
+					var res = Ext.decode(response.responseText);
+					var numero="00000"+res.AUTO_INCREMENT;
+					var codigo="DC"+numero.substr(numero.length-5,5)
+					Ext.getCmp(documentos.id+'-codigo').setValue(codigo);
+				}
+			});
+            Ext.getCmp(documentos.id+'-doc_id').setValue('');
+            Ext.getCmp(documentos.id+'-abrev').setValue('');
+            Ext.getCmp(documentos.id+'-descripcion').setValue('');
+            Ext.getCmp(documentos.id+'-compras').setValue('SI');
+            Ext.getCmp(documentos.id+'-ventas').setValue('SI');
+			Ext.getCmp(documentos.id+'-altas').setValue('SI');
+			Ext.getCmp(documentos.id+'-bajas').setValue('SI');
+			Ext.getCmp(documentos.id+'-ncompras').setValue('SI');
+			Ext.getCmp(documentos.id+'-nventas').setValue('SI');
+			Ext.getCmp(documentos.id+'-tingresos').setValue('SI');
+			Ext.getCmp(documentos.id+'-tsalidas').setValue('SI');
+			
+            Ext.getCmp(documentos.id+'-serie_n_compras').setValue('');			
+            Ext.getCmp(documentos.id+'-n_compras').setValue('');			
+            Ext.getCmp(documentos.id+'-serie_n_ventas').setValue('');			
+            Ext.getCmp(documentos.id+'-n_ventas').setValue('');			
+            Ext.getCmp(documentos.id+'-serie_nn_credito').setValue('');			
+            Ext.getCmp(documentos.id+'-nn_credito').setValue('');			
+            Ext.getCmp(documentos.id+'-serie_nn_debito').setValue('');			
+            Ext.getCmp(documentos.id+'-nn_debito').setValue('');
+			
+			
+			Ext.getCmp(documentos.id+'-serie_n_compras').setVisible(false);
+			Ext.getCmp(documentos.id+'-n_compras').setVisible(false);
+			Ext.getCmp(documentos.id+'-serie_n_ventas').setVisible(false);
+			Ext.getCmp(documentos.id+'-n_ventas').setVisible(false);
+			Ext.getCmp(documentos.id+'-serie_nn_credito').setVisible(false);
+			Ext.getCmp(documentos.id+'-nn_credito').setVisible(false);
+			Ext.getCmp(documentos.id+'-serie_nn_debito').setVisible(false);
+			Ext.getCmp(documentos.id+'-nn_debito').setVisible(false);
+			
+			Ext.getCmp(documentos.id+'-l1').setVisible(false);
+			Ext.getCmp(documentos.id+'-l2').setVisible(false);
+			Ext.getCmp(documentos.id+'-l3').setVisible(false);
+			Ext.getCmp(documentos.id+'-l4').setVisible(false);
+			
+            documentos.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(documentos.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(documentos.id+'-panel_derecho').expand();
+				Ext.getCmp(documentos.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(documentos.id+'-doc_id').setValue(rs.get('doc_id'));
+                Ext.getCmp(documentos.id+'-codigo').setValue(rs.get('codigo'));
+				Ext.getCmp(documentos.id+'-abrev').setValue(rs.get('abrev'));
+                Ext.getCmp(documentos.id+'-descripcion').setValue(rs.get('descripcion'));
+                Ext.getCmp(documentos.id+'-compras').setValue(rs.get('compras'));
+                Ext.getCmp(documentos.id+'-ventas').setValue(rs.get('ventas'));
+				Ext.getCmp(documentos.id+'-altas').setValue(rs.get('altas'));
+				Ext.getCmp(documentos.id+'-bajas').setValue(rs.get('bajas'));
+				Ext.getCmp(documentos.id+'-ncompras').setValue(rs.get('ncompras'));
+				Ext.getCmp(documentos.id+'-nventas').setValue(rs.get('nventas'));
+				
+				Ext.getCmp(documentos.id+'-tingresos').setValue(rs.get('tingresos'));
+				Ext.getCmp(documentos.id+'-tsalidas').setValue(rs.get('tsalidas'));
+				
+                Ext.getCmp(documentos.id+'-serie_n_compras').setValue(rs.get('str_serie_n_compras'));
+                Ext.getCmp(documentos.id+'-n_compras').setValue(rs.get('str_n_compras'));
+                Ext.getCmp(documentos.id+'-serie_n_ventas').setValue(rs.get('str_serie_n_ventas'));
+                Ext.getCmp(documentos.id+'-n_ventas').setValue(rs.get('str_n_ventas'));
+                Ext.getCmp(documentos.id+'-serie_nn_credito').setValue(rs.get('str_serie_nn_credito'));
+                Ext.getCmp(documentos.id+'-nn_credito').setValue(rs.get('str_nn_credito'));
+                Ext.getCmp(documentos.id+'-serie_nn_debito').setValue(rs.get('str_serie_nn_debito'));
+                Ext.getCmp(documentos.id+'-nn_debito').setValue(rs.get('str_nn_debito'));
+				
+				Ext.getCmp(documentos.id+'-serie_n_compras').setVisible(false);
+				Ext.getCmp(documentos.id+'-n_compras').setVisible(false);
+				Ext.getCmp(documentos.id+'-serie_n_ventas').setVisible(false);
+				Ext.getCmp(documentos.id+'-n_ventas').setVisible(false);
+				Ext.getCmp(documentos.id+'-serie_nn_credito').setVisible(false);
+				Ext.getCmp(documentos.id+'-nn_credito').setVisible(false);
+				Ext.getCmp(documentos.id+'-serie_nn_debito').setVisible(false);
+				Ext.getCmp(documentos.id+'-nn_debito').setVisible(false);
+				
+				Ext.getCmp(documentos.id+'-l1').setVisible(false);
+				Ext.getCmp(documentos.id+'-l2').setVisible(false);
+				Ext.getCmp(documentos.id+'-l3').setVisible(false);
+				Ext.getCmp(documentos.id+'-l4').setVisible(false);
+                
+                documentos.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            var vr_compras='';
+            var vr_ventas='';
+            if(documentos.fn_validar()){
+				if(Ext.getCmp(documentos.id+'-compras').checked==true)
+				{
+					vr_compras='SI';
+				}
+				else
+				{
+					vr_compras='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-ventas').checked==true)
+				{
+					vr_ventas='SI';
+				}
+				else
+				{
+					vr_ventas='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-altas').checked==true)
+				{
+					vr_altas='SI';
+				}
+				else
+				{
+					vr_altas='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-bajas').checked==true)
+				{
+					vr_bajas='SI';
+				}
+				else
+				{
+					vr_bajas='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-ncompras').checked==true)
+				{
+					vr_ncompras='SI';
+				}
+				else
+				{
+					vr_ncompras='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-nventas').checked==true)
+				{
+					vr_nventas='SI';
+				}
+				else
+				{
+					vr_nventas='NO';
+				}
+				
+				if(Ext.getCmp(documentos.id+'-tingresos').checked==true)
+				{
+					vr_tingresos='SI';
+				}
+				else
+				{
+					vr_tingresos='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-tsalidas').checked==true)
+				{
+					vr_tsalidas='SI';
+				}
+				else
+				{
+					vr_tsalidas='NO';
+				}
+				Ext.getCmp(documentos.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/documentos-actualizar',
+					params:{ 
+						doc_id:Ext.getCmp(documentos.id+'-doc_id').getValue(),
+						codigo:Ext.getCmp(documentos.id+'-codigo').getValue(),
+						abrev:Ext.getCmp(documentos.id+'-abrev').getValue().toUpperCase(),
+						descripcion:Ext.getCmp(documentos.id+'-descripcion').getValue().toUpperCase(),
+						compras:vr_compras,
+						ventas:vr_ventas,
+						altas:vr_altas,
+						bajas:vr_bajas,
+						ncompras:vr_ncompras,
+						nventas:vr_nventas,
+						tingresos:vr_tingresos,
+						tsalidas:vr_tsalidas,
+						n_compras:'',
+						n_ventas:'',
+						nn_credito:'',
+						nn_debito:''
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(documentos.id+'-panel_derecho').collapse();
+							Ext.getCmp(documentos.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							documentos.fn_habilitar(false,0);
+							Ext.getCmp(documentos.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(documentos.id+'-combo_describe').getValue(),query:Ext.getCmp(documentos.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(documentos.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(documentos.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(documentos.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/documentos-actualizar',
+					params:
+					{
+						doc_id:Ext.getCmp(documentos.id+'-doc_id').getValue(),
+						codigo:Ext.getCmp(documentos.id+'-codigo').getValue(),
+						abrev:Ext.getCmp(documentos.id+'-abrev').getValue().toUpperCase(),
+						descripcion:Ext.getCmp(documentos.id+'-descripcion').getValue().toUpperCase(),
+						compras:vr_compras,
+						ventas:vr_ventas,
+						n_compras:Ext.getCmp(documentos.id+'-serie_n_compras').getValue()+'-'+Ext.getCmp(documentos.id+'-n_compras').getValue(),
+						n_ventas:Ext.getCmp(documentos.id+'-serie_n_ventas').getValue()+'-'+Ext.getCmp(documentos.id+'-n_ventas').getValue(),
+						nn_credito:Ext.getCmp(documentos.id+'-serie_nn_credito').getValue()+'-'+Ext.getCmp(documentos.id+'-nn_credito').getValue(),
+						nn_debito:Ext.getCmp(documentos.id+'-serie_nn_debito').getValue()+'-'+Ext.getCmp(documentos.id+'-nn_debito').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(documentos.id+'-panel_derecho').collapse();
+							Ext.getCmp(documentos.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							documentos.fn_habilitar(false,0);
+							Ext.getCmp(documentos.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(documentos.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+			if(documentos.fn_validar()){
+				var vr_compras='';
+				var vr_ventas='';
+				
+				if(Ext.getCmp(documentos.id+'-compras').getValue()==true)
+				{
+					vr_compras='SI';
+				}
+				else
+				{
+					vr_compras='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-ventas').getValue()==true)
+				{
+					vr_ventas='SI';
+				}
+				else
+				{
+					vr_ventas='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-altas').checked==true)
+				{
+					vr_altas='SI';
+				}
+				else
+				{
+					vr_altas='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-bajas').checked==true)
+				{
+					vr_bajas='SI';
+				}
+				else
+				{
+					vr_bajas='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-ncompras').checked==true)
+				{
+					vr_ncompras='SI';
+				}
+				else
+				{
+					vr_ncompras='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-nventas').checked==true)
+				{
+					vr_nventas='SI';
+				}
+				else
+				{
+					vr_nventas='NO';
+				}
+				
+				if(Ext.getCmp(documentos.id+'-tingresos').checked==true)
+				{
+					vr_tingresos='SI';
+				}
+				else
+				{
+					vr_tingresos='NO';
+				}
+				if(Ext.getCmp(documentos.id+'-tsalidas').checked==true)
+				{
+					vr_tsalidas='SI';
+				}
+				else
+				{
+					vr_tsalidas='NO';
+				}
+				//alert("antes");
+				Ext.getCmp(documentos.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/documentos-guardar',
+					params:{ 
+						abrev:Ext.getCmp(documentos.id+'-abrev').getValue().toUpperCase(),
+						codigo:Ext.getCmp(documentos.id+'-codigo').getValue(),
+						descripcion:Ext.getCmp(documentos.id+'-descripcion').getValue().toUpperCase(),
+						compras:vr_compras,
+						ventas:vr_ventas,
+						altas:vr_altas,
+						bajas:vr_bajas,
+						ncompras:vr_ncompras,
+						nventas:vr_nventas,						
+						tingresos:vr_tingresos,
+						tsalidas:vr_tsalidas,
+						n_compras:'',
+						n_ventas:'',
+						nn_credito:'',
+						nn_debito:''
+					},
+					waitTitle: 'Registro de Documento',
+					waitMsg: 'Guardando Informacion..',
+					success: function(form, action){	
+						//alert(action.response.responseText);				
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(documentos.id+'-panel_derecho').collapse();
+							Ext.getCmp(documentos.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							documentos.fn_habilitar(false,0);
+							Ext.getCmp(documentos.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(documentos.id+'-combo_describe').getValue(),query:Ext.getCmp(documentos.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(documentos.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(documentos.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(documentos.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/documentos-guardar',
+					params:
+					{
+						abrev:Ext.getCmp(documentos.id+'-abrev').getValue().toUpperCase(),
+						codigo:Ext.getCmp(documentos.id+'-codigo').getValue(),
+						descripcion:Ext.getCmp(documentos.id+'-descripcion').getValue().toUpperCase(),
+						compras:vr_compras,
+						ventas:vr_ventas,
+						n_compras:Ext.getCmp(documentos.id+'-serie_n_compras').getValue()+'-'+Ext.getCmp(documentos.id+'-n_compras').getValue(),
+						n_ventas:Ext.getCmp(documentos.id+'-serie_n_ventas').getValue()+'-'+Ext.getCmp(documentos.id+'-n_ventas').getValue(),
+						nn_credito:Ext.getCmp(documentos.id+'-serie_nn_credito').getValue()+'-'+Ext.getCmp(documentos.id+'-nn_credito').getValue(),
+						nn_debito:Ext.getCmp(documentos.id+'-serie_nn_debito').getValue()+'-'+Ext.getCmp(documentos.id+'-nn_debito').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(documentos.id+'-panel_derecho').collapse();
+							Ext.getCmp(documentos.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							documentos.fn_habilitar(false,0);
+							Ext.getCmp(documentos.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(documentos.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(documentos.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Documento :<br>' + rs.get('descripcion'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando documento... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/documentos-eliminar',
+							params:
+							{
+								doc_id:rs.get('doc_id')
+							},
+							success:function(response,options)
+							{     
+								Ext.Msg.hide();        
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									documentos.fn_habilitar(false,0);
+									Ext.getCmp(documentos.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(documentos.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(documentos.id+'-abrev').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Abreviación");
+                Ext.getCmp(documentos.id+'-abrev').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-descripcion').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Descripción");
+                Ext.getCmp(documentos.id+'-descripcion').focus(true,10);
+                return false;
+            }
+            /*if(!Ext.getCmp(documentos.id+'-serie_n_compras').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Compras");
+                Ext.getCmp(documentos.id+'-serie_n_compras').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-n_compras').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Compras");
+                Ext.getCmp(documentos.id+'-n_compras').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-serie_n_ventas').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Ventas");
+                Ext.getCmp(documentos.id+'-serie_n_ventas').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-n_ventas').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Ventas");
+                Ext.getCmp(documentos.id+'-n_ventas').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-serie_nn_credito').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Crédito");
+                Ext.getCmp(documentos.id+'-serie_nn_credito').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-nn_credito').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Crédito");
+                Ext.getCmp(documentos.id+'-nn_credito').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-serie_nn_debito').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Débito");
+                Ext.getCmp(documentos.id+'-serie_nn_debito').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(documentos.id+'-nn_debito').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nº Débito");
+                Ext.getCmp(documentos.id+'-nn_debito').focus(true,10);
+                return false;
+            }*/
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-documentos').action="tablas/documentos-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(documentos.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(documentos.id+'-buscar').getValue();
+            document.getElementById('frmReporte-documentos').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(documentos.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(documentos.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(documentos.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(documentos.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(documentos.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(documentos.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(documentos.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(documentos.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(documentos.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(documentos.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(documentos.id+'-btn_editar').disable();
+			Ext.getCmp(documentos.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(documentos.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(documentos.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(documentos.id+'-btn_imprimir').setVisible(!sw);			
+        }
+    }
+    Ext.onReady(documentos.init,documentos);
+
+</script>

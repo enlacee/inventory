@@ -1,0 +1,1324 @@
+<form id="frmReporte-clientes" name="frmReporte-clientes" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+  <input type="hidden" name="txtpar4" id="txtpar4" />
+  <input type="hidden" name="txttitulo" id="txttitulo" />
+  <input type="hidden" name="txtfiltro" id="txtfiltro" />
+  <input type="hidden" name="txtsort" id="txtsort" />
+  <input type="hidden" name="txtdir" id="txtdir" />
+</form>
+<script type="text/javascript">	
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('clientes');
+	
+	
+
+    clientes={
+        id:'clientes',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:clientes.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(clientes.id+'-panel_derecho').expand();
+				Ext.getCmp(clientes.id+'-panel_derecho').setVisible(true);
+                            clientes.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:clientes.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            clientes.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:clientes.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            clientes.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:clientes.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            clientes.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:clientes.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(clientes.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+                            clientes.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:clientes.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							clientes.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:clientes.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    clientes.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var btn_excel=new Ext.Button({
+                id:clientes.id+'-btn_excel',
+                text:'Excel',
+                icon:'images/icon/excel.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea exportar listado de clientes?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    clientes.fn_imprimir_excel();
+									
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_dep_lista=new Ext.data.JsonStore({
+                url:'maestros/ubigeo-dep',
+                root:'data',
+                totalProperty:'total',
+                fields:['dep_id','nom_dep']
+            });
+            
+            store_dep_lista.load();
+            
+            var store_ciu_lista=new Ext.data.JsonStore({
+                url:'maestros/ubigeo-ciu',
+                root:'data',
+                totalProperty:'total',
+                fields:['dep_id','ciu_id','nom_ciu']
+            });
+            
+            var store_dis_lista=new Ext.data.JsonStore({
+                url:'maestros/ubigeo-dis',
+                root:'data',
+                totalProperty:'total',
+                fields:['dep_id','ciu_id','dis_id','nom_dis']
+            });
+			
+			var store_sit_lista=new Ext.data.JsonStore({
+                url:'tablas/situacion-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['sit_id','nombre']
+            });
+            
+            store_sit_lista.load();
+            
+            var store_clientes_lista=new Ext.data.JsonStore({
+                url:'maestros/clientes-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cli_id','codigo','nombre','ruc','telefono','email','web','dep_id','ciu_id','dis_id','direccion','observacion','activo','tip_per','tip_doc','rep_leg','sit_id', 'tipo_per', 'tipo_doc', 'nom_dep', 'nom_ciu', 'nom_dis'],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+            
+            var store_clientes_describe=new Ext.data.JsonStore({
+                data:[{campo: 'codigo', valor:'Por Codigo'},{campo: 'nombre', valor:'Nombre o Razon Social'},{campo: 'ruc', valor:'Por DNI o RUC'},{campo: 'telefono', valor:'Por telefono'},{campo: 'email', valor:'Por Email'}],
+                fields:['campo', 'valor']
+            });
+            
+            //store_clientes_describe.load({params:{table:'maestros_clientes'}});
+			
+			var pager = new Ext.PagingToolbar({
+                id:clientes.id+'_pager',
+                store:store_clientes_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(clientes.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(clientes.id+'-buscar').getValue();
+				params.tip_per = Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue();
+			}); 
+            
+            var combo_clientes_describe=new Ext.form.ComboBox({
+                id:clientes.id+'-combo_describe',
+                store:store_clientes_describe,
+                valueField:'campo',
+                displayField:'valor',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:150,
+                editable:false
+            });
+            
+            var grid_clientes_lista = new Ext.grid.GridPanel({
+                id:clientes.id+'-grid_lista',
+                store: store_clientes_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+				bbar:pager,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'cli_id',width:25},
+                    {header:'Código',sortable :true,dataIndex:'codigo',width:70},
+                    {header:'Nombres',sortable :true,dataIndex:'nombre',width:150},
+					{header:'Persona Natural/Juridica',sortable :true,dataIndex:'tipo_per',width:80},
+					{header:'Tip Doc',sortable :true,dataIndex:'tipo_doc',width:80},
+                    {header:'Nro Doc',sortable :true,dataIndex:'ruc',width:80},
+                    {header:'E-mail',sortable :true,dataIndex:'email',width:100,hidden:true},
+                    {header:'Web',sortable :true,dataIndex:'web',width:100,hidden:true},
+                    {header:'Departamento',sortable :true,dataIndex:'dep_id',width:100,hidden:true},
+                    {header:'Ciudad',sortable :true,dataIndex:'ciu_id',width:100,hidden:true},
+                    {header:'Distrito',sortable :true,dataIndex:'dis_id',width:100,hidden:true},
+                    {header:'Dirección',sortable :true,dataIndex:'direccion',width:100,hidden:true},					
+					{header:'Ubigeo',sortable :true,dataIndex:'nom_dep',width:100},
+					{header:'Teléfono',sortable :true,dataIndex:'telefono',width:100,hidden:true},
+					{header:'Representante legal',sortable :true,dataIndex:'rep_leg',width:100},
+					{header:'Sit Id',sortable :true,dataIndex:'sit_id',width:100,hidden:true},
+                    {header:'Observación',sortable :true,dataIndex:'observacion',width:100,hidden:true},
+                    {header:'Activo',sortable :true,dataIndex:'activo',width:100,hidden:true},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(clientes.id+'-btn_editar').isVisible()){
+							Ext.getCmp(clientes.id+'-panel_derecho').expand();
+				Ext.getCmp(clientes.id+'-panel_derecho').setVisible(true);
+                        	clientes.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(clientes.id+'-btn_editar').enable();
+						Ext.getCmp(clientes.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:clientes.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:clientes.id+'-cli_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:clientes.id+'-codigo',
+                                fieldLabel:'Código',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:clientes.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false,								
+								value:''/*,
+								regex: /^[a-zA-Z]{1}[a-zA-Z ]{0,}$/*/
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Persona",
+                                id: clientes.id+'-tip_per',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tip_per"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:clientes.id+'-tip_per_n',
+                                        boxLabel: "Natural",name: "tip_per",
+                                        inputValue: "N",
+                                        checked:true
+                                    },
+                                    {
+                                        id:clientes.id+'-tip_per_j',
+                                        boxLabel: "Juridica",name: "tip_per",
+                                        inputValue: "J"
+                                    }
+                                ],
+								listeners : {
+									change:function(){
+										if(Ext.getCmp(clientes.id+'-tip_per').getValue().getGroupValue()=='N'){
+											 Ext.getCmp(clientes.id+'-tip_doc_d').setVisible(true);
+											 Ext.getCmp(clientes.id+'-tip_doc_r').setVisible(true);
+											 Ext.getCmp(clientes.id+'-tip_doc').setValue("D");
+											 Ext.apply(Ext.getCmp(clientes.id+'-ruc'),{maxLength:8,minLength:8});
+											// Ext.getCmp(clientes.id+'-ruc').setValue('');
+											 Ext.getCmp(clientes.id+'-ruc').el.dom.maxLength = 8;
+										}else{
+											 Ext.getCmp(clientes.id+'-tip_doc_d').setVisible(false);
+											 Ext.getCmp(clientes.id+'-tip_doc_r').setVisible(true);					
+											 Ext.getCmp(clientes.id+'-tip_doc').setValue("R");					
+											 Ext.apply(Ext.getCmp(clientes.id+'-ruc'),{maxLength:11,minLength:11});
+											 //Ext.getCmp(clientes.id+'-ruc').setValue('');
+											 Ext.getCmp(clientes.id+'-ruc').el.dom.maxLength = 11;
+											  
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Documento",
+                                id: clientes.id+'-tip_doc',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tip_doc"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:clientes.id+'-tip_doc_d',
+                                        boxLabel: "DNI",name: "tip_doc",
+                                        inputValue: "D",
+                                        checked:true
+                                    },
+                                    {
+                                        id:clientes.id+'-tip_doc_r',
+                                        boxLabel: "RUC",name: "tip_doc",
+                                        inputValue: "R"
+                                    }
+                                ],
+								listeners : {
+									change:function(){
+										if(Ext.getCmp(clientes.id+'-tip_doc').getValue().getGroupValue()=='D'){
+											 //Ext.getCmp(clientes.id+'-tip_doc_d').setVisible(true);
+											 //Ext.getCmp(clientes.id+'-tip_doc_r').setVisible(true);
+											 //Ext.getCmp(clientes.id+'-tip_doc').setValue("D");
+											 Ext.apply(Ext.getCmp(clientes.id+'-ruc'),{maxLength:8,minLength:8});
+											// Ext.getCmp(clientes.id+'-ruc').setValue('');
+											 Ext.getCmp(clientes.id+'-ruc').el.dom.maxLength = 8;
+										}else{
+											 //Ext.getCmp(clientes.id+'-tip_doc_d').setVisible(false);
+											 //Ext.getCmp(clientes.id+'-tip_doc_r').setVisible(true);					
+											 //Ext.getCmp(clientes.id+'-tip_doc').setValue("R");					
+											 Ext.apply(Ext.getCmp(clientes.id+'-ruc'),{maxLength:11,minLength:11});
+											 //Ext.getCmp(clientes.id+'-ruc').setValue('');
+											 Ext.getCmp(clientes.id+'-ruc').el.dom.maxLength = 11;
+											  
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            new Ext.form.TextField({
+                                /*xtype:'textfield',*/
+                                id:clientes.id+'-ruc',
+                                fieldLabel:'Nro Doc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								maxLength:8,
+								minLength:8,
+                                width:100,
+								allowBlank:false,
+								decimalPrecision:0,
+								autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '8'}
+                            })
+                        ]
+						
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:clientes.id+'-telefono',
+                                fieldLabel:'Teléfono',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+								regex: /^\d*/i,
+								maskRe: /\d/i
+                            }
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:clientes.id+'-email',
+                                fieldLabel:'E-mail',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:200,
+								vtype:'email'
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:clientes.id+'-web',
+                                fieldLabel:'Web',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:350,
+								vtype:'url'
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_dep_lista,
+                                id:clientes.id+'-dep_id',
+                                fieldLabel:'Departamento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'dep_id',
+								allowBlank:false,
+                                displayField:'nom_dep',
+                                triggerAction:'all',
+                                forceSelection:true,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(clientes.id+'-ciu_id').setValue('');
+                                        Ext.getCmp(clientes.id+'-dis_id').setValue('');
+                                        store_ciu_lista.load({params:{dep_id:record.get('dep_id')}});
+                                        //store_dis_lista.load();
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_ciu_lista,
+                                id:clientes.id+'-ciu_id',
+                                fieldLabel:'Ciudad',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'ciu_id',
+                                displayField:'nom_ciu',
+								allowBlank:false,
+                                triggerAction:'all',
+                                forceSelection:true,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(clientes.id+'-dis_id').setValue('');
+                                        store_dis_lista.load({params:{dep_id:record.get('dep_id'),ciu_id:record.get('ciu_id')}});
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_dis_lista,
+                                id:clientes.id+'-dis_id',
+                                fieldLabel:'Distrito',
+								allowBlank:false,
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'dis_id',
+                                displayField:'nom_dis',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:clientes.id+'-direccion',
+                                fieldLabel:'Dirección',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:clientes.id+'-rep_leg',
+                                fieldLabel:'Representante Legal',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_sit_lista,
+                                id:clientes.id+'-sit_id',
+                                fieldLabel:'Situacion',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'sit_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textarea',
+                                id:clientes.id+'-observacion',
+                                fieldLabel:'Observación',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: clientes.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:clientes.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:clientes.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+			
+			
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,'-',btn_excel,
+							{
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Persona",
+                                id: clientes.id+'-tip_per_buscar',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tip_per_buscar"},
+                                columns: [60, 60,60],
+                                items: [
+                                    {
+                                        id:clientes.id+'-tip_per_buscar_t',
+                                        boxLabel: "Todos",name: "tip_per_buscar",
+                                        inputValue: "",
+										checked:true,
+										
+                                    },
+									{
+                                        id:clientes.id+'-tip_per_buscar_n',
+                                        boxLabel: "Natural",name: "tip_per_buscar",
+                                        inputValue: "N",
+                                    },
+                                    {
+                                        id:clientes.id+'-tip_per_buscar_j',
+                                        boxLabel: "Juridica",name: "tip_per_buscar",
+                                        inputValue: "J"
+                                    }
+                                ],
+								listeners : {
+									change:function(){
+		                                store_clientes_lista.load({params:{campo:Ext.getCmp(clientes.id+'-combo_describe').getValue(),query:Ext.getCmp(clientes.id+'-buscar').getValue(),tip_per:Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue()}});
+									}	
+								}
+                            },
+                            combo_clientes_describe,
+                    new Ext.app.SearchField({
+                        id:clientes.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_clientes_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									clientes.fn_habilitar(false,0);
+                                store_clientes_lista.load({params:{campo:Ext.getCmp(clientes.id+'-combo_describe').getValue(),query:obj.getValue(),tip_per:Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'98%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_clientes_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:clientes.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_clientes',
+                                        title:'Clientes', 
+                                        width: 1024,
+                                        height:550,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_clientes').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+			});
+				
+                Ext.getCmp('win_clientes').show();
+				
+                Ext.getCmp('win_clientes').center();
+                Ext.getCmp('win_clientes').toFront();
+				//store_clientes_lista.load({params:{start:0,limit:100}});
+                clientes.fn_habilitar(false,0);
+                Ext.getCmp(clientes.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando código de cliente... por favor espere!');
+            Ext.Ajax.request({
+                    url:'maestros/clientes-codigo',
+                    params:
+                    {
+                        table:'maestros_clientes'
+                    },
+                    success:function(response,options)
+                    {        
+						Ext.Msg.hide();     
+                        var res = Ext.decode(response.responseText);
+                        var numero="000000"+res.AUTO_INCREMENT;
+                        var codigo="CLI"+numero.substr(numero.length-6,6)
+                        Ext.getCmp(clientes.id+'-codigo').setValue(codigo);
+                    }
+                });
+            Ext.getCmp(clientes.id+'-cli_id').setValue('');
+            Ext.getCmp(clientes.id+'-codigo').setValue('');
+
+			Ext.getCmp(clientes.id+'-nombre').setValue('');
+			
+			Ext.getCmp(clientes.id+'-tip_per').items.items[0].setValue(true);
+            Ext.getCmp(clientes.id+'-tip_per').items.items[1].setValue(false);
+			
+			Ext.getCmp(clientes.id+'-tip_doc').items.items[0].setValue(true);
+            Ext.getCmp(clientes.id+'-tip_doc').items.items[1].setValue(false);
+			
+            Ext.getCmp(clientes.id+'-ruc').setValue('');
+            Ext.getCmp(clientes.id+'-telefono').setValue('');
+            Ext.getCmp(clientes.id+'-email').setValue('');
+            Ext.getCmp(clientes.id+'-web').setValue('');
+            Ext.getCmp(clientes.id+'-dep_id').setValue('');
+			Ext.getCmp(clientes.id+'-ciu_id').setValue('');
+            Ext.getCmp(clientes.id+'-ciu_id').store.load();
+			Ext.getCmp(clientes.id+'-dis_id').setValue('');
+            Ext.getCmp(clientes.id+'-dis_id').store.load();
+            Ext.getCmp(clientes.id+'-direccion').setValue('');
+            Ext.getCmp(clientes.id+'-observacion').setValue('');
+			Ext.getCmp(clientes.id+'-rep_leg').setValue('');
+			Ext.getCmp(clientes.id+'-sit_id').setValue('');
+			Ext.getCmp(clientes.id+'-sit_id').store.load();
+            
+            Ext.getCmp(clientes.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(clientes.id+'-estado').items.items[1].setValue(false);
+            
+            clientes.fn_habilitar(true,1);
+
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(clientes.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(clientes.id+'-panel_derecho').expand();
+				Ext.getCmp(clientes.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(clientes.id+'-cli_id').setValue(rs.get('cli_id'));
+                Ext.getCmp(clientes.id+'-codigo').setValue(rs.get('codigo'));
+                Ext.getCmp(clientes.id+'-nombre').setValue(rs.get('nombre'));
+				
+				Ext.getCmp(clientes.id+'-tip_per').setValue('N');
+				if(rs.get('tip_per')!=null){
+					Ext.getCmp(clientes.id+'-tip_per').setValue(rs.get('tip_per'));
+					if(rs.get('tip_per')=='N'){
+						 Ext.getCmp(clientes.id+'-tip_doc_d').setVisible(true);
+						 Ext.getCmp(clientes.id+'-tip_doc_r').setVisible(true);
+						 Ext.getCmp(clientes.id+'-tip_doc').setValue("D");
+						 Ext.apply(Ext.getCmp(clientes.id+'-ruc'),{maxLength:8,minLength:8});
+						 Ext.getCmp(clientes.id+'-ruc').el.dom.maxLength = 8;
+					}else{
+						 Ext.getCmp(clientes.id+'-tip_doc_d').setVisible(true);
+						 Ext.getCmp(clientes.id+'-tip_doc_r').setVisible(true);
+						 Ext.getCmp(clientes.id+'-tip_doc').setValue("D");
+						 Ext.apply(Ext.getCmp(clientes.id+'-ruc'),{maxLength:11,minLength:11});
+						 Ext.getCmp(clientes.id+'-ruc').el.dom.maxLength = 11;				
+					}
+				}				
+				if(rs.get('tip_doc')!=null){
+					Ext.getCmp(clientes.id+'-tip_doc').setValue(rs.get('tip_doc'));
+				}
+                Ext.getCmp(clientes.id+'-ruc').setValue(rs.get('ruc'));
+                Ext.getCmp(clientes.id+'-telefono').setValue(rs.get('telefono'));
+                Ext.getCmp(clientes.id+'-email').setValue(rs.get('email'));
+                Ext.getCmp(clientes.id+'-web').setValue(rs.get('web'));
+                Ext.getCmp(clientes.id+'-dep_id').setValue(rs.get('dep_id'));
+				
+				Ext.getCmp(clientes.id+'-ciu_id').setValue(rs.get('ciu_id'));
+				Ext.getCmp(clientes.id+'-ciu_id').setRawValue(rs.get('nom_ciu'));
+
+				Ext.getCmp(clientes.id+'-dis_id').setValue(rs.get('dis_id'));
+				Ext.getCmp(clientes.id+'-dis_id').setRawValue(rs.get('nom_dis'));
+				
+                Ext.getCmp(clientes.id+'-ciu_id').store.load({params:{dep_id:rs.get('dep_id')},
+                callback:function()
+                {
+                    Ext.getCmp(clientes.id+'-ciu_id').setValue(rs.get('ciu_id'));
+                    
+                    
+                }});
+				Ext.getCmp(clientes.id+'-dis_id').store.load({params:{dep_id:rs.get('dep_id'),ciu_id:rs.get('ciu_id')},
+					callback:function()
+					{
+						Ext.getCmp(clientes.id+'-dis_id').setValue(rs.get('dis_id'));
+					}}
+					);
+
+                Ext.getCmp(clientes.id+'-direccion').setValue(rs.get('direccion'));
+				Ext.getCmp(clientes.id+'-rep_leg').setValue(rs.get('rep_leg'));
+				Ext.getCmp(clientes.id+'-sit_id').setValue(rs.get('sit_id'));
+                Ext.getCmp(clientes.id+'-observacion').setValue(rs.get('observacion'));
+                Ext.getCmp(clientes.id+'-estado').setValue(rs.get('activo'));
+                clientes.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(clientes.fn_validar()){
+				Ext.getCmp(clientes.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/clientes-actualizar',
+					params:{ 
+						cli_id:Ext.getCmp(clientes.id+'-cli_id').getValue(),
+						codigo:Ext.getCmp(clientes.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(clientes.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(clientes.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(clientes.id+'-tip_doc').getValue().getGroupValue(),
+						
+						ruc:Ext.getCmp(clientes.id+'-ruc').getValue(),
+						telefono:Ext.getCmp(clientes.id+'-telefono').getValue(),
+						email:Ext.getCmp(clientes.id+'-email').getValue(),
+						web:Ext.getCmp(clientes.id+'-web').getValue(),
+						dep_id:Ext.getCmp(clientes.id+'-dep_id').getValue(),
+						ciu_id:Ext.getCmp(clientes.id+'-ciu_id').getValue(),
+						dis_id:Ext.getCmp(clientes.id+'-dis_id').getValue(),
+						direccion:Ext.getCmp(clientes.id+'-direccion').getValue().toUpperCase(),
+						rep_leg:Ext.getCmp(clientes.id+'-rep_leg').getValue().toUpperCase(),
+						sit_id:Ext.getCmp(clientes.id+'-sit_id').getValue(),
+						
+						observacion:Ext.getCmp(clientes.id+'-observacion').getValue(),
+						estado:Ext.getCmp(clientes.id+'-estado').getValue().getGroupValue()
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(clientes.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							clientes.fn_habilitar(false,0);
+							Ext.getCmp(clientes.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(clientes.id+'-combo_describe').getValue(),query:Ext.getCmp(clientes.id+'-buscar').getValue(),tip_per:Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(clientes.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(clientes.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(clientes.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Msg.wait('Actualizando... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/clientes-actualizar',
+					params:
+					{
+						cli_id:Ext.getCmp(clientes.id+'-cli_id').getValue(),
+						codigo:Ext.getCmp(clientes.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(clientes.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(clientes.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(clientes.id+'-tip_doc').getValue().getGroupValue(),
+						
+						ruc:Ext.getCmp(clientes.id+'-ruc').getValue(),
+						telefono:Ext.getCmp(clientes.id+'-telefono').getValue(),
+						email:Ext.getCmp(clientes.id+'-email').getValue(),
+						web:Ext.getCmp(clientes.id+'-web').getValue(),
+						dep_id:Ext.getCmp(clientes.id+'-dep_id').getValue(),
+						ciu_id:Ext.getCmp(clientes.id+'-ciu_id').getValue(),
+						dis_id:Ext.getCmp(clientes.id+'-dis_id').getValue(),
+						direccion:Ext.getCmp(clientes.id+'-direccion').getValue().toUpperCase(),
+						rep_leg:Ext.getCmp(clientes.id+'-rep_leg').getValue().toUpperCase(),
+						sit_id:Ext.getCmp(clientes.id+'-sit_id').getValue(),
+						
+						observacion:Ext.getCmp(clientes.id+'-observacion').getValue(),
+						estado:Ext.getCmp(clientes.id+'-estado').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{        
+						Ext.Msg.hide();     
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(clientes.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							clientes.fn_habilitar(false,0);
+							Ext.getCmp(clientes.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(clientes.id+res.campo).focus(true,10);							
+						}							
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {            
+			if(clientes.fn_validar()){
+				Ext.getCmp(clientes.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/clientes-guardar',
+					params:{ 
+						codigo:Ext.getCmp(clientes.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(clientes.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(clientes.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(clientes.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(clientes.id+'-ruc').getValue(),
+						telefono:Ext.getCmp(clientes.id+'-telefono').getValue(),
+						email:Ext.getCmp(clientes.id+'-email').getValue(),
+						web:Ext.getCmp(clientes.id+'-web').getValue(),
+						dep_id:Ext.getCmp(clientes.id+'-dep_id').getValue(),
+						ciu_id:Ext.getCmp(clientes.id+'-ciu_id').getValue(),
+						dis_id:Ext.getCmp(clientes.id+'-dis_id').getValue(),
+						direccion:Ext.getCmp(clientes.id+'-direccion').getValue().toUpperCase(),
+						rep_leg:Ext.getCmp(clientes.id+'-rep_leg').getValue().toUpperCase(),
+						sit_id:Ext.getCmp(clientes.id+'-sit_id').getValue(),
+						observacion:Ext.getCmp(clientes.id+'-observacion').getValue(),
+						estado:Ext.getCmp(clientes.id+'-estado').getValue().getGroupValue()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(clientes.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							clientes.fn_habilitar(false,0);
+							Ext.getCmp(clientes.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(clientes.id+'-combo_describe').getValue(),query:Ext.getCmp(clientes.id+'-buscar').getValue(),tip_per:Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(clientes.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(clientes.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(clientes.id+res.campo).focus(true,10);							
+					}
+				});
+				/*Ext.Msg.wait('Guardando información del Cliente... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/clientes-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(clientes.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(clientes.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(clientes.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(clientes.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(clientes.id+'-ruc').getValue(),
+						telefono:Ext.getCmp(clientes.id+'-telefono').getValue(),
+						email:Ext.getCmp(clientes.id+'-email').getValue(),
+						web:Ext.getCmp(clientes.id+'-web').getValue(),
+						dep_id:Ext.getCmp(clientes.id+'-dep_id').getValue(),
+						ciu_id:Ext.getCmp(clientes.id+'-ciu_id').getValue(),
+						dis_id:Ext.getCmp(clientes.id+'-dis_id').getValue(),
+						direccion:Ext.getCmp(clientes.id+'-direccion').getValue().toUpperCase(),
+						rep_leg:Ext.getCmp(clientes.id+'-rep_leg').getValue().toUpperCase(),
+						sit_id:Ext.getCmp(clientes.id+'-sit_id').getValue(),
+						observacion:Ext.getCmp(clientes.id+'-observacion').getValue(),
+						estado:Ext.getCmp(clientes.id+'-estado').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{             
+						Ext.Msg.hide();
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(clientes.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							clientes.fn_habilitar(false,0);
+							Ext.getCmp(clientes.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(clientes.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(clientes.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?', function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando Cliente... por favor espere!');
+						Ext.Ajax.request({
+							url:'maestros/clientes-eliminar',
+							params:
+							{
+								cli_id:rs.get('cli_id')
+							},
+							success:function(response,options)
+							{             
+								Ext.Msg.hide();
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									clientes.fn_habilitar(false,0);
+									Ext.getCmp(clientes.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(clientes.id+'-combo_describe').getValue(),query:Ext.getCmp(clientes.id+'-buscar').getValue(),tip_per:Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(clientes.id+res.campo).focus(true,10);							
+								}								
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			
+
+			
+            if(!Ext.getCmp(clientes.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(clientes.id+'-nombre').focus(true,10);
+                return false;
+            }
+			
+            if(!Ext.getCmp(clientes.id+'-ruc').isValid())
+            {
+                if(Ext.getCmp(clientes.id+'-tip_doc').getValue().getGroupValue()=='D'){
+	                og.msg("Error", "Ingrese el campo DNI");
+				}else{
+					og.msg("Error", "Ingrese el campo Ruc");
+				}
+                Ext.getCmp(clientes.id+'-ruc').focus(true,10);
+                return false;
+            }	
+			
+			/*if(!Ext.getCmp(clientes.id+'-email').isValid())
+            {
+                og.msg("Error", "E-mail no es valido");
+                Ext.getCmp(clientes.id+'-email').focus(true,10);
+                return false;
+            }*/
+			
+            if(!Ext.getCmp(clientes.id+'-dep_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Departamento");
+                Ext.getCmp(clientes.id+'-dep_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(clientes.id+'-ciu_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Ciudad");
+                Ext.getCmp(clientes.id+'-ciu_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(clientes.id+'-dis_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Distrito");
+                Ext.getCmp(clientes.id+'-dis_id').focus(true,10);
+                return false;
+            }
+           /* if(!Ext.getCmp(clientes.id+'-direccion').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Dirección");
+                Ext.getCmp(clientes.id+'-direccion').focus(true,10);
+                return false;
+            }*/
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-clientes').action="maestros/clientes-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(clientes.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(clientes.id+'-buscar').getValue();
+			
+			
+			var activePage = Math.ceil((Ext.getCmp(clientes.id+'_pager').cursor + Ext.getCmp(clientes.id+'_pager').pageSize) / Ext.getCmp(clientes.id+'_pager').pageSize);
+			document.getElementById('txtpar3').value = activePage;
+			vOrden = Ext.getCmp(clientes.id+'-grid_lista').store.getSortState( );
+			document.getElementById('txtpar4').value = Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue();
+			
+			document.getElementById('txttitulo').value = "Listado de Clientes";
+			vFiltro = '';
+			if(Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue()!=''){
+				if(Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue()=='N'){
+					vFiltro = "Tipo de Persona : Natural";
+				}else{
+					vFiltro = "Tipo de Persona : Juridica";	
+				}
+			}
+			if(Ext.getCmp(clientes.id+'-buscar').getValue()!=''){
+				if(vFiltro!=''){
+					vFiltro=vFiltro + ', ';
+				}
+				vFiltro = vFiltro + Ext.getCmp(clientes.id+'-combo_describe').getRawValue() + " : " + Ext.getCmp(clientes.id+'-buscar').getValue();
+			}
+			document.getElementById('txtfiltro').value = 'FILTRO : ' + vFiltro;
+			document.getElementById('txtsort').value = vOrden.field;
+			document.getElementById('txtdir').value = vOrden.direction;		
+            document.getElementById('frmReporte-clientes').submit();
+        },
+		fn_imprimir_excel:function()
+        {
+			document.getElementById('frmReporte-clientes').action="maestros/clientes-lista-excel";
+			document.getElementById('txtpar1').value = Ext.getCmp(clientes.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(clientes.id+'-buscar').getValue();
+			
+			
+			var activePage = Math.ceil((Ext.getCmp(clientes.id+'_pager').cursor + Ext.getCmp(clientes.id+'_pager').pageSize) / Ext.getCmp(clientes.id+'_pager').pageSize);
+			document.getElementById('txtpar3').value = activePage;
+			vOrden = Ext.getCmp(clientes.id+'-grid_lista').store.getSortState( );
+			document.getElementById('txtpar4').value = Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue();
+			
+			document.getElementById('txttitulo').value = "Listado de Clientes";
+			vFiltro = '';
+			if(Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue()!=''){
+				if(Ext.getCmp(clientes.id+'-tip_per_buscar').getValue().getGroupValue()=='N'){
+					vFiltro = "Tipo de Persona : Natural";
+				}else{
+					vFiltro = "Tipo de Persona : Juridica";	
+				}
+			}
+			if(Ext.getCmp(clientes.id+'-buscar').getValue()!=''){
+				if(vFiltro!=''){
+					vFiltro=vFiltro + ', ';
+				}
+				vFiltro = vFiltro + Ext.getCmp(clientes.id+'-combo_describe').getRawValue() + " : " + Ext.getCmp(clientes.id+'-buscar').getValue();
+			}
+			document.getElementById('txtfiltro').value = 'FILTRO : ' + vFiltro;
+			document.getElementById('txtsort').value = vOrden.field;
+			document.getElementById('txtdir').value = vOrden.direction;		
+            document.getElementById('frmReporte-clientes').submit();
+        },
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(clientes.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(clientes.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(clientes.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(clientes.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(clientes.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(clientes.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(clientes.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(clientes.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(clientes.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(clientes.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(clientes.id+'-btn_editar').disable();
+			Ext.getCmp(clientes.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(clientes.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(clientes.id+'-combo_describe').setVisible(!sw);
+			Ext.getCmp(clientes.id+'-tip_per_buscar').setVisible(!sw);
+			
+			Ext.getCmp(clientes.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(clientes.init,clientes);
+
+</script>

@@ -1,0 +1,152 @@
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('clave');
+    clave={
+        id:'clave',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_cambiar=new Ext.Button({
+                id:clave.id+'-btn_cambiar',
+                text:'Entrar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            clave.fn_cambiar();
+                        }
+                    }
+            });
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                xtype:'panel',
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:clave.id+'-usr_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_tienda_lista,
+                                id:clave.id+'-tie_id',
+                                fieldLabel:'Elegir Tienda a dirigirse',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'tie_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    }
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_cambiar,
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'form',
+                xtype: 'panel',
+                width:'100%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    panel_form
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_clave',
+                                        title:'clave de Tienda', 
+                                        width: 400,
+                                        height:100,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+										modal:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_clave').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_clave').show();
+                Ext.getCmp('win_clave').center();
+                Ext.getCmp('win_clave').toFront();
+                btn_cambiar.setVisible(true);
+        },
+        fn_cambiar:function()
+        {
+            
+            Ext.Msg.wait('Direccionando a tienda ' + Ext.getCmp(clave.id+'-tie_id').getRawValue() + ' ... por favor espere!');
+            Ext.Ajax.request({
+                url:'usuarios/cambiar-clave',
+                params:
+                {
+                    tie_id:Ext.getCmp(clave.id+'-tie_id').getValue(),
+					tienda:Ext.getCmp(clave.id+'-tie_id').getRawValue()
+                },
+                success:function(response,options)
+                {           
+					document.getElementById('miNombre').innerHTML="<?php echo VAR_NOMBRES." ".VAR_APELLIDOS.", ".VAR_CARGO.' - ';?>"+Ext.getCmp(clave.id+'-tie_id').getRawValue()+"<br><?php echo date('d/m/Y H:i:s'); ?><br>";
+					Ext.Msg.hide();  
+                    Ext.getCmp('win_clave').close();
+            }
+            });
+        }
+         
+    }
+    Ext.onReady(clave.init,clave);
+
+</script>

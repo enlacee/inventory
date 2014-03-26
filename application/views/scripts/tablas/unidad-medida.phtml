@@ -1,0 +1,630 @@
+<form id="frmReporte-unidad_medida" name="frmReporte-unidad_medida" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('unidad_medida');
+    unidad_medida={
+        id:'unidad_medida',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:unidad_medida.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(unidad_medida.id+'-panel_derecho').expand();
+				Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(true);
+                            unidad_medida.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:unidad_medida.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            unidad_medida.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:unidad_medida.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            unidad_medida.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:unidad_medida.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            unidad_medida.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:unidad_medida.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(unidad_medida.id+'-panel_derecho').collapse();
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(false);
+                            unidad_medida.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:unidad_medida.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							unidad_medida.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:unidad_medida.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    unidad_medida.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_unidad_medida_lista=new Ext.data.JsonStore({
+                url:'tablas/unidad-medida-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ume_id','codigo','abreviatura','descripcion']
+            });
+            
+            store_unidad_medida_lista.load();
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'unidad_medida'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:unidad_medida.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_unidad_medida_lista = new Ext.grid.GridPanel({
+                id:unidad_medida.id+'-grid_lista',
+                store: store_unidad_medida_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'ume_id',width:25},
+                    {header:'Código',sortable :true,dataIndex:'codigo',width:100},
+                    {header:'Abreviatura',sortable :true,dataIndex:'abreviatura',width:120},
+                    {header:'Descripción',sortable :true,dataIndex:'descripcion',width:200}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(unidad_medida.id+'-btn_editar').isVisible()){
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').expand();
+				Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(true);
+                        	unidad_medida.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(unidad_medida.id+'-btn_editar').enable();
+						Ext.getCmp(unidad_medida.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:unidad_medida.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:unidad_medida.id+'-ume_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:unidad_medida.id+'-codigo',
+                                fieldLabel:'Código',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:unidad_medida.id+'-abreviatura',
+                                fieldLabel:'Abreviatura',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:120,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:unidad_medida.id+'-descripcion',
+                                fieldLabel:'Descripción',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    }
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:10px;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'760',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_unidad_medida_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:unidad_medida.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'790',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_unidad_medida',
+                                        title:'Unidad de Medida', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:unidad_medida.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_unidad_medida_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									unidad_medida.fn_habilitar(false,0);
+                                store_unidad_medida_lista.load({params:{campo:Ext.getCmp(unidad_medida.id+'-combo_describe').getValue(),query:Ext.getCmp(unidad_medida.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+                                        onEsc:function(){Ext.getCmp('win_unidad_medida').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_unidad_medida').show();
+                Ext.getCmp('win_unidad_medida').center();
+                Ext.getCmp('win_unidad_medida').toFront();
+                unidad_medida.fn_habilitar(false,0);
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando código de unidad de medida... por favor espere!');
+            Ext.Ajax.request({
+                    url:'tablas/unidad-medida-codigo',
+                    params:
+                    {
+                        table:'unidad_medida'
+                    },
+                    success:function(response,options)
+                    {        
+						Ext.Msg.hide();     
+                        var res = Ext.decode(response.responseText);
+                        var numero="00"+res.AUTO_INCREMENT;
+                        var codigo="UM"+numero.substr(numero.length-2,2)
+                        Ext.getCmp(unidad_medida.id+'-codigo').setValue(codigo);
+                    }
+                });
+            Ext.getCmp(unidad_medida.id+'-ume_id').setValue('');
+            Ext.getCmp(unidad_medida.id+'-abreviatura').setValue('');
+            Ext.getCmp(unidad_medida.id+'-descripcion').setValue('');
+                       
+            unidad_medida.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(unidad_medida.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(unidad_medida.id+'-panel_derecho').expand();
+				Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(true);
+				Ext.getCmp(unidad_medida.id+'-ume_id').setValue(rs.get('ume_id'));
+                Ext.getCmp(unidad_medida.id+'-codigo').setValue(rs.get('codigo'));
+				Ext.getCmp(unidad_medida.id+'-abreviatura').setValue(rs.get('abreviatura'));
+				Ext.getCmp(unidad_medida.id+'-descripcion').setValue(rs.get('descripcion'));
+				
+                unidad_medida.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(unidad_medida.fn_validar()){
+				Ext.getCmp(unidad_medida.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/unidad-medida-actualizar',
+					params:{ 
+						ume_id:Ext.getCmp(unidad_medida.id+'-ume_id').getValue(),
+						codigo:Ext.getCmp(unidad_medida.id+'-codigo').getValue(),
+						abreviatura:Ext.getCmp(unidad_medida.id+'-abreviatura').getValue().toUpperCase(),
+						descripcion:Ext.getCmp(unidad_medida.id+'-descripcion').getValue().toUpperCase()
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').collapse();
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							unidad_medida.fn_habilitar(false,0);
+							Ext.getCmp(unidad_medida.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(unidad_medida.id+'-combo_describe').getValue(),query:Ext.getCmp(unidad_medida.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(unidad_medida.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(unidad_medida.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(unidad_medida.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/unidad-medida-actualizar',
+					params:
+					{
+						ume_id:Ext.getCmp(unidad_medida.id+'-ume_id').getValue(),
+						codigo:Ext.getCmp(unidad_medida.id+'-codigo').getValue(),
+						abreviatura:Ext.getCmp(unidad_medida.id+'-abreviatura').getValue().toUpperCase(),
+						descripcion:Ext.getCmp(unidad_medida.id+'-descripcion').getValue().toUpperCase()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').collapse();
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							unidad_medida.fn_habilitar(false,0);
+							Ext.getCmp(unidad_medida.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(unidad_medida.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+            if(unidad_medida.fn_validar()){
+				Ext.getCmp(unidad_medida.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/unidad-medida-guardar',
+					params:{ 
+						ume_id:Ext.getCmp(unidad_medida.id+'-ume_id').getValue(),
+						codigo:Ext.getCmp(unidad_medida.id+'-codigo').getValue(),
+						abreviatura:Ext.getCmp(unidad_medida.id+'-abreviatura').getValue().toUpperCase(),
+						descripcion:Ext.getCmp(unidad_medida.id+'-descripcion').getValue().toUpperCase()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').collapse();
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							unidad_medida.fn_habilitar(false,0);
+							Ext.getCmp(unidad_medida.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(unidad_medida.id+'-combo_describe').getValue(),query:Ext.getCmp(unidad_medida.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(unidad_medida.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(unidad_medida.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(unidad_medida.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/unidad-medida-guardar',
+					params:
+					{
+						ume_id:Ext.getCmp(unidad_medida.id+'-ume_id').getValue(),
+						codigo:Ext.getCmp(unidad_medida.id+'-codigo').getValue(),
+						abreviatura:Ext.getCmp(unidad_medida.id+'-abreviatura').getValue().toUpperCase(),
+						descripcion:Ext.getCmp(unidad_medida.id+'-descripcion').getValue().toUpperCase()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').collapse();
+							Ext.getCmp(unidad_medida.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							unidad_medida.fn_habilitar(false,0);
+							Ext.getCmp(unidad_medida.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(unidad_medida.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(unidad_medida.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Unidad de Medida :<br>' + rs.get('descripcion'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando unidad de medida... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/unidad-medida-eliminar',
+							params:
+							{
+								ume_id:rs.get('ume_id')
+							},
+							success:function(response,options)
+							{       
+								Ext.Msg.hide();      
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									unidad_medida.fn_habilitar(false,0);
+									Ext.getCmp(unidad_medida.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(unidad_medida.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },		
+		fn_validar:function()
+		{
+			if(!Ext.getCmp(unidad_medida.id+'-abreviatura').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Abreviatura");
+                Ext.getCmp(unidad_medida.id+'-abreviatura').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(unidad_medida.id+'-descripcion').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombres");
+                Ext.getCmp(unidad_medida.id+'-descripcion').focus(true,10);
+                return false;
+            }
+			return true;	
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-unidad_medida').action="tablas/unidad-medida-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(unidad_medida.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(unidad_medida.id+'-buscar').getValue();
+            document.getElementById('frmReporte-unidad_medida').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(unidad_medida.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(unidad_medida.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(unidad_medida.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(unidad_medida.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(unidad_medida.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(unidad_medida.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(unidad_medida.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(unidad_medida.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(unidad_medida.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(unidad_medida.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(unidad_medida.id+'-btn_editar').disable();
+			Ext.getCmp(unidad_medida.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(unidad_medida.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(unidad_medida.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(unidad_medida.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(unidad_medida.init,unidad_medida);
+
+</script>

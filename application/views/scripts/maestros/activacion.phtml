@@ -1,0 +1,1272 @@
+<form id="frmReporte-activacion" name="frmReporte-activacion" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('activacion');
+    activacion={
+        id:'activacion',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:activacion.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(activacion.id+'-panel_derecho').expand();
+				Ext.getCmp(activacion.id+'-panel_derecho').setVisible(true);
+                            activacion.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:activacion.id+'-btn_guardar',
+                text:'Aceptar',
+                iconCls:'btn_save_log',
+				disabled:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            activacion.fn_guardar();							
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:activacion.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            activacion.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:activacion.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            activacion.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:activacion.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(activacion.id+'-panel_derecho').collapse();
+							Ext.getCmp(activacion.id+'-panel_derecho').setVisible(false);
+                            activacion.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:activacion.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							activacion.fn_eliminar();                            
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:activacion.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    activacion.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var store_fam_lista=new Ext.data.JsonStore({
+                url:'tablas/familias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['fam_id','nombre']
+            });
+            
+            store_fam_lista.load();
+            
+            var store_marcas_lista=new Ext.data.JsonStore({
+                url:'tablas/marcas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mar_id','nombre']
+            });
+            
+            store_marcas_lista.load();
+            
+            var store_lineas_lista=new Ext.data.JsonStore({
+                url:'tablas/lineas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['lin_id','nombre']
+            });
+            
+            var store_unidad_medida_lista=new Ext.data.JsonStore({
+                url:'tablas/unidad-medida-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ume_id','codigo','abreviatura','descripcion']
+            });
+            
+            store_unidad_medida_lista.load();
+            
+            var store_activacion_lista=new Ext.data.JsonStore({
+                url:'maestros/activacion-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mcd_id','codigo1','codigo2','codigo3','nombre','ume_id','mar_id','lin_id','precio_costo','precio_venta','stock_minimo','stock_actual', 'utilidad', 'desc1', 'desc2', 'desc3', 'desc4','activo', 'fam_id', 'ume_nom', 'precio_compra', 'ind_calculo','mar_nom', 'stock_pro', 'stock_inicial', {name: 'activo', type: 'bool'}],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+            
+            var store_activacion_describe=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_activacion_describe.load({params:{table:'maestros_mercaderias'}});
+            
+            var pager = new Ext.PagingToolbar({
+                id:activacion.id+'_pager',
+                store:store_activacion_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(activacion.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(activacion.id+'-buscar').getValue();
+			});
+            
+            var combo_activacion_describe=new Ext.form.ComboBox({
+                id:activacion.id+'-combo_describe',
+                store:store_activacion_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+				value:'codigo1',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+			
+			var txt_busqueda=new Ext.app.SearchField({
+				id:activacion.id+'-buscar', 
+				emptyText : 'Valor a buscar...',
+				enableKeyEvents: true,
+				store: store_activacion_lista,
+				hasSearch : false,
+				width: 120,
+				listeners:
+				{
+					specialkey:function(obj, e)
+					{
+						if (e.getKey() == 13)
+						{
+						activacion.fn_habilitar(false,0);
+						store_activacion_lista.load({params:{campo:Ext.getCmp(activacion.id+'-combo_describe').getValue(),query:Ext.getCmp(activacion.id+'-buscar').getValue(),start:0,limit:100}});
+						}
+					},
+				}
+			});
+            
+            var grid_activacion_lista = new Ext.grid.GridPanel({
+                id:activacion.id+'-grid_lista',
+                store: store_activacion_lista,
+				 columnLines:true,
+				 monitorResize:true,
+				 width:226,
+                height:300,
+				 enableKeyEvents: true,
+				 enableHdMenu:false,
+				  sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mcd_id',width:25,hidden:true},
+                    {header:'Código 1',sortable :true,dataIndex:'codigo1',width:80},
+                    {header:'Código 2',sortable :true,dataIndex:'codigo2',width:100,hidden:true},
+                    {header:'Código 3',sortable :true,dataIndex:'codigo3',width:100,hidden:true},
+                    {header:'Descripción',sortable :true,dataIndex:'nombre',width:250},
+                    {header:'Marca',sortable :true,dataIndex:'mar_nom',width:100},
+					{header:'Unidad de Medida',sortable :true,dataIndex:'ume_nom',width:100,hidden:true},
+					/*{header:'Stock Actual',sortable :true,dataIndex:'stock_inicial',width:70,align:'right'},
+                    {header:'Precio Compra',sortable :true,dataIndex:'precio_compra',width:100,align:'right',hidden:true},
+					{header:'Precio Costo',sortable :true,dataIndex:'precio_costo',width:70,align:'right'},
+                    {header:'Precio Venta',sortable :true,dataIndex:'precio_venta',width:70,align:'right'},
+					{header:'Activo',sortable :true,dataIndex:'activo',width:25,align:'center',xtype: 'checkcolumn', hidden:true},
+                    {header:'Stock Mínimo',sortable :true,dataIndex:'stock_minimo',width:100,align:'right',hidden:true},
+					{header:'% Incremento',sortable :true,dataIndex:'utilidad',width:100,align:'right',hidden:true},
+					{header:'% Desc 1',sortable :true,dataIndex:'desc1',width:100,align:'right',hidden:true},
+					{header:'% Desc 2',sortable :true,dataIndex:'desc2',width:100,align:'right',hidden:true},
+					{header:'% Desc 3',sortable :true,dataIndex:'desc3',width:100,align:'right',hidden:true},
+					{header:'% Desc 4',sortable :true,dataIndex:'desc4',width:100,align:'right',hidden:true},
+                    {header:'Estado',sortable :true,dataIndex:'activo',width:100,hidden:true}*/
+                    ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(activacion.id+'-btn_guardar').isVisible()){
+							activacion.fn_guardar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(activacion.id+'-btn_guardar').enable();
+						//Ext.getCmp(mercaderias.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+            
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+				xtype:'panel',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:activacion.id+'-mcd_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:activacion.id+'-codigo1',
+                                fieldLabel:'Código 1',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:activacion.id+'-codigo2',
+                                fieldLabel:'Código 2',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:activacion.id+'-codigo3',
+                                fieldLabel:'Código 3',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:activacion.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_unidad_medida_lista,
+                                id:activacion.id+'-ume_id',
+                                fieldLabel:'Unidad de Medida',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                mode:'local',
+                                valueField:'ume_id',
+                                displayField:'abreviatura',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_marcas_lista,
+                                id:activacion.id+'-mar_id',
+                                fieldLabel:'Marca',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'mar_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_fam_lista,
+                                id:activacion.id+'-fam_id',
+                                fieldLabel:'Familia',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'fam_id',
+								allowBlank:false,
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(activacion.id+'-lin_id').setValue('');
+                                        store_lineas_lista.load({params:{campo:'fam_id',query:record.get('fam_id')}});
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_lineas_lista,
+                                id:activacion.id+'-lin_id',
+                                fieldLabel:'Línea',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'lin_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-precio_compra',
+                                fieldLabel:'Precio de Compra',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:.75,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Cálculo de Precios",
+                                id: activacion.id+'-ind_calculo',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "ind_calculo"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:activacion.id+'-ind_calculo_m',
+                                        boxLabel: "Manual",name: "ind_calculo",
+                                        inputValue: "M",
+                                        checked:true
+                                    },
+                                    {
+                                        id:activacion.id+'-ind_calculo_c',
+                                        boxLabel: "Automatico",name: "ind_calculo",
+                                        inputValue: "A"
+                                    }
+                                ],
+								listeners : {
+									change : function(){
+										if(Ext.getCmp(activacion.id+'-ind_calculo').getValue().getGroupValue()=="M"){
+											Ext.getCmp(activacion.id+'-precio_compra').enable();
+											Ext.getCmp(activacion.id+'-precio_costo').enable();
+											Ext.getCmp(activacion.id+'-precio_venta').enable();
+											Ext.getCmp(activacion.id+'-utilidad').enable();
+										}else{
+											Ext.getCmp(activacion.id+'-precio_compra').disable();
+											Ext.getCmp(activacion.id+'-precio_costo').disable();
+											Ext.getCmp(activacion.id+'-precio_venta').disable();
+											Ext.getCmp(activacion.id+'-utilidad').disable();
+										}
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-precio_costo',
+                                fieldLabel:'Precio de Costo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(activacion.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(activacion.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(activacion.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-utilidad',
+                                fieldLabel:'% Incremento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(activacion.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(activacion.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(activacion.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-precio_venta',
+                                fieldLabel:'Precio de Venta',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vcosto = eval(Ext.getCmp(activacion.id+'-precio_costo').getValue());
+										if(vcosto>0){											
+											vventa = eval(Ext.getCmp(activacion.id+'-precio_venta').getValue());
+											vvalor = (vventa/vcosto)*100 - 100;
+											Ext.getCmp(activacion.id+'-utilidad').setValue(vvalor);
+										}else{
+											Ext.getCmp(activacion.id+'-utilidad').setValue(0);
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-stock_minimo',
+                                fieldLabel:'Stock Mínimo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-stock_actual',
+                                fieldLabel:'Stock Actual',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-desc1',
+                                fieldLabel:'% Desc 1',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-desc2',
+                                fieldLabel:'% Desc 2',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-desc3',
+                                fieldLabel:'% Desc 3',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:activacion.id+'-desc4',
+                                fieldLabel:'% Desc 4',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: activacion.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:activacion.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:activacion.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_activacion_describe,txt_busqueda
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_activacion_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:activacion.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+             new Ext.Window({
+                                        id:'win_activacion',
+                                        title:'Activacion de Productos',
+                                        width: 550,
+                                        height:400,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_activacion').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+			});
+                Ext.getCmp('win_activacion').show();
+                Ext.getCmp('win_activacion').center();
+                Ext.getCmp('win_activacion').toFront();
+                activacion.fn_habilitar(false,0);
+                //store_activacion_lista.load({params:{start:0,limit:100}});
+                Ext.getCmp(activacion.id+'-panel_derecho').collapse();
+				Ext.getCmp(activacion.id+'-panel_derecho').setVisible(false);
+				Ext.getCmp(activacion.id+'-combo_describe').setValue('codigo1');
+        },
+        fn_nuevo:function()
+        {
+            Ext.getCmp(activacion.id+'-mcd_id').setValue('');
+            Ext.getCmp(activacion.id+'-codigo1').setValue('');
+            Ext.getCmp(activacion.id+'-codigo2').setValue('');
+            Ext.getCmp(activacion.id+'-codigo3').setValue('');
+            Ext.getCmp(activacion.id+'-nombre').setValue('');
+            Ext.getCmp(activacion.id+'-ume_id').setValue('');
+            Ext.getCmp(activacion.id+'-mar_id').setValue('');
+            Ext.getCmp(activacion.id+'-fam_id').setValue('');
+			Ext.getCmp(activacion.id+'-lin_id').setValue('');
+			Ext.getCmp(activacion.id+'-ind_calculo').items.items[0].setValue(true);
+            Ext.getCmp(activacion.id+'-ind_calculo').items.items[1].setValue(false);
+			
+            Ext.getCmp(activacion.id+'-precio_compra').setValue("0.00");
+			Ext.getCmp(activacion.id+'-precio_costo').setValue("0.00");
+            Ext.getCmp(activacion.id+'-precio_venta').setValue("0.00");
+            Ext.getCmp(activacion.id+'-stock_minimo').setValue("0");
+            Ext.getCmp(activacion.id+'-stock_actual').setValue("0");
+			Ext.getCmp(activacion.id+'-utilidad').setValue("0");
+			Ext.getCmp(activacion.id+'-desc1').setValue("0");
+			Ext.getCmp(activacion.id+'-desc2').setValue("0");
+			Ext.getCmp(activacion.id+'-desc3').setValue("0");
+			Ext.getCmp(activacion.id+'-desc4').setValue("0");
+            Ext.getCmp(activacion.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(activacion.id+'-estado').items.items[1].setValue(false);
+            activacion.fn_habilitar(true,1);
+			Ext.getCmp(activacion.id+'-codigo1').focus(true,10);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(activacion.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(mercaderias.id+'-panel_derecho').expand();
+				Ext.getCmp(activacion.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(mercaderias.id+'-mcd_id').setValue(rs.get('mcd_id'));
+                Ext.getCmp(mercaderias.id+'-codigo1').setValue(rs.get('codigo1'));
+                Ext.getCmp(mercaderias.id+'-codigo2').setValue(rs.get('codigo2'));
+                Ext.getCmp(mercaderias.id+'-codigo3').setValue(rs.get('codigo3'));
+                Ext.getCmp(mercaderias.id+'-nombre').setValue(rs.get('nombre'));
+                Ext.getCmp(mercaderias.id+'-ume_id').setValue(rs.get('ume_id'));
+                Ext.getCmp(mercaderias.id+'-mar_id').setValue(rs.get('mar_id'));
+                Ext.getCmp(mercaderias.id+'-fam_id').setValue(rs.get('fam_id'));
+				Ext.getCmp(mercaderias.id+'-lin_id').store.load({params:{campo:'fam_id',query:rs.get('fam_id')},
+				callback:function()
+				{
+					Ext.getCmp(mercaderias.id+'-lin_id').setValue(rs.get('lin_id'));                    
+				}});
+				
+				if(rs.get('precio_compra')>0){
+                	Ext.getCmp(mercaderias.id+'-precio_compra').setValue(rs.get('precio_compra'));
+				}else{
+					Ext.getCmp(mercaderias.id+'-precio_compra').setValue('0');
+				}
+				if(rs.get('precio_costo')>0){
+					Ext.getCmp(mercaderias.id+'-precio_costo').setValue(rs.get('precio_costo'));
+				}else{
+					Ext.getCmp(mercaderias.id+'-precio_costo').setValue('0');
+				}
+				if(rs.get('precio_venta')>0){
+                	Ext.getCmp(mercaderias.id+'-precio_venta').setValue(rs.get('precio_venta'));
+				}else{
+					Ext.getCmp(mercaderias.id+'-precio_venta').setValue('0');
+				}
+				
+				//if(rs.get('utilidad')>0){
+					Ext.getCmp(mercaderias.id+'-utilidad').setValue('<?=($this->datos->se_utilidad?$this->datos->se_utilidad:0)?>');
+				/*}else{
+					Ext.getCmp(mercaderias.id+'-utilidad').setValue('0');
+				}*/
+				
+				<?php if($this->datos->se_calculo_precios=='A'){?>
+				Ext.getCmp(mercaderias.id+'-ind_calculo').setValue('A');
+				<?php }else{ ?>
+				Ext.getCmp(mercaderias.id+'-ind_calculo').setValue('M');
+				<?php }?>
+
+				
+				
+				if(rs.get('ind_calculo')=="C"){
+					Ext.getCmp(mercaderias.id+'-precio_compra').disable();
+					Ext.getCmp(mercaderias.id+'-precio_costo').disable();
+					Ext.getCmp(mercaderias.id+'-precio_venta').disable();
+					Ext.getCmp(mercaderias.id+'-utilidad').disable();
+				}
+				if(rs.get('stock_minimo')>0){
+	                Ext.getCmp(mercaderias.id+'-stock_minimo').setValue(rs.get('stock_minimo'));
+				}else{
+					Ext.getCmp(mercaderias.id+'-stock_minimo').setValue('0');
+				}
+				
+				if(rs.get('stock_actual')>0){
+	                Ext.getCmp(mercaderias.id+'-stock_actual').setValue(rs.get('stock_actual'));
+				}else{
+					Ext.getCmp(mercaderias.id+'-stock_actual').setValue('0');
+				}
+				//Ext.getCmp(mercaderias.id+'-stock_actual').setReadOnly(true);
+				//Ext.getCmp(mercaderias.id+'-stock_actual').disable();
+				
+				//if(rs.get('desc1')>0){
+					Ext.getCmp(mercaderias.id+'-desc1').setValue('<?=($this->datos->se_desc1?$this->datos->se_desc1:0)?>');
+				/*}else{
+					Ext.getCmp(mercaderias.id+'-desc1').setValue('0');
+				}*/
+				
+				//if(rs.get('desc2')>0){
+					Ext.getCmp(mercaderias.id+'-desc2').setValue('<?=($this->datos->se_desc2?$this->datos->se_desc2:0)?>');
+				/*}else{
+					Ext.getCmp(mercaderias.id+'-desc2').setValue('0');
+				}*/
+				
+				//if(rs.get('desc3')>0){
+					Ext.getCmp(mercaderias.id+'-desc3').setValue('<?=($this->datos->se_desc3?$this->datos->se_desc3:0)?>');
+				/*}else{
+					Ext.getCmp(mercaderias.id+'-desc3').setValue('0');
+				}*/
+				
+				//if(rs.get('desc4')>0){
+					//Ext.getCmp(mercaderias.id+'-desc4').setValue('<?=($this->datos->se_desc4?$this->datos->se_desc4:0)?>'));
+				/*}else{
+					Ext.getCmp(mercaderias.id+'-desc4').setValue('0');
+				}*/
+				Ext.getCmp(mercaderias.id+'-desc4').setValue("<?=($this->datos->se_desc4?$this->datos->se_desc4:0)?>");
+				
+                Ext.getCmp(mercaderias.id+'-estado').setValue("1");
+                
+                mercaderias.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(activacion.fn_validar()){
+				Ext.Msg.wait('Actualizando activacion... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/activacion-actualizar',
+					params:
+					{
+						mcd_id:Ext.getCmp(activacion.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(activacion.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(activacion.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(activacion.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(activacion.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(activacion.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(activacion.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(activacion.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(activacion.id+'-lin_id').getValue(),
+						precio_costo:Ext.getCmp(activacion.id+'-precio_costo').getValue(),
+						precio_compra:Ext.getCmp(activacion.id+'-precio_compra').getValue(),
+						precio_venta:Ext.getCmp(activacion.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(activacion.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(activacion.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(activacion.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(activacion.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(activacion.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(activacion.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(activacion.id+'-desc4').getValue(),
+						estado:Ext.getCmp(activacion.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(activacion.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{        
+						Ext.Msg.hide();    
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(activacion.id+'-panel_derecho').collapse();
+							Ext.getCmp(activacion.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							activacion.fn_habilitar(false,0);
+							Ext.getCmp(activacion.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(activacion.id+res.campo).focus(true,10);							
+						}
+					}
+				});
+			}
+        },
+        fn_guardar:function()
+        {
+			
+		
+            var vData= new Array();
+			var v_activacion= new Array();
+			var datos=Ext.getCmp(activacion.id+'-grid_lista').getSelectionModel().getSelected();
+			vValore = datos.get('mcd_id') + '.@.' + datos.get('ume_id') + '.@.' + 'true';
+			//alert(vValore);
+			vData[0] = vValore;
+			/*alert("antes");
+			Ext.getCmp(activacion.id+'-formulario').getForm().submit({						
+				method: 'POST',
+				url:'maestros/activacion-guardar',
+				params:{ 
+					"v_detalle[]":vData,
+				},
+				waitTitle: 'Registro de ',
+				waitMsg: 'Guardando Información..',
+				success: function(form, action){
+					alert(action.response.responseText);				
+					var res = Ext.decode(action.response.responseText);
+					if(res.success){
+						og.msg("Ok","El registro se ha actualizado");
+                    Ext.getCmp(activacion.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(activacion.id+'-combo_describe').getValue(),query:Ext.getCmp(activacion.id+'-buscar').getValue(),start:0,limit:100}});
+					}else{
+						og.msg("Error",res.mensaje);
+						Ext.getCmp(activacion.id+res.campo).focus(true,10);						
+					}
+					Ext.getCmp(activacion.id+'-formulario').getForm().reset();
+				},
+				failure: function(form, action){
+					alert(action.response.responseText);
+					var res = Ext.decode(action.response.responseText);
+					Ext.Msg.show({
+						title:'Error',
+						msg: res.data,
+						   buttons: Ext.Msg.OK,
+						   icon: Ext.MessageBox.ERROR
+						});
+						
+						
+				}
+			});*/
+			Ext.Msg.wait('Activando Productos... por favor espere!');
+            Ext.Ajax.request({
+                url:'maestros/activacion-guardar',
+                params:
+                {
+					"v_detalle[]":vData,
+                },
+                success:function(response,options)
+                {
+					//alert(response.responseText);
+					Ext.Msg.hide();
+                    var res = Ext.decode(response.responseText);
+                    og.msg("Ok","El producto se activo correctamente, proceda a modifcar sus datos");					
+					activacion.fn_editar();	
+					Ext.getCmp('win_activacion').close();							
+				}
+			});
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(activacion.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				 Ext.Msg.confirm('Alerta', 'Desea eliminar?', function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando datos de activacion... por favor espere!');
+						Ext.Ajax.request({
+							url:'maestros/activacion-eliminar',
+							params:
+							{
+								mcd_id:rs.get('mcd_id')
+							},
+							success:function(response,options)
+							{          
+								Ext.Msg.hide();   
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									activacion.fn_habilitar(false,0);
+									Ext.getCmp(activacion.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(activacion.id+res.campo).focus(true,10);				
+								}									
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(activacion.id+'-codigo1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 1");
+                Ext.getCmp(activacion.id+'-codigo1').focus(true,10);
+                return false;
+            }
+            /*if(!Ext.getCmp(activacion.id+'-codigo2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 2");
+                Ext.getCmp(activacion.id+'-codigo2').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-codigo3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 3");
+                Ext.getCmp(activacion.id+'-codigo3').focus(true,10);
+                return false;
+            }*/
+            if(!Ext.getCmp(activacion.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(activacion.id+'-nombre').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-ume_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Unidad de Medida");
+                Ext.getCmp(activacion.id+'-ume_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-mar_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Marca");
+                Ext.getCmp(activacion.id+'-mar_id').focus(true,10);
+                return false;
+            }
+			 if(!Ext.getCmp(activacion.id+'-fam_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Familia");
+                Ext.getCmp(activacion.id+'-fam_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-lin_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Linea");
+                Ext.getCmp(activacion.id+'-lin_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(activacion.id+'-precio_compra').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Compra");
+                Ext.getCmp(activacion.id+'-precio_compra').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-precio_costo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Costo");
+                Ext.getCmp(activacion.id+'-precio_costo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-precio_venta').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Venta");
+                Ext.getCmp(activacion.id+'-precio_venta').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-stock_minimo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Mínimo");
+                Ext.getCmp(activacion.id+'-stock_minimo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(activacion.id+'-stock_actual').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Actual");
+                Ext.getCmp(activacion.id+'-stock_actual').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(activacion.id+'-utilidad').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Incremento");
+                Ext.getCmp(activacion.id+'-utilidad').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(activacion.id+'-desc1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 1");
+                Ext.getCmp(activacion.id+'-desc1').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(activacion.id+'-desc2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 2");
+                Ext.getCmp(activacion.id+'-desc2').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(activacion.id+'-desc3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 3");
+                Ext.getCmp(activacion.id+'-desc3').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(activacion.id+'-desc4').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 4");
+                Ext.getCmp(activacion.id+'-desc4').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-activacion').action="maestros/activacion-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(activacion.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(activacion.id+'-buscar').getValue();
+            document.getElementById('frmReporte-activacion').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			/*if(!sw){
+				Ext.getCmp(activacion.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(activacion.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(activacion.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(activacion.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(activacion.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(activacion.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(activacion.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(activacion.id+'-btn_cancelar').setVisible(sw);
+			
+			Ext.getCmp(activacion.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(activacion.id+'-btn_eliminar').setVisible(!sw);
+
+			Ext.getCmp(activacion.id+'-btn_editar').disable();
+			Ext.getCmp(activacion.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(activacion.id+'-buscar').setVisible(true);			
+			Ext.getCmp(activacion.id+'-combo_describe').setVisible(true);
+			
+			Ext.getCmp(activacion.id+'-btn_imprimir').setVisible(!sw);	*/
+			
+			Ext.getCmp(activacion.id+'-btn_guardar').setVisible(true);
+			Ext.getCmp(activacion.id+'-btn_actualizar').setVisible(false);
+			Ext.getCmp(activacion.id+'-btn_nuevo').setVisible(false);
+			Ext.getCmp(activacion.id+'-btn_cancelar').setVisible(false);
+			
+			Ext.getCmp(activacion.id+'-btn_editar').setVisible(false);
+			Ext.getCmp(activacion.id+'-btn_eliminar').setVisible(false);
+			Ext.getCmp(activacion.id+'-buscar').setVisible(true);			
+			Ext.getCmp(activacion.id+'-combo_describe').setVisible(true);
+			
+			Ext.getCmp(activacion.id+'-btn_imprimir').setVisible(false);
+					
+        }
+    }
+    Ext.onReady(activacion.init,activacion);
+
+</script>

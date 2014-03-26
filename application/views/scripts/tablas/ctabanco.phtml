@@ -1,0 +1,652 @@
+<form id="frmReporte-ctabanco" name="frmReporte-ctabanco" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('ctabanco');
+    ctabanco={
+        id:'ctabanco',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:ctabanco.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(ctabanco.id+'-panel_derecho').expand();
+				Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(true);
+                            ctabanco.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:ctabanco.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            ctabanco.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:ctabanco.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            ctabanco.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:ctabanco.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            ctabanco.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:ctabanco.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(ctabanco.id+'-panel_derecho').collapse();
+							Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(false);
+                            ctabanco.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:ctabanco.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							ctabanco.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:ctabanco.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    ctabanco.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_bancos_lista=new Ext.data.JsonStore({
+                url:'tablas/bancos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ban_id','nombre']
+            });
+            
+            store_bancos_lista.load();
+			
+			var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+            
+            var store_ctabanco_lista=new Ext.data.JsonStore({
+                url:'tablas/ctabanco-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cta_id','nro_cta','ban_id','ban_nom', 'mon_nom', 'mon_id']
+            });
+            
+            store_ctabanco_lista.load();
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'ctabanco'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:ctabanco.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_ctabanco_lista = new Ext.grid.GridPanel({
+                id:ctabanco.id+'-grid_lista',
+                store: store_ctabanco_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'cta_id',width:25},
+                    {header:'Banco',sortable :true,dataIndex:'ban_nom',width:150},
+					{header:'Moneda',sortable :true,dataIndex:'mon_nom',width:100},
+					{header:'Cuenta de Banco',sortable :true,dataIndex:'nro_cta',width:100},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(ctabanco.id+'-btn_editar').isVisible()){
+							Ext.getCmp(ctabanco.id+'-panel_derecho').expand();
+				Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(true);
+                        	ctabanco.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(ctabanco.id+'-btn_editar').enable();
+						Ext.getCmp(ctabanco.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:ctabanco.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:ctabanco.id+'-cta_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_bancos_lista,
+                                id:ctabanco.id+'-ban_id',
+                                fieldLabel:'Banco',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:350,
+                                mode:'local',
+                                valueField:'ban_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_monedas_lista,
+                                id:ctabanco.id+'-mon_id',
+                                fieldLabel:'Moneda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:350,
+                                mode:'local',
+                                valueField:'mon_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:ctabanco.id+'-nro_cta',
+                                fieldLabel:'Nro de Cuenta',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    }
+                ]
+            }
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:10px;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'760',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_ctabanco_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:ctabanco.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'790',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_ctabanco',
+                                        title:'Líneas', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:ctabanco.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_ctabanco_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									ctabanco.fn_habilitar(false,0);
+                                store_ctabanco_lista.load({params:{campo:Ext.getCmp(ctabanco.id+'-combo_describe').getValue(),query:Ext.getCmp(ctabanco.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+                                        onEsc:function(){Ext.getCmp('win_ctabanco').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_ctabanco').show();
+                Ext.getCmp('win_ctabanco').center();
+                Ext.getCmp('win_ctabanco').toFront();
+                ctabanco.fn_habilitar(false,0);
+        },
+
+        fn_nuevo:function()
+        {
+			
+            Ext.getCmp(ctabanco.id+'-cta_id').setValue('');
+			Ext.getCmp(ctabanco.id+'-ban_id').setValue('');
+			Ext.getCmp(ctabanco.id+'-mon_id').setValue('');
+			Ext.getCmp(ctabanco.id+'-nro_cta').setValue('');
+            ctabanco.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(ctabanco.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(ctabanco.id+'-panel_derecho').expand();
+				Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(ctabanco.id+'-cta_id').setValue(rs.get('cta_id'));
+				Ext.getCmp(ctabanco.id+'-ban_id').setValue(rs.get('ban_id'));
+                Ext.getCmp(ctabanco.id+'-mon_id').setValue(rs.get('mon_id'));
+				Ext.getCmp(ctabanco.id+'-nro_cta').setValue(rs.get('nro_cta'));
+                
+                ctabanco.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			if(ctabanco.fn_validar()){
+				Ext.getCmp(ctabanco.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/ctabanco-actualizar',
+					params:{ 
+						cta_id:Ext.getCmp(ctabanco.id+'-cta_id').getValue(),
+						mon_id:Ext.getCmp(ctabanco.id+'-mon_id').getValue(),
+						nro_cta:Ext.getCmp(ctabanco.id+'-nro_cta').getValue().toUpperCase(),
+						ban_id:Ext.getCmp(ctabanco.id+'-ban_id').getValue()
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(ctabanco.id+'-panel_derecho').collapse();
+							Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							ctabanco.fn_habilitar(false,0);
+							Ext.getCmp(ctabanco.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(ctabanco.id+'-combo_describe').getValue(),query:Ext.getCmp(ctabanco.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(ctabanco.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(ctabanco.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(ctabanco.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/ctabanco-actualizar',
+					params:
+					{
+						cta_id:Ext.getCmp(ctabanco.id+'-cta_id').getValue(),
+						mon_nom:Ext.getCmp(ctabanco.id+'-mon_nom').getValue(),
+						nro_cta:Ext.getCmp(ctabanco.id+'-nro_cta').getValue().toUpperCase(),
+						ban_id:Ext.getCmp(ctabanco.id+'-ban_id').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(ctabanco.id+'-panel_derecho').collapse();
+							Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							ctabanco.fn_habilitar(false,0);
+							Ext.getCmp(ctabanco.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(ctabanco.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+			if(ctabanco.fn_validar()){
+				Ext.getCmp(ctabanco.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/ctabanco-guardar',
+					params:{ 
+						mon_id:Ext.getCmp(ctabanco.id+'-mon_id').getValue(),
+						nro_cta:Ext.getCmp(ctabanco.id+'-nro_cta').getValue().toUpperCase(),
+						ban_id:Ext.getCmp(ctabanco.id+'-ban_id').getValue()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(ctabanco.id+'-panel_derecho').collapse();
+							Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							ctabanco.fn_habilitar(false,0);
+							Ext.getCmp(ctabanco.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(ctabanco.id+'-combo_describe').getValue(),query:Ext.getCmp(ctabanco.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(ctabanco.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(ctabanco.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(ctabanco.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/ctabanco-guardar',
+					params:
+					{
+						mon_nom:Ext.getCmp(ctabanco.id+'-mon_nom').getValue(),
+						nro_cta:Ext.getCmp(ctabanco.id+'-nro_cta').getValue().toUpperCase(),
+						ban_id:Ext.getCmp(ctabanco.id+'-ban_id').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(ctabanco.id+'-panel_derecho').collapse();
+							Ext.getCmp(ctabanco.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							ctabanco.fn_habilitar(false,0);
+							Ext.getCmp(ctabanco.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(ctabanco.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(ctabanco.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Linea :<br>' + rs.get('nro_cta'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando linea... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/ctabanco-eliminar',
+							params:
+							{
+								cta_id:rs.get('cta_id')
+							},
+							success:function(response,options)
+							{       
+								Ext.Msg.hide();      
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									ctabanco.fn_habilitar(false,0);
+									Ext.getCmp(ctabanco.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(ctabanco.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(ctabanco.id+'-nro_cta').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Numero de Cuenta");
+                Ext.getCmp(ctabanco.id+'-nro_cta').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(ctabanco.id+'-ban_id').isValid())
+            {
+                og.msg("Error", "Ingrese el Banco");
+                Ext.getCmp(ctabanco.id+'-ban_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(ctabanco.id+'-mon_id').isValid())
+            {
+                og.msg("Error", "Ingrese la Moneda");
+                Ext.getCmp(ctabanco.id+'-mon_id').focus(true,10);
+                return false;
+            }
+			return true;			
+		},
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-ctabanco').action="tablas/ctabanco-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(ctabanco.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(ctabanco.id+'-buscar').getValue();
+            document.getElementById('frmReporte-ctabanco').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(ctabanco.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(ctabanco.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(ctabanco.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(ctabanco.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(ctabanco.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(ctabanco.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(ctabanco.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(ctabanco.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(ctabanco.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(ctabanco.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			if(Ext.getCmp(ctabanco.id+'-grid_lista').getSelectionModel().getSelected()){
+				Ext.getCmp(ctabanco.id+'-btn_editar').enable();
+				Ext.getCmp(ctabanco.id+'-btn_eliminar').enable();
+			}else{			
+				Ext.getCmp(ctabanco.id+'-btn_editar').disable();
+				Ext.getCmp(ctabanco.id+'-btn_eliminar').disable();
+			}
+			Ext.getCmp(ctabanco.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(ctabanco.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(ctabanco.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(ctabanco.init,ctabanco);
+
+</script>

@@ -1,0 +1,1635 @@
+﻿<form id="frmReporte-saldocompras" name="frmReporte-saldocompras" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('saldocompras');
+    saldocompras={
+        id:'saldocompras',
+        store_reader:new Ext.data.ArrayStore({  //step 1
+            id:saldocompras.id+'-reader_guiasasignadas',
+            fields:[{name:'itemid'},{name:'id'},{name:'cantidad'},{name:'codigo'},{name:'detalle'},{name:'marca'},{name:'precio'},{name:'descuento'},{name:'total'},{name:'ume_id'},{name:'valor_desc'},{name:'valor_bruto'}]  
+            }),
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:saldocompras.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(saldocompras.id+'-panel_derecho').expand();
+				Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(true);
+                            saldocompras.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:saldocompras.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            saldocompras.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:saldocompras.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            saldocompras.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:saldocompras.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            saldocompras.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:saldocompras.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(saldocompras.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(false);
+                            saldocompras.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_anular=new Ext.Button({
+                id:saldocompras.id+'-btn_anular',
+                text:'Anular',
+                icon:'images/icon/btn_cancelar.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							saldocompras.fn_anular();
+                        }
+                    }
+            });
+			
+			var btn_eliminar=new Ext.Button({
+                id:saldocompras.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							saldocompras.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:saldocompras.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    saldocompras.fn_imprimir();
+                                }
+                            });
+                        }
+                    }
+            });
+			
+			var btn_imprimir_formato=new Ext.Button({
+                id:saldocompras.id+'-btn_imprimir_formato',
+                text:'Formato',
+                icon:'images/icon/preview_log.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Si desea imprimir Preimpreso (Click en SI), sino se imprimira formato general (Click en NO)', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    saldocompras.fn_imprimir_preimpreso();
+                                }else{
+									saldocompras.fn_imprimir_general();
+								}
+                            });
+                        }
+                    }
+            });
+			
+			var btn_busprv=new Ext.Button({
+                id:saldocompras.id+'-btn_busprv',
+                text:'Buscar',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert(vgVentana);
+							vgVentana = 'saldocompras';
+                           inicio.getForm( 'maestros/buscaproveedores','Busca Clientes')
+                        }
+                    }
+            });
+
+            var store_saldocompras_lista=new Ext.data.JsonStore({
+                url:'movimientos/saldocompras-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['nombre_cliente','descripcion_documento','sco_id','codigo','prv_id','tipo_ingreso','doc_id','doc_n','n_guia','cpa_id','mon_id','valor_compra','impuesto_igv','total_compra', 'fec_ven', 'fec_mov', 'moneda', 'prv_codigo', 'ruc', 'anulado', 'afecta', 'formato', 'observacion', 'cliente', 'prv_ruc', 'saldo', 'saldo_inicial'],
+				remoteSort:true,				
+				sortInfo: {field:'fec_mov', direction:'desc'}
+            });
+            
+            
+			
+			var pager = new Ext.PagingToolbar({
+                id:saldocompras.id+'_pager',
+                store:store_saldocompras_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(saldocompras.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(saldocompras.id+'-buscar').getValue();
+			});
+			
+            
+            var vstore_proveedores_lista=new Ext.data.JsonStore({
+                url:'maestros/proveedores-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['prv_id','nombre','ruc','codigo']
+            });
+            
+            //vstore_proveedores_lista.load({params:{start:0,limit:100}});
+			
+			var pagerCmbPrv = new Ext.PagingToolbar({
+                id:saldocompras.id+'_pagerCmbPrb',
+                store:vstore_proveedores_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerCmbPrv.on('beforechange',function(bar,params){  
+				params.campo = 'nombre';
+				params.query = Ext.getCmp(saldocompras.id+'-combo_prv').getValue();
+			});
+            
+            var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+
+            var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','abrev','descripcion','saldocompras','compras','n_saldocompras','n_compras','nn_credito','nn_debito','str_serie_n_compras','str_n_compras','str_serie_n_saldocompras','str_n_saldocompras','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito']
+            });
+            
+            store_documentos_lista.load({params:{campo:'compras',query:'SI'}});
+            
+            var store_condiciones_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cpa_id','codigo','descripcion','dias','letras']
+            });
+            
+            store_condiciones_pago_lista.load();
+
+            var store_compras_describe=new Ext.data.JsonStore({
+                url:'movimientos/saldocompras-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_compras_describe.load({params:{table:'movimientos_saldocompras'}});
+            
+            var combo_compras_describe=new Ext.form.ComboBox({
+                id:saldocompras.id+'-combo_describe',
+                store:store_compras_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_saldocompras_lista = new Ext.grid.GridPanel({
+                id:saldocompras.id+'-grid_lista',
+                store: store_saldocompras_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'sco_id',width:25},
+					{header:'Fecha',sortable :true,dataIndex:'fec_ven',width:70},
+                    {header:'Documento',sortable :true,dataIndex:'descripcion_documento',width:80},
+					{header:'Número',sortable :true,dataIndex:'doc_n',width:80, align:'center'},
+					{header:'Cliente',sortable :true,dataIndex:'nombre_cliente',width:200},
+                    {header:'Total Venta',sortable :true,dataIndex:'total_compra',width:80, align:'right'},
+					{header:'Saldo',sortable :true,dataIndex:'saldo_inicial',width:80, align:'right'},
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:70, align:'left'},
+					{header:'Anulado',sortable :true,dataIndex:'anulado',width:50, align:'left'}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        Ext.getCmp(saldocompras.id+'-panel_derecho').expand();
+				Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(true);
+                        saldocompras.fn_editar();
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(saldocompras.id+'-btn_editar').enable();
+						Ext.getCmp(saldocompras.id+'-btn_eliminar').enable();
+						Ext.getCmp(saldocompras.id+'-btn_anular').enable();
+                    }
+                }
+            });
+
+            
+            
+
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+				id:saldocompras.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+					{
+                      xtype:'hidden',
+                      id:saldocompras.id+'-sco_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:.7,
+                        items:
+                        [
+                            
+                            {
+                                xtype: "radiogroup",
+                                hidden:true,
+                                fieldLabel: "Tipo de Compra",
+                                itemCls: 'label01',
+                                id: saldocompras.id+'-tipo_ingreso',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tipo_ingreso"},
+                                columns: [120,120,120],
+                                items: [
+                                    {
+                                        id:saldocompras.id+'-tipo_ingreso1',
+                                        boxLabel: "COMPRA PLAZA",name: "tipo_ingreso",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:saldocompras.id+'-tipo_ingreso2',
+                                        boxLabel: "IMPORTACI&oacute;N",name: "tipo_ingreso",
+                                        inputValue: "2"
+                                    }/*,
+                                    {
+                                        id:compras.id+'-tipo_ingreso3',
+                                        boxLabel: "TRASLADO",name: "tipo_ingreso",
+                                        inputValue: "3"
+                                    }*/
+                                ]
+                            }    
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-codigo',
+                                fieldLabel:'Operaci&oacute;n',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								disabled:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.38,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:vstore_proveedores_lista,
+                                id:saldocompras.id+'-prv_id',
+                                fieldLabel:'Proveedor',
+                                readOnly:true,
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                valueField:'prv_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+								allowBlank:false,
+								pageSize:100,
+                                listeners:
+                                    {
+										beforequery:function(obj){
+											vstore_proveedores_lista.setBaseParam('campo', 'nombre');
+											vstore_proveedores_lista.setBaseParam('query', Ext.getCmp(saldocompras.id+'-prv_id').getValue());						
+										},
+										specialkey:function(obj, e)
+										{
+											if (e.getKey() == 13)
+											{
+												vstore_proveedores_lista.load({params:{campo:'nombre',query:obj.getRawValue(),start:0,limit:100}});
+											}
+										},
+                                        select:function(cmb,record,index)
+                                        {
+                                            Ext.getCmp(saldocompras.id+'-prv_ruc').setValue(record.get('ruc'));
+                                            Ext.getCmp(saldocompras.id+'-prv_codigo').setValue(record.get('codigo'));
+                                        }
+                                    }
+                            }
+                        ]
+                    },
+					{
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.07,
+                        items:
+                        [
+                            btn_busprv
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.40,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-cliente',
+                                fieldLabel:'Cliente',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:180,
+								hidden:true,
+								listeners : {
+									blur:function(obj){
+										vCadena = obj.getValue();
+										vCadena.replace(/^\s+|\s+$/g,"");
+										if(vCadena=="CLIENTES VARIOS"){
+											Ext.getCmp(saldocompras.id+'-prv_ruc').setDisabled(true);
+											Ext.getCmp(saldocompras.id+'-prv_ruc').setReadOnly(true);
+										}else{
+											Ext.getCmp(saldocompras.id+'-prv_ruc').setDisabled(false);
+											Ext.getCmp(saldocompras.id+'-prv_ruc').setReadOnly(false);
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'RUC/DNI',
+                                id:saldocompras.id+'-prv_ruc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'C&oacute;digo',
+                                id:saldocompras.id+'-prv_codigo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:110,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_documentos_lista,
+                                id:saldocompras.id+'-doc_id',
+                                fieldLabel:'Documento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'doc_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+                				editable:false,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {				
+										/*Ext.Msg.wait('Obteniendo Nro de Documento... por favor espere!');
+										Ext.Ajax.request({
+											url:'tablas/numeracion-obtener-codigo',
+											params:
+											{
+												doc_id:record.get('doc_id'),
+												tipo:'2'
+											},
+											success:function(response,options)
+											{    
+												Ext.Msg.hide();    
+												var res = Ext.decode(response.responseText);
+												if(res.success){
+													var numero=(Math.pow(10,res.data[0]['lon'])).toString()+(Number(res.data[0]['nro'])+1);
+													var codigo=numero.substr(numero.length-res.data[0]['lon'],res.data[0]['lon'])
+													Ext.getCmp(saldocompras.id+'-numero').setValue(res.data[0]['serie']+ '-' + codigo);
+												}else{
+													Ext.getCmp(saldocompras.id+'-numero').setValue('');
+												}
+												
+											}
+										});*/
+										
+										/*if(record.get('doc_id')==1){
+											Ext.getCmp(saldocompras.id+'-afecta_almacen').setVisible(false);
+											Ext.getCmp(saldocompras.id+'-afecta_almacen').setValue(false);
+										}else{
+											Ext.getCmp(saldocompras.id+'-afecta_almacen').setVisible(true);
+											Ext.getCmp(saldocompras.id+'-afecta_almacen').setValue(true);
+										}*/											
+                                    }
+                                }
+                            } 
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.28,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-numero',
+                                fieldLabel:'N&uacute;mero',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vDoc = obj.getValue();
+										n=vDoc.indexOf("-");
+										
+										vSer = vDoc.substr(0,n);
+										vSer=(Math.pow(10,3)).toString()+(Number(vSer));
+										vSer=vSer.substr(vSer.length-3,3);
+										
+										vNro = vDoc.substr(n+1,vDoc.length - n);
+										var vNro=(Math.pow(10,7)).toString()+(Number(vNro));
+										var vNro=vNro.substr(vNro.length-7,7);
+										Ext.getCmp(saldocompras.id+'-numero').setValue(vSer+ '-' + vNro);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:saldocompras.id+'-fechaDocumento',
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha Documento',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                value:'<? echo date('d/m/Y');?>',
+                                style:'margin-left:7px'
+                            }
+                        ]
+                    },                    
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:saldocompras.id+'-fecha',
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha Vencimiento',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                value:'<? echo date('d/m/Y');?>',
+                                style:'margin-left:7px'
+                            }
+                        ]
+                    },                    
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-guia_remision',
+                                fieldLabel:'Guía',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								hidden:true,
+								listeners : {
+									blur:function(obj){
+										vDoc = obj.getValue();
+										n=vDoc.indexOf("-");
+										
+										vSer = vDoc.substr(0,n);
+										vSer=(Math.pow(10,3)).toString()+(Number(vSer));
+										vSer=vSer.substr(vSer.length-3,3);
+										
+										vNro = vDoc.substr(n+1,vDoc.length - n);
+										var vNro=(Math.pow(10,7)).toString()+(Number(vNro));
+										var vNro=vNro.substr(vNro.length-7,7);
+										Ext.getCmp(saldocompras.id+'-guia_remision').setValue(vSer+ '-' + vNro);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_condiciones_pago_lista,
+                                id:saldocompras.id+'-cpa_id',
+                                fieldLabel:'Forma de Pago',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                mode:'local',
+                                valueField:'cpa_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								value:'2',
+                				editable:false,
+								readonly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.30,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_monedas_lista,
+                                id:saldocompras.id+'-mon_id',
+                                fieldLabel:'Moneda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                mode:'local',
+                                valueField:'mon_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								value:'<?=$sesion->se_moneda_almacen?>',
+                				editable:false,
+								listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+										if(cmb.getValue()=='1'){											
+											document.getElementById(Ext.getCmp(saldocompras.id+'-valor_bruto').label.id).innerHTML = 'Valor Bruto S/.';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-valor_descuento').label.id).innerHTML = 'Descuento S/.';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-valor_compra').label.id).innerHTML = 'Valor Compra S/.';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-impuesto_igv').label.id).innerHTML = 'Saldo S/.';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-total_compra').label.id).innerHTML = 'Total Compra S/.';
+											
+										}else{
+											document.getElementById(Ext.getCmp(saldocompras.id+'-valor_bruto').label.id).innerHTML = 'Valor Bruto $';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-valor_descuento').label.id).innerHTML = 'Descuento $';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-valor_compra').label.id).innerHTML = 'Valor Compra $';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-impuesto_igv').label.id).innerHTML = 'Saldo $';
+											document.getElementById(Ext.getCmp(saldocompras.id+'-total_compra').label.id).innerHTML = 'Total Compra $';
+										}										
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.28,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-tipocambio',
+                                fieldLabel:'Tipo de Cambio',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true,
+								value:vgTcC,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            /*{
+                                xtype:'datefield',
+                                id:saldocompras.id+'-fecha_vencimiento',
+                                emptyText:'Vencimiento',
+                                width:100,
+                                fieldLabel:'Vencimiento',
+                                format:'d/m/Y',
+                                altFormats : "d-m-Y",
+                                readOnly:true,
+                                style:'margin-left:7px'
+                            }*/
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:105,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+                                id:saldocompras.id+'-afecta_almacen',
+                                fieldLabel:'Afecta Almacén',
+                                checked:false,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [        
+                            {
+                                xtype:'checkbox',
+                                id:saldocompras.id+'-inc_igv',
+                                fieldLabel:'Incluye IGV',
+                                checked:true,
+								enableKeyEvents: true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.15,
+                        items:
+                        [        
+                            {
+                                xtype:'checkbox',
+                                id:saldocompras.id+'-jal_pro',
+                                fieldLabel:'Jalar Proforma',
+                                checked:false,
+								enableKeyEvents: true,
+								hidden:true,
+								listeners:{
+									check:function(obj, even){
+										if(obj.getValue()){
+											Ext.getCmp(saldocompras.id+'-proforma').enable();
+											Ext.getCmp(saldocompras.id+'-proforma').focus(true,0)
+										}else{
+											Ext.getCmp(saldocompras.id+'-proforma').disable();
+										}
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.2,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-valor_bruto',
+                                fieldLabel:'Valor Bruto S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.18,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-valor_descuento',
+                                fieldLabel:'Descuento S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:60,
+                                readOnly:true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.22,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-valor_compra',
+                                fieldLabel:'Valor Compra S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true,
+								hidden:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.22,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-total_compra',
+                                fieldLabel:'Total Documento S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.18,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:saldocompras.id+'-impuesto_igv',
+                                fieldLabel:'Saldo S/.',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:60,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:0.6,
+                        items:
+                        [        
+                            {
+                                xtype:'textarea',
+                                hidden:true,
+                                id:saldocompras.id+'-observacion',
+                                fieldLabel:'Observacion',
+                                itemCls: 'label01',
+                                style:{marginLeft:'7px',textAlign:'left'},
+                                width:300,
+								height:40
+                            }
+                        ]
+                    }
+					,
+                    {
+                        xtype:'label',
+						id:saldocompras.id+'-msganulado',
+                        columnWidth:0.4,
+						text:'DOCUMENTO ANULADO',
+						style:{color:'#ff0000',fontSize:'20px'}
+                    }
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_anular,btn_eliminar,'-',btn_imprimir, '-',/*,btn_imprimir_formato,*/btn_cancelar,
+                            combo_compras_describe,'-',
+                    new Ext.app.SearchField({
+                        id:saldocompras.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_saldocompras_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj,e)
+                            {
+                                if(e.getKey() == 13)
+                                {
+                                    store_saldocompras_lista.load({params:{campo:Ext.getCmp(saldocompras.id+'-combo_describe').getValue(),query:Ext.getCmp(saldocompras.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_saldocompras_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:saldocompras.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_saldocompras',
+                                        title:'Saldos Iniciales por Cobrar', 
+                                        width: 900,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                        onEsc:function(){Ext.getCmp('win_saldocompras').close();}, resizable:true,
+                        items:panel,
+                        buttonAlign:'center'
+            });
+            
+            Ext.getCmp('win_saldocompras').show();
+            Ext.getCmp('win_saldocompras').center();
+            Ext.getCmp('win_saldocompras').toFront();
+            saldocompras.fn_habilitar(false,0);
+			//store_saldocompras_lista.load({params:{start:0,limit:100}});
+            Ext.getCmp(saldocompras.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(false);
+            
+            
+                
+            
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando c&oacute;digo de Venta... por favor espere!');
+            Ext.Ajax.request({
+				url:'movimientos/saldocompras-codigo',
+				params:
+				{
+					table:'movimientos_saldocompras'
+				},
+				success:function(response,options)
+				{   
+				//alert(response.responseText);
+					Ext.Msg.hide();
+					var res = Ext.decode(response.responseText);						
+					var numero="000000000"+res.codigo;
+					//alert(numero);
+					var agencia= "000"+vgIdTienda;
+					//alert(agencia);
+					var codigo="SC"+agencia.substr(agencia.length-3,3)+numero.substr(numero.length-9,9)
+					Ext.getCmp(saldocompras.id+'-codigo').setValue(codigo);
+				}
+			});            
+            
+			Ext.getCmp(saldocompras.id+'-tipo_ingreso').setValue('1');
+			
+			//Ext.getCmp(saldocompras.id+'-clientes_varios').setValue(false);
+			Ext.getCmp(saldocompras.id+'-cliente').setVisible(false);
+			Ext.getCmp(saldocompras.id+'-prv_id').setVisible(true);
+			Ext.getCmp(saldocompras.id+'-prv_ruc').setReadOnly(true);
+			Ext.apply(Ext.getCmp(saldocompras.id+'-prv_id'),{allowBlank:false});
+			Ext.apply(Ext.getCmp(saldocompras.id+'-cliente'),{allowBlank:true});
+			//Ext.apply(Ext.getCmp(saldocompras.id+'-prv_ruc'),{allowBlank:true});
+			
+			Ext.getCmp(saldocompras.id+'-prv_id').setValue('');
+			Ext.getCmp(saldocompras.id+'-prv_ruc').setValue('');
+			Ext.getCmp(saldocompras.id+'-prv_codigo').setValue('');
+			Ext.getCmp(saldocompras.id+'-doc_id').setValue('');
+			Ext.getCmp(saldocompras.id+'-numero').setValue('');
+			Ext.getCmp(saldocompras.id+'-guia_remision').setValue('');
+			Ext.getCmp(saldocompras.id+'-cpa_id').setValue('2');
+			Ext.getCmp(saldocompras.id+'-mon_id').setValue('1');
+			//Ext.getCmp(saldocompras.id+'-afecta_almacen').setValue(true);
+			Ext.getCmp(saldocompras.id+'-inc_igv').setValue(true);
+			Ext.getCmp(saldocompras.id+'-msganulado').setVisible(false);
+			Ext.getCmp(saldocompras.id+'-observacion').setValue('');
+			
+			saldocompras.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(saldocompras.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				Ext.getCmp(saldocompras.id+'-panel_derecho').expand();
+				Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(true);
+				Ext.getCmp(saldocompras.id+'-msganulado').setVisible(false);
+                saldocompras.fn_habilitar(true,2);
+				if(rs.get('anulado')=='1'){
+					Ext.getCmp(saldocompras.id+'-btn_actualizar').setVisible(false);
+					Ext.getCmp(saldocompras.id+'-msganulado').setVisible(true);
+				}
+				
+				Ext.getCmp(saldocompras.id+'-sco_id').setValue(rs.get('sco_id'));
+								
+				var numero="000000000"+rs.get('codigo');
+				var agencia= "000"+vgIdTienda;
+				var codigo="SC"+agencia.substr(agencia.length-3,3)+numero.substr(numero.length-9,9)
+				Ext.getCmp(saldocompras.id+'-codigo').setValue(codigo);
+					
+				Ext.getCmp(saldocompras.id+'-tipo_ingreso').setValue(rs.get('tipo_ingreso'));
+				Ext.getCmp(saldocompras.id+'-fecha').setValue(rs.get('fec_ven'));
+				//alert(rs.get('prv_id'));
+				if(rs.get('prv_id')=='0'){
+					//Ext.getCmp(saldocompras.id+'-clientes_varios').setValue(true);
+					//alert("Despues");
+					Ext.getCmp(saldocompras.id+'-prv_id').setVisible(false);
+					Ext.getCmp(saldocompras.id+'-cliente').setVisible(true);
+					Ext.getCmp(saldocompras.id+'-prv_ruc').setReadOnly(false);
+					Ext.apply(Ext.getCmp(saldocompras.id+'-prv_id'),{allowBlank:true});
+					Ext.apply(Ext.getCmp(saldocompras.id+'-cliente'),{allowBlank:false});
+					//Ext.apply(Ext.getCmp(saldocompras.id+'-prv_ruc'),{allowBlank:false});
+				}else{
+					//Ext.getCmp(saldocompras.id+'-clientes_varios').setValue(false);
+					//alert("Despues");
+					Ext.getCmp(saldocompras.id+'-cliente').setVisible(false);
+					Ext.getCmp(saldocompras.id+'-prv_id').setVisible(true);
+					Ext.getCmp(saldocompras.id+'-prv_ruc').setReadOnly(true);
+					Ext.apply(Ext.getCmp(saldocompras.id+'-prv_id'),{allowBlank:false});
+					Ext.apply(Ext.getCmp(saldocompras.id+'-cliente'),{allowBlank:true});
+					//Ext.apply(Ext.getCmp(saldocompras.id+'-prv_ruc'),{allowBlank:true});
+				}
+				
+				Ext.getCmp(saldocompras.id+'-cliente').setValue(rs.get('nombre_cliente'));
+								
+				Ext.getCmp(saldocompras.id+'-prv_id').store.load({params:{campo:'prv_id',query:rs.get('prv_id'),start:0,limit:1}});
+				Ext.getCmp(saldocompras.id+'-prv_id').setValue(rs.get('prv_id'));
+				Ext.getCmp(saldocompras.id+'-prv_id').setRawValue(rs.get('nombre_cliente'));
+				
+				Ext.getCmp(saldocompras.id+'-prv_ruc').setValue(rs.get('ruc'));
+				Ext.getCmp(saldocompras.id+'-prv_codigo').setValue(rs.get('prv_codigo'));
+				Ext.getCmp(saldocompras.id+'-doc_id').setValue(rs.get('doc_id'));
+				Ext.getCmp(saldocompras.id+'-numero').setValue(rs.get('doc_n'));
+				Ext.getCmp(saldocompras.id+'-guia_remision').setValue(rs.get('n_guia'));
+				Ext.getCmp(saldocompras.id+'-cpa_id').setValue(rs.get('cpa_id'));
+				Ext.getCmp(saldocompras.id+'-mon_id').setValue(rs.get('mon_id'));
+				Ext.getCmp(saldocompras.id+'-observacion').setValue(rs.get('observacion'));
+				Ext.getCmp(saldocompras.id+'-total_compra').setValue(rs.get('total_compra'));
+				Ext.getCmp(saldocompras.id+'-impuesto_igv').setValue(rs.get('saldo_inicial'));
+				
+				/*if(rs.get('afecta')=='S'){
+					Ext.getCmp(saldocompras.id+'-afecta_almacen').setValue(true);
+				}else{
+					Ext.getCmp(saldocompras.id+'-afecta_almacen').setValue(false);
+				}
+				if(rs.get('formato')=='S'){
+					Ext.getCmp(saldocompras.id+'-inc_igv').setValue(true);
+				}else{
+					Ext.getCmp(saldocompras.id+'-inc_igv').setValue(false);	
+				}*/
+				
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			if(saldocompras.fn_validar()){
+				/*if(Ext.getCmp(saldocompras.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(saldocompras.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}*/
+				
+				/*if(Ext.getCmp(saldocompras.id+'-clientes_varios').getValue()){
+					vIdCli='0';
+					vCli = Ext.getCmp(saldocompras.id+'-cliente').getValue();
+					vRuc = Ext.getCmp(saldocompras.id+'-prv_ruc').getValue();
+				}else{*/
+					vIdCli = Ext.getCmp(saldocompras.id+'-prv_id').getValue();
+					vCli = Ext.getCmp(saldocompras.id+'-prv_id').getRawValue();
+					vRuc = Ext.getCmp(saldocompras.id+'-prv_ruc').getValue();
+				//}
+				Ext.getCmp(saldocompras.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/saldocompras-actualizar',
+					params:{ 
+						sco_id:Ext.getCmp(saldocompras.id+'-sco_id').getValue(),
+						codigo:Ext.getCmp(saldocompras.id+'-codigo').getValue(),
+						prv_id:vIdCli,
+						cliente:vCli,
+						prv_ruc:vRuc,
+						tipo_ingreso:Ext.getCmp(saldocompras.id+'-tipo_ingreso').getValue(),
+						doc_id:Ext.getCmp(saldocompras.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldocompras.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldocompras.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldocompras.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldocompras.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(saldocompras.id+'-valor_compra').getValue(),
+						valor_bruto:Ext.getCmp(saldocompras.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(saldocompras.id+'-valor_descuento').getValue(),
+						saldo:Ext.getCmp(saldocompras.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(saldocompras.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(saldocompras.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldocompras.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(saldocompras.id+'-observacion').getValue(),
+						afecta_stock:'N',
+						formato:'S',
+						igv:18,
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(saldocompras.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldocompras.fn_habilitar(false,0);
+							Ext.getCmp(saldocompras.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldocompras.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(saldocompras.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(saldocompras.id+res.campo).focus(true,10);							
+					}
+				});				
+				/*Ext.Ajax.request({
+					url:'movimientos/saldocompras-guardar',
+					params:
+					{
+						sco_id:Ext.getCmp(saldocompras.id+'-sco_id').getValue(),
+						codigo:Ext.getCmp(saldocompras.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(saldocompras.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(saldocompras.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(saldocompras.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldocompras.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldocompras.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldocompras.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldocompras.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(saldocompras.id+'-valor_compra').getValue(),
+						impuesto_igv:Ext.getCmp(saldocompras.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(saldocompras.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(saldocompras.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldocompras.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(saldocompras.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldocompras.fn_habilitar(false,0);
+							Ext.getCmp(saldocompras.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldocompras.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {	
+			if(saldocompras.fn_validar()){
+				/*if(Ext.getCmp(saldocompras.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(saldocompras.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}*/
+				
+				/*if(Ext.getCmp(saldocompras.id+'-clientes_varios').getValue()){
+					vIdCli='0';
+					vCli = Ext.getCmp(saldocompras.id+'-cliente').getValue();
+					vRuc = Ext.getCmp(saldocompras.id+'-prv_ruc').getValue();
+				}else{*/
+					vIdCli = Ext.getCmp(saldocompras.id+'-prv_id').getValue();
+					vCli = Ext.getCmp(saldocompras.id+'-prv_id').getRawValue();
+					vRuc = Ext.getCmp(saldocompras.id+'-prv_ruc').getValue();
+				//}
+				Ext.getCmp(saldocompras.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/saldocompras-guardar',
+					params:{ 
+						codigo:Ext.getCmp(saldocompras.id+'-codigo').getValue(),
+						prv_id:vIdCli,
+						cliente:vCli,
+						prv_ruc:vRuc,
+						tipo_ingreso:Ext.getCmp(saldocompras.id+'-tipo_ingreso').getValue(),
+						doc_id:Ext.getCmp(saldocompras.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldocompras.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldocompras.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldocompras.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldocompras.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(saldocompras.id+'-valor_compra').getValue(),
+						valor_bruto:Ext.getCmp(saldocompras.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(saldocompras.id+'-valor_descuento').getValue(),
+						saldo:Ext.getCmp(saldocompras.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(saldocompras.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(saldocompras.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldocompras.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(saldocompras.id+'-observacion').getValue(),
+						afecta_stock:'N',
+						formato:'S',
+						igv:18,
+					},
+					waitTitle: 'Guardando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){
+						//alert(action.response.responseText);			
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(saldocompras.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldocompras.fn_habilitar(false,0);
+							Ext.getCmp(saldocompras.id+'-grid_lista').store.load();
+							
+							
+							/*if(Ext.getCmp(saldocompras.id+'-doc_id').getValue()==2 || Ext.getCmp(saldocompras.id+'-doc_id').getValue()==3){
+								Ext.Msg.confirm('Alerta', 'Desea imprimir Formato de Venta', function(btn) {
+									if(btn == 'yes')
+									{
+										saldocompras.fn_imprimir_formato(res.sco_id);
+									}
+								});
+							}*/
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldocompras.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(saldocompras.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);		
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(saldocompras.id+res.campo).focus(true,10);							
+					}
+				});				
+
+				/*Ext.Ajax.request({
+					url:'movimientos/saldocompras-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(saldocompras.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(saldocompras.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(saldocompras.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(saldocompras.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(saldocompras.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(saldocompras.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(saldocompras.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(saldocompras.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(saldocompras.id+'-valor_compra').getValue(),
+						impuesto_igv:Ext.getCmp(saldocompras.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(saldocompras.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(saldocompras.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(saldocompras.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(saldocompras.id+'-panel_derecho').collapse();
+							Ext.getCmp(saldocompras.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							saldocompras.fn_habilitar(false,0);
+							Ext.getCmp(saldocompras.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(saldocompras.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+		fn_anular:function()
+        {
+            var rs=Ext.getCmp(saldocompras.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				if(rs.get('anulado')=='1'){
+					og.msg("Error","Documento ya esta anulado");
+					return;
+				}
+				Ext.Msg.confirm('Alerta', 'Desea Anular?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Anulando Venta... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/saldocompras-anular',
+							params:
+							{
+								sco_id:rs.get('sco_id')
+							},
+							success:function(response,options)
+							{           
+								Ext.Msg.hide();  
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha anulado");
+									saldocompras.fn_habilitar(false,0);
+									Ext.getCmp(saldocompras.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(saldocompras.id+'-combo_describe').getValue(),query:Ext.getCmp(saldocompras.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(saldocompras.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(saldocompras.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando compra... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/saldocompras-eliminar',
+							params:
+							{
+								sco_id:rs.get('sco_id')
+							},
+							success:function(response,options)
+							{             			
+								Ext.Msg.hide();
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									saldocompras.fn_habilitar(false,0);
+									Ext.getCmp(saldocompras.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(saldocompras.id+'-combo_describe').getValue(),query:Ext.getCmp(saldocompras.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(saldocompras.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },	
+		fn_validar:function(){
+			/*if(Ext.getCmp(saldocompras.id+'-clientes_varios').getValue()){
+				if(!Ext.getCmp(saldocompras.id+'-cliente').isValid())
+				{
+					og.msg("Error", "Ingrese el Nombre del Cliente");
+					Ext.getCmp(saldocompras.id+'-cliente').focus(true,10);
+					return false;
+				}
+				if(!Ext.getCmp(saldocompras.id+'-prv_ruc').isValid())
+				{
+					og.msg("Error", "Ingrese el RUC/DNI del Cliente");
+					Ext.getCmp(saldocompras.id+'-prv_ruc').focus(true,10);
+					return false;
+				}
+			}else{*/
+				if(!Ext.getCmp(saldocompras.id+'-prv_id').isValid())
+				{
+					og.msg("Error", "Ingrese el Proveedor");
+					Ext.getCmp(saldocompras.id+'-prv_id').focus(true,10);
+					return false;
+				}
+			//}
+			//alert("Despueaz");
+			if(!Ext.getCmp(saldocompras.id+'-doc_id').isValid())
+            {
+                og.msg("Error", "Ingrese el Documento");
+                Ext.getCmp(saldocompras.id+'-doc_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(saldocompras.id+'-numero').isValid())
+            {
+                og.msg("Error", "Ingrese el Número del Documento");
+                Ext.getCmp(saldocompras.id+'-numero').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(saldocompras.id+'-cpa_id').isValid())
+            {
+                og.msg("Error", "Ingrese la Condici&oacute;n de Pago");
+                Ext.getCmp(saldocompras.id+'-cpa_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(saldocompras.id+'-mon_id').isValid())
+            {
+                og.msg("Error", "Ingrese la Moneda de Pago");
+                Ext.getCmp(saldocompras.id+'-mon_id').focus(true,10);
+                return false;
+            }
+            
+            if( Ext.getCmp(saldocompras.id+'-fecha').getValue() - Ext.getCmp(saldocompras.id+'-fechaDocumento').getValue() < 0)
+            {
+                 og.msg("Error", "Fecha de vencimiento no puede ser menor a fecha de Documento");
+                 return false;
+            }
+            
+            if( Ext.getCmp(saldocompras.id+'-total_compra').getValue() - Ext.getCmp(saldocompras.id+'-impuesto_igv').getValue() < 0)
+            {
+                 og.msg("Error", "Saldo Inicial no puede ser mayor al Total");
+                 Ext.getCmp(saldoventas.id+'-impuesto_igv').focus(true,10);                 
+                 return false;
+            }
+            
+            
+			return true;
+		},
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(saldocompras.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(saldocompras.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(saldocompras.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(saldocompras.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(saldocompras.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(saldocompras.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(saldocompras.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(saldocompras.id+'-btn_cancelar').setVisible(sw);
+			
+			Ext.getCmp(saldocompras.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(saldocompras.id+'-btn_eliminar').setVisible(!sw);
+			Ext.getCmp(saldocompras.id+'-btn_anular').setVisible(!sw);
+
+			Ext.getCmp(saldocompras.id+'-btn_editar').disable();
+			Ext.getCmp(saldocompras.id+'-btn_eliminar').disable();
+			Ext.getCmp(saldocompras.id+'-btn_anular').disable();
+			
+			Ext.getCmp(saldocompras.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(saldocompras.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(saldocompras.id+'-btn_imprimir').setVisible(!sw);			
+        },
+		
+		fn_ubicacliente:function(vcampo, vvalor, vcodigo, vnombre, vruc){
+			//alert('entra');
+			Ext.getCmp(saldocompras.id+'-prv_id').store.load({params:{campo:vcampo,query:vvalor,start:0,limit:100}});
+			Ext.getCmp(saldocompras.id+'-prv_id').setValue(vvalor);
+			Ext.getCmp(saldocompras.id+'-prv_id').setRawValue(vnombre);
+			Ext.getCmp(saldocompras.id+'-prv_ruc').setValue(vruc);
+			Ext.getCmp(saldocompras.id+'-prv_codigo').setValue(vcodigo);
+			
+		},
+		
+		fn_ubicaproveedor:function(vcampo, vvalor, vcodigo, vnombre, vruc){
+			//alert('entra');
+			Ext.getCmp(saldocompras.id+'-prv_id').store.load({params:{campo:vcampo,query:vvalor,start:0,limit:100}});
+			Ext.getCmp(saldocompras.id+'-prv_id').setValue(vvalor);
+			Ext.getCmp(saldocompras.id+'-prv_id').setRawValue(vnombre);
+			Ext.getCmp(saldocompras.id+'-prv_ruc').setValue(vruc);
+			Ext.getCmp(saldocompras.id+'-prv_codigo').setValue(vcodigo);
+			
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-saldocompras').action="movimientos/saldocompras-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(saldocompras.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(saldocompras.id+'-buscar').getValue();
+			var activePage = Math.ceil((Ext.getCmp(saldocompras.id+'_pager').cursor + Ext.getCmp(saldocompras.id+'_pager').pageSize) / Ext.getCmp(saldocompras.id+'_pager').pageSize);
+			document.getElementById('txtpar3').value = activePage;
+            document.getElementById('frmReporte-saldocompras').submit();
+        },
+		
+		fn_imprimir_preimpreso:function()
+        {
+			var rs=Ext.getCmp(saldocompras.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				document.getElementById('frmReporte-saldocompras').action="movimientos/formato-saldocompras";
+				document.getElementById('txtpar1').value = '1';
+				document.getElementById('txtpar2').value = rs.get('sco_id');
+				document.getElementById('frmReporte-saldocompras').submit();
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }			
+        },
+		
+		fn_imprimir_general:function()
+        {
+			var rs=Ext.getCmp(saldocompras.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				document.getElementById('frmReporte-saldocompras').action="movimientos/formato-saldocompras";
+				document.getElementById('txtpar1').value = '2';
+				document.getElementById('txtpar2').value = rs.get('sco_id');
+				document.getElementById('frmReporte-saldocompras').submit();
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		fn_imprimir_formato:function(vid)
+        {
+				document.getElementById('frmReporte-saldocompras').action="movimientos/formato-saldocompras";
+				document.getElementById('txtpar1').value = '1';
+				document.getElementById('txtpar2').value = vid;
+				document.getElementById('frmReporte-saldocompras').submit();
+        },
+         
+    }
+    Ext.onReady(saldocompras.init,saldocompras);
+
+</script>

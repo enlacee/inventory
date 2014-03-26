@@ -1,0 +1,718 @@
+<form id="frmReporte-numeracion" name="frmReporte-numeracion" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('numeracion');
+    numeracion={
+        id:'numeracion',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:numeracion.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(numeracion.id+'-panel_derecho').expand();
+				Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(true);
+                            numeracion.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:numeracion.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            numeracion.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:numeracion.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            numeracion.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:numeracion.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            numeracion.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:numeracion.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(numeracion.id+'-panel_derecho').collapse();
+							Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(false);
+                            numeracion.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:numeracion.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							numeracion.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:numeracion.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    numeracion.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','descripcion']
+            });
+            
+            store_documentos_lista.load();
+            
+            var store_numeracion_lista=new Ext.data.JsonStore({
+                url:'tablas/numeracion-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['num_id','serie','doc_id','doc_nom', 'lon', 'nro', 'tipo', 'tipo_des']
+            });
+            
+            store_numeracion_lista.load();
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'numeracion'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:numeracion.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_numeracion_lista = new Ext.grid.GridPanel({
+                id:numeracion.id+'-grid_lista',
+                store: store_numeracion_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'num_id',width:25},
+					{header:'Movimiento',sortable :true,dataIndex:'tipo_des',width:150},
+					{header:'Documento',sortable :true,dataIndex:'doc_nom',width:150},
+					{header:'Serie',sortable :true,dataIndex:'serie',width:50},
+					{header:'Longitud',sortable :true,dataIndex:'lon',width:100},
+					{header:'Numero',sortable :true,dataIndex:'nro',width:100},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(numeracion.id+'-btn_editar').isVisible()){
+							Ext.getCmp(numeracion.id+'-panel_derecho').expand();
+				Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(true);
+                        	numeracion.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(numeracion.id+'-btn_editar').enable();
+						Ext.getCmp(numeracion.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:numeracion.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:numeracion.id+'-num_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo",
+                                id: numeracion.id+'-tipo',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tipo"},
+                                columns: [100, 100],
+                                items: [
+                                    {
+                                        id:numeracion.id+'-1',
+                                        boxLabel: "Compra",name: "tipo",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:numeracion.id+'-2',
+                                        boxLabel: "Venta",name: "tipo",
+                                        inputValue: "2"
+                                    },
+                                    {
+                                        id:numeracion.id+'-3',
+                                        boxLabel: "Alta",name: "tipo",
+                                        inputValue: "3"
+                                    },
+                                    {
+                                        id:numeracion.id+'-4',
+                                        boxLabel: "Baja",name: "tipo",
+                                        inputValue: "4"
+                                    },
+                                    {
+                                        id:numeracion.id+'-5',
+                                        boxLabel: "NCCompra",name: "tipo",
+                                        inputValue: "5"
+                                    },
+                                    {
+                                        id:numeracion.id+'-6',
+                                        boxLabel: "NCVenta",name: "tipo",
+                                        inputValue: "6"
+                                    },
+                                    {
+                                        id:numeracion.id+'-7',
+                                        boxLabel: "TRIngreso",name: "tipo",
+                                        inputValue: "7"
+                                    },
+                                    {
+                                        id:numeracion.id+'-8',
+                                        boxLabel: "TRSalida",name: "tipo",
+                                        inputValue: "8"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_documentos_lista,
+                                id:numeracion.id+'-doc_id',
+                                fieldLabel:'Documento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:350,
+                                mode:'local',
+                                valueField:'doc_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:numeracion.id+'-serie',
+                                fieldLabel:'Serie',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:numeracion.id+'-lon',
+                                fieldLabel:'Longitud',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:numeracion.id+'-nro',
+                                fieldLabel:'Numero',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:80,
+                            }
+                        ]
+                    },
+                ]
+            }
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:10px;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'760',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_numeracion_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:numeracion.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'790',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_numeracion',
+                                        title:'Numeracion de Documentos', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:numeracion.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_numeracion_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									numeracion.fn_habilitar(false,0);
+                                store_numeracion_lista.load({params:{campo:Ext.getCmp(numeracion.id+'-combo_describe').getValue(),query:Ext.getCmp(numeracion.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+                                        onEsc:function(){Ext.getCmp('win_numeracion').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_numeracion').show();
+                Ext.getCmp('win_numeracion').center();
+                Ext.getCmp('win_numeracion').toFront();
+                numeracion.fn_habilitar(false,0);
+        },
+
+        fn_nuevo:function()
+        {                
+            Ext.getCmp(numeracion.id+'-num_id').setValue('');
+			Ext.getCmp(numeracion.id+'-serie').setValue('');
+			Ext.getCmp(numeracion.id+'-lon').setValue('');
+			Ext.getCmp(numeracion.id+'-doc_id').setValue('');
+			Ext.getCmp(numeracion.id+'-nro').setValue('');
+            numeracion.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(numeracion.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(numeracion.id+'-panel_derecho').expand();
+				Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(numeracion.id+'-num_id').setValue(rs.get('num_id'));
+                Ext.getCmp(numeracion.id+'-lon').setValue(rs.get('lon'));
+				Ext.getCmp(numeracion.id+'-serie').setValue(rs.get('serie'));
+				Ext.getCmp(numeracion.id+'-nro').setValue(rs.get('nro'));
+				Ext.getCmp(numeracion.id+'-tipo').setValue(rs.get('tipo'));
+				if(rs.get('doc_id')==null){
+                	Ext.getCmp(numeracion.id+'-doc_id').setValue("");
+				}else{
+					Ext.getCmp(numeracion.id+'-doc_id').setValue(rs.get('doc_id'));
+				}
+                
+                numeracion.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			if(numeracion.fn_validar()){
+				Ext.getCmp(numeracion.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/numeracion-actualizar',
+					params:{ 
+						num_id:Ext.getCmp(numeracion.id+'-num_id').getValue(),
+						lon:Ext.getCmp(numeracion.id+'-lon').getValue(),
+						nro:Ext.getCmp(numeracion.id+'-nro').getValue(),
+						serie:Ext.getCmp(numeracion.id+'-serie').getValue(),
+						doc_id:Ext.getCmp(numeracion.id+'-doc_id').getValue(),
+						tipo:Ext.getCmp(numeracion.id+'-tipo').getValue().getGroupValue(),
+						doc_nom:Ext.getCmp(numeracion.id+'-doc_id').getRawValue(),
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(numeracion.id+'-panel_derecho').collapse();
+							Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							numeracion.fn_habilitar(false,0);
+							Ext.getCmp(numeracion.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(numeracion.id+'-combo_describe').getValue(),query:Ext.getCmp(numeracion.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(numeracion.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(numeracion.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						alert(action.response.responseText);
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(numeracion.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/numeracion-actualizar',
+					params:
+					{
+						num_id:Ext.getCmp(numeracion.id+'-num_id').getValue(),
+						lon:Ext.getCmp(numeracion.id+'-lon').getValue(),
+						serie:Ext.getCmp(numeracion.id+'-serie').getValue().toUpperCase(),
+						doc_id:Ext.getCmp(numeracion.id+'-doc_id').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(numeracion.id+'-panel_derecho').collapse();
+							Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							numeracion.fn_habilitar(false,0);
+							Ext.getCmp(numeracion.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(numeracion.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+			if(numeracion.fn_validar()){
+				Ext.getCmp(numeracion.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/numeracion-guardar',
+					params:{ 
+						lon:Ext.getCmp(numeracion.id+'-lon').getValue(),
+						nro:Ext.getCmp(numeracion.id+'-nro').getValue(),
+						serie:Ext.getCmp(numeracion.id+'-serie').getValue(),
+						doc_id:Ext.getCmp(numeracion.id+'-doc_id').getValue(),
+						tipo:Ext.getCmp(numeracion.id+'-tipo').getValue().getGroupValue(),
+						doc_nom:Ext.getCmp(numeracion.id+'-doc_id').getRawValue(),
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(numeracion.id+'-panel_derecho').collapse();
+							Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							numeracion.fn_habilitar(false,0);
+							Ext.getCmp(numeracion.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(numeracion.id+'-combo_describe').getValue(),query:Ext.getCmp(numeracion.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(numeracion.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(numeracion.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(numeracion.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/numeracion-guardar',
+					params:
+					{
+						lon:Ext.getCmp(numeracion.id+'-lon').getValue(),
+						serie:Ext.getCmp(numeracion.id+'-serie').getValue().toUpperCase(),
+						doc_id:Ext.getCmp(numeracion.id+'-doc_id').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(numeracion.id+'-panel_derecho').collapse();
+							Ext.getCmp(numeracion.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							numeracion.fn_habilitar(false,0);
+							Ext.getCmp(numeracion.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(numeracion.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(numeracion.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Linea :<br>' + rs.get('serie'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando linea... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/numeracion-eliminar',
+							params:
+							{
+								num_id:rs.get('num_id')
+							},
+							success:function(response,options)
+							{       
+								Ext.Msg.hide();      
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									numeracion.fn_habilitar(false,0);
+									Ext.getCmp(numeracion.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(numeracion.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(numeracion.id+'-serie').isValid())
+            {
+                og.msg("Error", "Ingrese el campo series");
+                Ext.getCmp(numeracion.id+'-serie').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(numeracion.id+'-doc_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Familia");
+                Ext.getCmp(numeracion.id+'-doc_id').focus(true,10);
+                return false;
+            }
+			return true;			
+		},
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-numeracion').action="tablas/numeracion-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(numeracion.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(numeracion.id+'-buscar').getValue();
+            document.getElementById('frmReporte-numeracion').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(numeracion.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(numeracion.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(numeracion.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(numeracion.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(numeracion.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(numeracion.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(numeracion.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(numeracion.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(numeracion.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(numeracion.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			if(Ext.getCmp(numeracion.id+'-grid_lista').getSelectionModel().getSelected()){
+				Ext.getCmp(numeracion.id+'-btn_editar').enable();
+				Ext.getCmp(numeracion.id+'-btn_eliminar').enable();
+			}else{			
+				Ext.getCmp(numeracion.id+'-btn_editar').disable();
+				Ext.getCmp(numeracion.id+'-btn_eliminar').disable();
+			}
+			Ext.getCmp(numeracion.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(numeracion.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(numeracion.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(numeracion.init,numeracion);
+
+</script>

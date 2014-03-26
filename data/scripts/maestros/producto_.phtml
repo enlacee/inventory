@@ -1,0 +1,1351 @@
+<form id="frmReporte-producto" name="frmReporte-producto" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('producto');
+    producto={
+        id:'producto',
+        init:function(){
+            /*Ext.Ajax.timeout = 180000;*/
+			alert("HOLKA");
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:producto.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(producto.id+'-panel_derecho').expand();
+				Ext.getCmp(producto.id+'-panel_derecho').setVisible(true);
+                            producto.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:producto.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            producto.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:producto.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            producto.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:producto.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            producto.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:producto.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(producto.id+'-panel_derecho').collapse();
+							Ext.getCmp(producto.id+'-panel_derecho').setVisible(false);
+                            producto.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:producto.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							producto.fn_eliminar();                            
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:producto.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    producto.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var store_fam_lista=new Ext.data.JsonStore({
+                url:'tablas/familias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['fam_id','nombre']
+            });
+            
+            store_fam_lista.load();
+            
+            var store_marcas_lista=new Ext.data.JsonStore({
+                url:'tablas/marcas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mar_id','nombre']
+            });
+			//store_marcas_lista.load({params:{start:0,limit:100}});
+			
+			var pagerCmbPrv = new Ext.PagingToolbar({
+                id:producto.id+'_pagerCmbPrb',
+                store:store_marcas_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerCmbPrv.on('beforechange',function(bar,params){  
+				params.campo = 'nombre';
+				params.query = Ext.getCmp(producto.id+'-mar_id').getValue();
+			});
+			
+            
+            var store_lineas_lista=new Ext.data.JsonStore({
+                url:'tablas/lineas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['lin_id','nombre']
+            });
+            
+            var store_unidad_medida_lista=new Ext.data.JsonStore({
+                url:'tablas/unidad-medida-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ume_id','codigo','abreviatura','descripcion']
+            });
+            
+            store_unidad_medida_lista.load();
+            
+            var store_producto_lista=new Ext.data.JsonStore({
+                url:'maestros/producto-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mcd_id','codigo1','codigo2','codigo3','nombre','ume_id','mar_id','lin_id','activo', 'fam_id', 'ume_nom', 'mar_nom'],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+            
+            var store_producto_describe=new Ext.data.JsonStore({
+                url:'maestros/producto-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_producto_describe.load({params:{table:'maestros_producto'}});
+            
+            var pager = new Ext.PagingToolbar({
+                id:producto.id+'_pager',
+                store:store_producto_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(producto.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(producto.id+'-buscar').getValue();
+			}); 
+            
+            var combo_producto_describe=new Ext.form.ComboBox({
+                id:producto.id+'-combo_describe',
+                store:store_producto_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+			
+			var txt_busqueda=new Ext.app.SearchField({
+				id:producto.id+'-buscar', 
+				emptyText : 'Valor a buscar...',
+				enableKeyEvents: true,
+				store: store_producto_lista,
+				hasSearch : false,
+				width: 120,
+				listeners:
+				{
+					specialkey:function(obj, e)
+					{
+						if (e.getKey() == 13)
+						{
+						producto.fn_habilitar(false,0);
+						store_producto_lista.load({params:{campo:Ext.getCmp(producto.id+'-combo_describe').getValue(),query:Ext.getCmp(producto.id+'-buscar').getValue(),start:0,limit:100}});
+						}
+					}
+				}
+			});
+            
+            var grid_producto_lista = new Ext.grid.GridPanel({
+                id:producto.id+'-grid_lista',
+                store: store_producto_lista,
+                singleSelect:true,
+                forceSelection:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:400,
+                stateful: true,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mcd_id',width:25},
+                    {header:'Código 1',sortable :true,dataIndex:'codigo1',width:100},
+                    {header:'Código 2',sortable :true,dataIndex:'codigo2',width:100},
+                    {header:'Código 3',sortable :true,dataIndex:'codigo3',width:100,hidden:true},
+                    {header:'Descripción',sortable :true,dataIndex:'nombre',width:250},
+                    {header:'Marca',sortable :true,dataIndex:'mar_nom',width:100},
+					{header:'Unidad de Medida',sortable :true,dataIndex:'ume_nom',width:100,hidden:true},
+					/*{header:'Stock Actual',sortable :true,dataIndex:'stock_pro',width:100,align:'right'},
+                    {header:'Precio Compra',sortable :true,dataIndex:'precio_compra',width:100,align:'right',hidden:true},
+					{header:'Precio Costo',sortable :true,dataIndex:'precio_costo',width:100,align:'right'},
+                    {header:'Precio Venta',sortable :true,dataIndex:'precio_venta',width:100,align:'right'},
+                    {header:'Stock Mínimo',sortable :true,dataIndex:'stock_minimo',width:100,align:'right',hidden:true},
+					{header:'% Incremento',sortable :true,dataIndex:'utilidad',width:100,align:'right',hidden:true},
+					{header:'% Desc 1',sortable :true,dataIndex:'desc1',width:100,align:'right',hidden:true},
+					{header:'% Desc 2',sortable :true,dataIndex:'desc2',width:100,align:'right',hidden:true},
+					{header:'% Desc 3',sortable :true,dataIndex:'desc3',width:100,align:'right',hidden:true},
+					{header:'% Desc 4',sortable :true,dataIndex:'desc4',width:100,align:'right',hidden:true},*/
+                    {header:'Estado',sortable :true,dataIndex:'activo',width:100,hidden:true}
+                    ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        Ext.getCmp(producto.id+'-panel_derecho').expand();
+				Ext.getCmp(producto.id+'-panel_derecho').setVisible(true);
+                        producto.fn_editar();
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(producto.id+'-btn_editar').enable();
+						Ext.getCmp(producto.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+            
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:producto.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:producto.id+'-mcd_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:producto.id+'-codigo1',
+                                fieldLabel:'Código 1',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:producto.id+'-codigo2',
+                                fieldLabel:'Código 2',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:producto.id+'-codigo3',
+                                fieldLabel:'Código 3',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:producto.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_unidad_medida_lista,
+                                id:producto.id+'-ume_id',
+                                fieldLabel:'Unidad de Medida',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                mode:'local',
+                                valueField:'ume_id',
+                                displayField:'abreviatura',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_marcas_lista,
+                                id:producto.id+'-mar_id',
+                                fieldLabel:'Marca',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                valueField:'mar_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								pageSize:100,
+                                listeners:
+                                    {
+										beforequery:function(obj){
+											store_marcas_lista.setBaseParam('campo', 'nombre');
+											store_marcas_lista.setBaseParam('query', Ext.getCmp(producto.id+'-mar_id').getValue());						
+										},
+										expand:function(cmb){
+											if(!cmb.getRawValue()){
+												store_marcas_lista.load({params:{start:0,limit:100}});
+											}
+										},
+										specialkey:function(obj, e)
+										{
+											if (e.getKey() == 13)
+											{
+												store_marcas_lista.load({params:{campo:'nombre',query:obj.getRawValue(),start:0,limit:100}});
+											}
+										},
+										select:function(cmb,record,index)
+										{
+											Ext.getCmp(producto.id+'-prv_ruc').setValue(record.get('ruc'));
+											Ext.getCmp(producto.id+'-prv_codigo').setValue(record.get('codigo'));
+										}
+									}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_fam_lista,
+                                id:producto.id+'-fam_id',
+                                fieldLabel:'Familia',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'fam_id',
+								allowBlank:false,
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(producto.id+'-lin_id').setValue('');
+                                        store_lineas_lista.load({params:{campo:'fam_id',query:record.get('fam_id')}});
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_lineas_lista,
+                                id:producto.id+'-lin_id',
+                                fieldLabel:'Línea',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'lin_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-precio_compra',
+                                fieldLabel:'Precio de Compra',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								hidden:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:.75,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Cálculo de Precios",
+                                id: producto.id+'-ind_calculo',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "ind_calculo"},
+                                columns: [60, 100],
+								hidden:true,
+                                items: [
+                                    {
+                                        id:producto.id+'-ind_calculo_m',
+                                        boxLabel: "Manual",name: "ind_calculo",
+                                        inputValue: "M",
+                                        checked:true
+                                    },
+                                    {
+                                        id:producto.id+'-ind_calculo_c',
+                                        boxLabel: "Automatico",name: "ind_calculo",
+                                        inputValue: "A"
+                                    }
+                                ],
+								listeners : {
+									change : function(){
+										if(Ext.getCmp(producto.id+'-ind_calculo').getValue().getGroupValue()=="M"){
+											Ext.getCmp(producto.id+'-precio_compra').enable();
+											Ext.getCmp(producto.id+'-precio_costo').enable();
+											Ext.getCmp(producto.id+'-precio_venta').enable();
+											Ext.getCmp(producto.id+'-utilidad').enable();
+										}else{
+											Ext.getCmp(producto.id+'-precio_compra').disable();
+											Ext.getCmp(producto.id+'-precio_costo').disable();
+											Ext.getCmp(producto.id+'-precio_venta').disable();
+											Ext.getCmp(producto.id+'-utilidad').disable();
+										}
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-precio_costo',
+                                fieldLabel:'Precio de Costo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								hidden:true,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(producto.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(producto.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(producto.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-utilidad',
+                                fieldLabel:'% Incremento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:2,
+								hidden:true,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(producto.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(producto.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(producto.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-precio_venta',
+                                fieldLabel:'Precio de Venta',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								hidden:true,
+								listeners : {
+									blur:function(obj){
+										vcosto = eval(Ext.getCmp(producto.id+'-precio_costo').getValue());
+										if(vcosto>0){											
+											vventa = eval(Ext.getCmp(producto.id+'-precio_venta').getValue());
+											vvalor = (vventa/vcosto)*100 - 100;
+											Ext.getCmp(producto.id+'-utilidad').setValue(vvalor);
+										}else{
+											Ext.getCmp(producto.id+'-utilidad').setValue(0);
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-stock_minimo',
+                                fieldLabel:'Stock Mínimo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								hidden:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-stock_actual',
+                                fieldLabel:'Stock Actual',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								hidden:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-desc1',
+                                fieldLabel:'% Desc 1',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								hidden:true
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-desc2',
+                                fieldLabel:'% Desc 2',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								hidden:true
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-desc3',
+                                fieldLabel:'% Desc 3',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								hidden:true
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:producto.id+'-desc4',
+                                fieldLabel:'% Desc 4',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								hidden:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: producto.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:producto.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:producto.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_producto_describe,txt_busqueda
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_producto_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:producto.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+             new Ext.Window({
+                                        id:'win_producto',
+                                        title:'Maestro de Mercaderias',
+                                        width: 800,
+                                        height:400,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_producto').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+			});
+                Ext.getCmp('win_producto').show();
+                Ext.getCmp('win_producto').center();
+                Ext.getCmp('win_producto').toFront();
+                producto.fn_habilitar(false,0);
+                //store_producto_lista.load({params:{start:0,limit:100}});
+                Ext.getCmp(producto.id+'-panel_derecho').collapse();
+							Ext.getCmp(producto.id+'-panel_derecho').setVisible(false);
+        },
+        fn_nuevo:function()
+        {
+            Ext.getCmp(producto.id+'-mcd_id').setValue('');
+            Ext.getCmp(producto.id+'-codigo1').setValue('');
+            Ext.getCmp(producto.id+'-codigo2').setValue('');
+            Ext.getCmp(producto.id+'-codigo3').setValue('');
+            Ext.getCmp(producto.id+'-nombre').setValue('');
+            Ext.getCmp(producto.id+'-ume_id').setValue('');
+            Ext.getCmp(producto.id+'-mar_id').setValue('');
+            Ext.getCmp(producto.id+'-fam_id').setValue('');
+			Ext.getCmp(producto.id+'-lin_id').setValue('');
+			Ext.getCmp(producto.id+'-ind_calculo').items.items[0].setValue(true);
+            Ext.getCmp(producto.id+'-ind_calculo').items.items[1].setValue(false);
+			
+            Ext.getCmp(producto.id+'-precio_compra').setValue("0.00");
+			Ext.getCmp(producto.id+'-precio_costo').setValue("0.00");
+            Ext.getCmp(producto.id+'-precio_venta').setValue("0.00");
+            Ext.getCmp(producto.id+'-stock_minimo').setValue("0");
+            Ext.getCmp(producto.id+'-stock_actual').setValue("0");
+			Ext.getCmp(producto.id+'-utilidad').setValue("0");
+			Ext.getCmp(producto.id+'-desc1').setValue("0");
+			Ext.getCmp(producto.id+'-desc2').setValue("0");
+			Ext.getCmp(producto.id+'-desc3').setValue("0");
+			Ext.getCmp(producto.id+'-desc4').setValue("0");
+            Ext.getCmp(producto.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(producto.id+'-estado').items.items[1].setValue(false);
+            producto.fn_habilitar(true,1);
+			Ext.getCmp(producto.id+'-codigo1').focus(true,10);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(producto.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(producto.id+'-panel_derecho').expand();
+				Ext.getCmp(producto.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(producto.id+'-mcd_id').setValue(rs.get('mcd_id'));
+                Ext.getCmp(producto.id+'-codigo1').setValue(rs.get('codigo1'));
+                Ext.getCmp(producto.id+'-codigo2').setValue(rs.get('codigo2'));
+                Ext.getCmp(producto.id+'-codigo3').setValue(rs.get('codigo3'));
+                Ext.getCmp(producto.id+'-nombre').setValue(rs.get('nombre'));
+                Ext.getCmp(producto.id+'-ume_id').setValue(rs.get('ume_id'));
+				
+				Ext.getCmp(producto.id+'-mar_id').store.load({params:{campo:'mar_id',query:rs.get('mar_id'),start:0,limit:100},
+				callback:function()
+				{
+					Ext.getCmp(producto.id+'-mar_id').setValue(rs.get('mar_id'));         
+				}});				
+				
+                Ext.getCmp(producto.id+'-fam_id').setValue(rs.get('fam_id'));
+				
+				Ext.getCmp(producto.id+'-lin_id').store.load({params:{campo:'fam_id',query:rs.get('fam_id')},
+				callback:function()
+				{
+					Ext.getCmp(producto.id+'-lin_id').setValue(rs.get('lin_id'));                    
+				}});
+				
+                Ext.getCmp(producto.id+'-precio_compra').setValue(rs.get('precio_compra'));
+				Ext.getCmp(producto.id+'-precio_costo').setValue(rs.get('precio_costo'));
+                Ext.getCmp(producto.id+'-precio_venta').setValue(rs.get('precio_venta'));
+				Ext.getCmp(producto.id+'-utilidad').setValue(rs.get('utilidad'));
+				
+				Ext.getCmp(producto.id+'-ind_calculo').setValue(rs.get('ind_calculo'));
+				
+				if(rs.get('ind_calculo')=="C"){
+					Ext.getCmp(producto.id+'-precio_compra').disable();
+					Ext.getCmp(producto.id+'-precio_costo').disable();
+					Ext.getCmp(producto.id+'-precio_venta').disable();
+					Ext.getCmp(producto.id+'-utilidad').disable();
+				}
+				
+                Ext.getCmp(producto.id+'-stock_minimo').setValue(rs.get('stock_minimo'));
+                Ext.getCmp(producto.id+'-stock_actual').setValue(rs.get('stock_pro'));
+				Ext.getCmp(producto.id+'-stock_actual').setReadOnly(true);
+				Ext.getCmp(producto.id+'-stock_actual').disable();
+				
+				
+				Ext.getCmp(producto.id+'-desc1').setValue(rs.get('desc1'));
+				Ext.getCmp(producto.id+'-desc2').setValue(rs.get('desc2'));
+				Ext.getCmp(producto.id+'-desc3').setValue(rs.get('desc3'));
+				Ext.getCmp(producto.id+'-desc4').setValue(rs.get('desc4'));
+				
+                Ext.getCmp(producto.id+'-estado').setValue(rs.get('activo'));				
+                
+                producto.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(producto.fn_validar()){
+				Ext.getCmp(producto.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/producto-actualizar',
+					params:{ 
+						mcd_id:Ext.getCmp(producto.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(producto.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(producto.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(producto.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(producto.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(producto.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(producto.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(producto.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(producto.id+'-lin_id').getValue(),
+						precio_costo:Ext.getCmp(producto.id+'-precio_costo').getValue(),
+						precio_compra:Ext.getCmp(producto.id+'-precio_compra').getValue(),
+						precio_venta:Ext.getCmp(producto.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(producto.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(producto.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(producto.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(producto.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(producto.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(producto.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(producto.id+'-desc4').getValue(),
+						estado:Ext.getCmp(producto.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(producto.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					waitTitle: 'Registro de Mercaderia',
+					waitMsg: 'Actualizando Informacion..',
+					success: function(form, action){	
+						//alert(action.response.responseText);				
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(producto.id+'-panel_derecho').collapse();
+							Ext.getCmp(producto.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							producto.fn_habilitar(false,0);
+							Ext.getCmp(producto.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(producto.id+'-combo_describe').getValue(),query:Ext.getCmp(producto.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(producto.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(producto.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(producto.id+res.campo).focus(true,10);							
+					}
+				});
+				/*Ext.Msg.wait('Actualizando información de mercaderia... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/producto-actualizar',
+					params:
+					{
+						mcd_id:Ext.getCmp(producto.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(producto.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(producto.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(producto.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(producto.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(producto.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(producto.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(producto.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(producto.id+'-lin_id').getValue(),
+						precio_costo:Ext.getCmp(producto.id+'-precio_costo').getValue(),
+						precio_compra:Ext.getCmp(producto.id+'-precio_compra').getValue(),
+						precio_venta:Ext.getCmp(producto.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(producto.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(producto.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(producto.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(producto.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(producto.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(producto.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(producto.id+'-desc4').getValue(),
+						estado:Ext.getCmp(producto.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(producto.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{       
+						Ext.Msg.hide();     
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(producto.id+'-panel_derecho').collapse();
+							Ext.getCmp(producto.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							producto.fn_habilitar(false,0);
+							Ext.getCmp(producto.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(producto.id+'-combo_describe').getValue(),query:Ext.getCmp(producto.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(producto.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+            if(producto.fn_validar()){
+				Ext.getCmp(producto.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/producto-guardar',
+					params:{ 
+						mcd_id:Ext.getCmp(producto.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(producto.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(producto.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(producto.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(producto.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(producto.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(producto.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(producto.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(producto.id+'-lin_id').getValue(),
+						precio_compra:Ext.getCmp(producto.id+'-precio_compra').getValue(),
+						precio_costo:Ext.getCmp(producto.id+'-precio_costo').getValue(),
+						precio_venta:Ext.getCmp(producto.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(producto.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(producto.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(producto.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(producto.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(producto.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(producto.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(producto.id+'-desc4').getValue(),
+						estado:Ext.getCmp(producto.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(producto.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(producto.id+'-panel_derecho').collapse();
+							Ext.getCmp(producto.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							producto.fn_habilitar(false,0);
+							Ext.getCmp(producto.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(producto.id+'-combo_describe').getValue(),query:Ext.getCmp(producto.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(producto.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(producto.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(producto.id+res.campo).focus(true,10);							
+					}
+				});
+				/*Ext.Msg.wait('Guardando información de mercaderia... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/producto-guardar',
+					params:
+					{
+						mcd_id:Ext.getCmp(producto.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(producto.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(producto.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(producto.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(producto.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(producto.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(producto.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(producto.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(producto.id+'-lin_id').getValue(),
+						precio_compra:Ext.getCmp(producto.id+'-precio_compra').getValue(),
+						precio_costo:Ext.getCmp(producto.id+'-precio_costo').getValue(),
+						precio_venta:Ext.getCmp(producto.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(producto.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(producto.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(producto.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(producto.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(producto.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(producto.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(producto.id+'-desc4').getValue(),
+						estado:Ext.getCmp(producto.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(producto.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{       
+						Ext.Msg.hide();      
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(producto.id+'-panel_derecho').collapse();
+							Ext.getCmp(producto.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							producto.fn_habilitar(false,0);
+							Ext.getCmp(producto.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(producto.id+'-combo_describe').getValue(),query:Ext.getCmp(producto.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(producto.id+res.campo).focus(true,10);							
+						}						
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(producto.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				 Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Mercaderia :<br>' + rs.get('nombre'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando mercaderia... por favor espere!');
+						Ext.Ajax.request({
+							url:'maestros/producto-eliminar',
+							params:
+							{
+								mcd_id:rs.get('mcd_id')
+							},
+							success:function(response,options)
+							{        
+								Ext.Msg.hide();     
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									producto.fn_habilitar(false,0);
+									Ext.getCmp(producto.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(producto.id+'-combo_describe').getValue(),query:Ext.getCmp(producto.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(producto.id+res.campo).focus(true,10);				
+								}									
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(producto.id+'-codigo1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 1");
+                Ext.getCmp(producto.id+'-codigo1').focus(true,10);
+                return false;
+            }
+            /*if(!Ext.getCmp(producto.id+'-codigo2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 2");
+                Ext.getCmp(producto.id+'-codigo2').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-codigo3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 3");
+                Ext.getCmp(producto.id+'-codigo3').focus(true,10);
+                return false;
+            }*/
+            if(!Ext.getCmp(producto.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(producto.id+'-nombre').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-ume_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Unidad de Medida");
+                Ext.getCmp(producto.id+'-ume_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-mar_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Marca");
+                Ext.getCmp(producto.id+'-mar_id').focus(true,10);
+                return false;
+            }
+			 if(!Ext.getCmp(producto.id+'-fam_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Familia");
+                Ext.getCmp(producto.id+'-fam_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-lin_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Linea");
+                Ext.getCmp(producto.id+'-lin_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(producto.id+'-precio_compra').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Compra");
+                Ext.getCmp(producto.id+'-precio_compra').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-precio_costo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Costo");
+                Ext.getCmp(producto.id+'-precio_costo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-precio_venta').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Venta");
+                Ext.getCmp(producto.id+'-precio_venta').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-stock_minimo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Mínimo");
+                Ext.getCmp(producto.id+'-stock_minimo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(producto.id+'-stock_actual').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Actual");
+                Ext.getCmp(producto.id+'-stock_actual').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(producto.id+'-utilidad').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Incremento");
+                Ext.getCmp(producto.id+'-utilidad').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(producto.id+'-desc1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 1");
+                Ext.getCmp(producto.id+'-desc1').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(producto.id+'-desc2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 2");
+                Ext.getCmp(producto.id+'-desc2').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(producto.id+'-desc3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 3");
+                Ext.getCmp(producto.id+'-desc3').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(producto.id+'-desc4').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 4");
+                Ext.getCmp(producto.id+'-desc4').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-producto').action="maestros/producto-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(producto.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(producto.id+'-buscar').getValue();
+            document.getElementById('frmReporte-producto').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(producto.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(producto.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(producto.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(producto.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(producto.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(producto.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(producto.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(producto.id+'-btn_cancelar').setVisible(sw);
+			
+			Ext.getCmp(producto.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(producto.id+'-btn_eliminar').setVisible(!sw);
+
+			Ext.getCmp(producto.id+'-btn_editar').disable();
+			Ext.getCmp(producto.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(producto.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(producto.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(producto.id+'-btn_imprimir').setVisible(!sw);			
+        }
+    }
+    Ext.onReady(producto.init,producto);
+
+</script>

@@ -1,0 +1,253 @@
+<form id="frmReporte-saldoinicialcompras" name="frmReporte-saldoinicialcompras" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('saldoinicialcompras');
+    saldoinicialcompras={
+        id:'saldoinicialcompras',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+                       
+            var btn_guardar=new Ext.Button({
+                id:saldoinicialcompras.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            saldoinicialcompras.fn_guardar();
+                        }
+                    }
+            });
+            
+            var store_saldoinicialcompras_lista=new Ext.data.JsonStore({
+                url:'movimientos/compras-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['nombre_proveedor','descripcion_documento','mco_id','codigo','prv_id','tipo_ingreso','doc_id','doc_n','n_guia','cpa_id','mon_id','valor_compra','impuesto_igv','total_compra', 'fec_ven', 'fec_mov', 'moneda', 'prv_codigo', 'ruc', 'anulado', 'afecta', 'formato', 'observacion', 'saldo', 'saldo_tmp','saldo_inicial'],
+				remoteSort:true,				
+				sortInfo: {field:'fec_mov', direction:'desc'}
+            });
+            
+            
+			
+			var pager = new Ext.PagingToolbar({
+                id:saldoinicialcompras.id+'_pager',
+                store:store_saldoinicialcompras_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(saldoinicialcompras.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(saldoinicialcompras.id+'-buscar').getValue();
+			});
+
+            var store_compras_describe=new Ext.data.JsonStore({
+                url:'movimientos/compras-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_compras_describe.load({params:{table:'movimientos_compras'}});
+            
+            var combo_compras_describe=new Ext.form.ComboBox({
+                id:saldoinicialcompras.id+'-combo_describe',
+                store:store_compras_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_saldoinicialcompras_lista = new Ext.grid.EditorGridPanel({
+                id:saldoinicialcompras.id+'-grid_lista',
+                store: store_saldoinicialcompras_lista,
+				clicksToEdit: 1,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+				loadMask:true,
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mco_id',width:25},
+					{header:'Fecha',sortable :true,dataIndex:'fec_ven',width:70},
+                    {header:'Documento',sortable :true,dataIndex:'descripcion_documento',width:80},
+					{header:'Número',sortable :true,dataIndex:'doc_n',width:80, align:'center'},
+					{header:'Proveedor',sortable :true,dataIndex:'nombre_proveedor',width:200},
+                     {
+                                  header:"Saldo Inicial", width: 100, sortable: true, dataIndex: 'saldo_inicial',align:'right',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        style:{textAlign:'right'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+										listeners : {
+											blur : function(obj, eve){
+
+												var index = grid_saldoinicialcompras_lista.getSelectionModel().getSelectedCell(); //.sm().getSelected( );
+												if (!index)
+												{
+													return false;
+												}
+												
+												datos=Ext.getCmp(saldoinicialcompras.id+'-grid_lista').getStore(0).getAt(index[0]);
+												
+												if(datos.get('saldo_tmp') == datos.get('saldo')){
+													if(obj.getValue() > datos.get('total_venta')){
+														datos.set('saldo_inicial',datos.get('saldo_tmp'));
+														alert("Monto no valido");
+														return false;
+													}
+												}else{
+													if(obj.getValue() > datos.get('total_compra') || obj.getValue() < datos.get('saldo')){
+														datos.set('saldo_inicial',datos.get('saldo_tmp'));
+														alert("Monto no valido");
+														return false;
+													}
+												}
+												//return true;
+											}
+										}
+                                   })
+                                },
+					{header:'Saldo Actual',sortable :true,dataIndex:'saldo',width:100, align:'right'},		
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:70, align:'left'},
+					{header:'Anulado',sortable :true,dataIndex:'anulado',width:50, align:'left'}
+                ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_guardar,
+                            combo_compras_describe,'-',
+                    new Ext.app.SearchField({
+                        id:saldoinicialcompras.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_saldoinicialcompras_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj,e)
+                            {
+                                if(e.getKey() == 13)
+                                {
+                                    store_saldoinicialcompras_lista.load({params:{campo:Ext.getCmp(saldoinicialcompras.id+'-combo_describe').getValue(),query:Ext.getCmp(saldoinicialcompras.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'100%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_saldoinicialcompras_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_compras',
+                                        title:'Saldos Iniciales de Compras', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                        onEsc:function(){Ext.getCmp('win_compras').close();}, resizable:true,
+                        items:panel,
+                        buttonAlign:'center'
+            });
+            
+            Ext.getCmp('win_compras').show();
+            Ext.getCmp('win_compras').center();
+            Ext.getCmp('win_compras').toFront();
+        },
+        fn_guardar:function()
+        {	
+			var vData= new Array();
+			con=0;
+			for(i=0;i<Ext.getCmp(saldoinicialcompras.id+'-grid_lista').store.getCount();i++)
+            {
+                datos=Ext.getCmp(saldoinicialcompras.id+'-grid_lista').getStore(0).getAt(i);
+				vAnt = datos.get('saldo_tmp');
+				vNew = datos.get('saldo');
+
+				if( vAnt !=vNew ){
+					vValore = datos.get('mco_id') + '.@.' + datos.get('saldo');
+					vData[con] = vValore;
+					con++;
+				}
+				
+            }	
+			alert(vData.length + ' ' + con);
+			Ext.Msg.wait('Guardando información de Saldos Iniciales de Compras... por favor espere!');
+            Ext.Ajax.request({
+                url:'movimientos/saldoinicialcompras-guardar',
+                params:
+                {
+					"v_detalle[]":vData,
+                },
+				waitTitle: 'Registro de ',
+				waitMsg: 'Guardando Información..',
+                success:function(response,options)
+                {
+					Ext.Msg.hide();
+                    var res = Ext.decode(response.responseText);
+                    og.msg("Ok","El registro se ha actualizado");
+                    Ext.getCmp(saldoinicialcompras.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(saldoinicialcompras.id+'-combo_describe').getValue(),query:Ext.getCmp(saldoinicialcompras.id+'-buscar').getValue(),start:0,limit:100}});
+				}
+			});
+        },
+         
+    }
+    Ext.onReady(saldoinicialcompras.init,saldoinicialcompras);
+
+</script>

@@ -1,0 +1,653 @@
+<form id="frmReporte-tipo_cambio" name="frmReporte-tipo_cambio" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('tipo_cambio');
+    tipo_cambio={
+        id:'tipo_cambio',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:tipo_cambio.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(tipo_cambio.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(true);
+                            tipo_cambio.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:tipo_cambio.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            tipo_cambio.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:tipo_cambio.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            tipo_cambio.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:tipo_cambio.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            tipo_cambio.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:tipo_cambio.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(tipo_cambio.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(false);
+                            tipo_cambio.fn_habilitar(false,0);
+                        }
+                    }
+            });
+			
+			;
+            
+            var btn_eliminar=new Ext.Button({
+                id:tipo_cambio.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							tipo_cambio.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:tipo_cambio.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							tipo_cambio.fn_imprimir();
+                        }
+                    }
+            });
+            
+            var store_tipo_cambio_lista=new Ext.data.JsonStore({
+                url:'tablas/tipo-cambio-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tic_id','fecha','valor_compra','valor_venta'],
+				remoteSort:true,				
+				sortInfo: {field:'fecha', direction:'asc'}
+            });
+            
+            //store_tipo_cambio_lista.load({params:{start:0,limit:100}});
+			
+			var pager = new Ext.PagingToolbar({
+                id:tipo_cambio.id+'_pager',
+                store:store_tipo_cambio_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(tipo_cambio.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(tipo_cambio.id+'-buscar').getValue();
+			});
+
+            var store_tipo_cambio_describe=new Ext.data.JsonStore({
+                url:'tablas/tipo-cambio-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_tipo_cambio_describe.load({params:{table:'tipo_cambio'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:tipo_cambio.id+'-combo_describe',
+                store:store_tipo_cambio_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_tipo_cambio_lista = new Ext.grid.GridPanel({
+                id:tipo_cambio.id+'-grid_lista',
+                store: store_tipo_cambio_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+				bbar:pager,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'tic_id',width:25},
+                    {header:'Fecha',sortable :true,dataIndex:'fecha',width:150},
+                    {header:'Compra',sortable :true,dataIndex:'valor_compra',width:100, align:'right'},
+                    {header:'Venta',sortable :true,dataIndex:'valor_venta',width:100, align:'right'}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(tipo_cambio.id+'-btn_editar').isVisible()){
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(true);
+                        	tipo_cambio.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(tipo_cambio.id+'-btn_editar').enable();
+						Ext.getCmp(tipo_cambio.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:tipo_cambio.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:tipo_cambio.id+'-tic_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:tipo_cambio.id+'-fecha',
+                                emptyText:'Fecha',
+                                width:120,
+                                fieldLabel:'Fecha',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                itemCls: 'label01',
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:tipo_cambio.id+'-valor_compra',
+                                fieldLabel:'Valor compra',
+                                itemCls: 'label01',
+                                style:{marginLeft:'7px', textAlign:'right'},
+                                width:80,
+								allowNegative: false,
+								decimalPrecision:4,
+								maxValue: 4.0000,
+						        minValue: 2.0000,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:tipo_cambio.id+'-valor_venta',
+                                fieldLabel:'Valor venta',
+                                itemCls: 'label01',
+                                style:{marginLeft:'7px', textAlign:'right'},
+                                width:80,
+								allowNegative: false,
+								decimalPrecision:4,
+								maxValue: 4.0000,
+						        minValue: 2.0000,
+								allowBlank:false
+                            }
+                        ]
+                    }
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:0px;',
+            border:false,tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:tipo_cambio.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_tipo_cambio_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									tipo_cambio.fn_habilitar(false,0);
+                                store_tipo_cambio_lista.load({params:{campo:Ext.getCmp(tipo_cambio.id+'-combo_describe').getValue(),query:Ext.getCmp(tipo_cambio.id+'-buscar').getValue(),start:0,limit:100}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_tipo_cambio_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:tipo_cambio.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_tipo_cambio',
+                                        title:'Tipo de Cambio', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_tipo_cambio').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_tipo_cambio').show();
+                Ext.getCmp('win_tipo_cambio').center();
+                Ext.getCmp('win_tipo_cambio').toFront();
+                tipo_cambio.fn_habilitar(false,0);
+        }
+        ,
+        fn_nuevo:function()
+        {
+            Ext.getCmp(tipo_cambio.id+'-tic_id').setValue('');
+            Ext.getCmp(tipo_cambio.id+'-fecha').setValue('');
+            Ext.getCmp(tipo_cambio.id+'-valor_compra').setValue('0.00');
+            Ext.getCmp(tipo_cambio.id+'-valor_venta').setValue('0.00');
+            
+            tipo_cambio.fn_habilitar(true,1);
+        },
+		
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(tipo_cambio.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(tipo_cambio.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(tipo_cambio.id+'-tic_id').setValue(rs.get('tic_id'));
+                Ext.getCmp(tipo_cambio.id+'-fecha').setValue(rs.get('fecha'));
+                Ext.getCmp(tipo_cambio.id+'-valor_compra').setValue(rs.get('valor_compra'));
+                Ext.getCmp(tipo_cambio.id+'-valor_venta').setValue(rs.get('valor_venta'));
+                
+                tipo_cambio.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+        fn_actualizar:function()
+        {
+			if(tipo_cambio.fn_validar())
+            {
+				Ext.getCmp(tipo_cambio.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/tipo-cambio-actualizar',
+					params:{ 
+						tic_id:Ext.getCmp(tipo_cambio.id+'-tic_id').getValue(),
+						fecha:Ext.util.Format.date(Ext.getCmp(tipo_cambio.id+'-fecha').getValue(),'Y-m-d'),
+						valor_compra:Ext.getCmp(tipo_cambio.id+'-valor_compra').getValue(),
+						valor_venta:Ext.getCmp(tipo_cambio.id+'-valor_venta').getValue()
+					},
+					waitTitle: 'Registro Tipo de Cambio',
+					waitMsg: 'Actualizando Informacion..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							tipo_cambio.fn_habilitar(false,0);
+							Ext.getCmp(tipo_cambio.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(tipo_cambio.id+'-combo_describe').getValue(),query:Ext.getCmp(tipo_cambio.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_cambio.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(tipo_cambio.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(tipo_cambio.id+res.campo).focus(true,10);
+							
+					}
+				});
+				/*Ext.getCmp(tipo_cambio.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(false);
+				Ext.Ajax.request({
+					url:'tablas/tipo-cambio-actualizar',
+					params:
+					{
+						tic_id:Ext.getCmp(tipo_cambio.id+'-tic_id').getValue(),
+						fecha:Ext.getCmp(tipo_cambio.id+'-fecha').getValue(),
+						valor_compra:Ext.getCmp(tipo_cambio.id+'-valor_compra').getValue(),
+						valor_venta:Ext.getCmp(tipo_cambio.id+'-valor_venta').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							og.msg("Ok","El registro se ha actualizado");
+							tipo_cambio.fn_habilitar(false,0);
+							Ext.getCmp(tipo_cambio.id+'-grid_lista').store.load();
+						}else{
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(true);
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_cambio.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+            if(tipo_cambio.fn_validar())
+            {
+				Ext.getCmp(tipo_cambio.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/tipo-cambio-guardar',
+					params:{ 
+						fecha:Ext.util.Format.date(Ext.getCmp(tipo_cambio.id+'-fecha').getValue(),'Y-m-d'),
+						valor_compra:Ext.getCmp(tipo_cambio.id+'-valor_compra').getValue(),
+						valor_venta:Ext.getCmp(tipo_cambio.id+'-valor_venta').getValue()
+					},
+					waitTitle: 'Registro de Tipo de Cambio',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							tipo_cambio.fn_habilitar(false,0);
+							Ext.getCmp(tipo_cambio.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(tipo_cambio.id+'-combo_describe').getValue(),query:Ext.getCmp(tipo_cambio.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_cambio.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(compras.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(tipo_cambio.id+res.campo).focus(true,10);
+							
+					}
+				});
+				/*Ext.getCmp(tipo_cambio.id+'-panel_derecho').collapse();
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(false);
+				Ext.Ajax.request({
+					url:'tablas/tipo-cambio-guardar',
+					params:
+					{
+						fecha:Ext.util.Format.date(Ext.getCmp(tipo_cambio.id+'-fecha').getValue(),'Y-m-d'),
+						valor_compra:Ext.getCmp(tipo_cambio.id+'-valor_compra').getValue(),
+						valor_venta:Ext.getCmp(tipo_cambio.id+'-valor_venta').getValue()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							og.msg("Ok","El registro se ha guardado");
+							tipo_cambio.fn_habilitar(false,0);
+							Ext.getCmp(tipo_cambio.id+'-grid_lista').store.load();
+						}else{
+							Ext.getCmp(tipo_cambio.id+'-panel_derecho').expand();
+				Ext.getCmp(tipo_cambio.id+'-panel_derecho').setVisible(true);
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(tipo_cambio.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+		
+		fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(tipo_cambio.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				 Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Tipo de Cambio :<br>De fecha ' + rs.get('fecha'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando tipo de cambio... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/tipo-cambio-eliminar',
+							params:
+							{
+								tic_id:rs.get('tic_id')
+							},
+							success:function(response,options)
+							{             
+								Ext.Msg.hide();
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									tipo_cambio.fn_habilitar(false,0);
+									Ext.getCmp(tipo_cambio.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(tipo_cambio.id+'-combo_describe').getValue(),query:Ext.getCmp(tipo_cambio.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(tipo_cambio.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-tipo_cambio').action="tablas/tipo-cambio-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(tipo_cambio.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(tipo_cambio.id+'-buscar').getValue();
+            document.getElementById('frmReporte-tipo_cambio').submit();
+        },
+		
+		fn_validar:function()
+		{
+			if(!Ext.getCmp(tipo_cambio.id+'-fecha').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Fecha");
+                Ext.getCmp(tipo_cambio.id+'-fecha').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(tipo_cambio.id+'-valor_compra').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Valor compra");
+                Ext.getCmp(tipo_cambio.id+'-valor_compra').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(tipo_cambio.id+'-valor_venta').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Valor venta");
+                Ext.getCmp(tipo_cambio.id+'-valor_venta').focus(true,10);
+                return false;
+            }
+			return true;	
+		},
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(tipo_cambio.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(tipo_cambio.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(tipo_cambio.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(tipo_cambio.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(tipo_cambio.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(tipo_cambio.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(tipo_cambio.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(tipo_cambio.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(tipo_cambio.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(tipo_cambio.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(tipo_cambio.id+'-btn_editar').disable();
+			Ext.getCmp(tipo_cambio.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(tipo_cambio.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(tipo_cambio.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(tipo_cambio.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(tipo_cambio.init,tipo_cambio);
+
+</script>

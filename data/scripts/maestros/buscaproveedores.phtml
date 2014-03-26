@@ -1,0 +1,973 @@
+<form id="frmReporte-buscaproveedores" name="frmReporte-buscaproveedores" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('buscaproveedores');
+    buscaproveedores={
+        id:'buscaproveedores',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:buscaproveedores.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(buscaproveedores.id+'-panel_derecho').expand();
+				Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(true);
+                            buscaproveedores.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:buscaproveedores.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            buscaproveedores.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:buscaproveedores.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            buscaproveedores.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:buscaproveedores.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            buscaproveedores.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:buscaproveedores.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(buscaproveedores.id+'-panel_derecho').collapse();
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(false);
+                            buscaproveedores.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:buscaproveedores.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							buscaproveedores.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:buscaproveedores.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    buscaproveedores.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var btn_seleccionar=new Ext.Button({
+                id:buscaproveedores.id+'-btn_seleccionar',
+                text:'Seleccionar',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            buscaproveedores.fn_seleccionar();
+                        }
+                    }
+            });
+            
+            var store_buscaproveedores_lista=new Ext.data.JsonStore({
+                url:'maestros/proveedores-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['prv_id','codigo','nombre','ruc','direccion','telefono','activo','tip_per','tip_doc','rep_leg','tipo_per', 'tipo_doc'],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+            
+            //store_buscaproveedores_lista.load();
+            
+            var store_buscaproveedores_describe=new Ext.data.JsonStore({
+				data:[{campo: 'nombre', valor:'Por Nombre'},{campo: 'ruc', valor:'Por RUC'}],
+                fields:['campo', 'valor']
+            });
+			
+			 var pager = new Ext.PagingToolbar({
+                id:buscaproveedores.id+'_pager',
+                store:store_buscaproveedores_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(buscaproveedores.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(buscaproveedores.id+'-buscar').getValue();
+			}); 
+            
+            var combo_buscaproveedores_describe=new Ext.form.ComboBox({
+                id:buscaproveedores.id+'-combo_describe',
+                store:store_buscaproveedores_describe,
+                valueField:'campo',
+                displayField:'valor',
+                triggerAction:'all',
+                emptyText:'Seleccione Campo',
+                mode:'local',
+                width:100,
+                editable:false,
+				value:'ruc'
+            });
+            
+            var grid_buscaproveedores_lista = new Ext.grid.GridPanel({
+                id:buscaproveedores.id+'-grid_lista',
+                store: store_buscaproveedores_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+				bbar:pager,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'prv_id',width:25},
+                    {header:'Código',sortable :true,dataIndex:'codigo',width:120},
+                    {header:'Nombre',sortable :true,dataIndex:'nombre',width:200},
+					{header:'Tip Per',sortable :true,dataIndex:'tipo_per',width:80},
+					{header:'Tip Doc',sortable :true,dataIndex:'tipo_doc',width:80},
+                    {header:'Nro Doc',sortable :true,dataIndex:'ruc',width:100},
+                    {header:'Dirección',sortable :true,dataIndex:'direccion',width:70,hidden:true},
+                    {header:'Teléfono',sortable :true,dataIndex:'telefono',width:100,hidden:true},
+					{header:'Representante legal',sortable :true,dataIndex:'rep_leg',width:100},
+                    {header:'Activo',sortable :true,dataIndex:'activo',width:100,hidden:true},
+                ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        /*if(Ext.getCmp(buscaproveedores.id+'-btn_editar').isVisible()){
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').expand();
+				Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(true);
+                        	buscaproveedores.fn_editar();
+						}*/
+						buscaproveedores.fn_seleccionar();
+                    },
+					rowclick:function()
+                    {
+                       // Ext.getCmp(buscaproveedores.id+'-btn_editar').enable();
+						//Ext.getCmp(buscaproveedores.id+'-btn_eliminar').enable();
+						//buscaproveedores.fn_seleccionar();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:buscaproveedores.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:buscaproveedores.id+'-prv_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaproveedores.id+'-codigo',
+                                fieldLabel:'Código',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaproveedores.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Persona",
+                                id: buscaproveedores.id+'-tip_per',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tip_per"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:buscaproveedores.id+'-tip_per_n',
+                                        boxLabel: "Natural",name: "tip_per",
+                                        inputValue: "N",
+                                        checked:true
+                                    },
+                                    {
+                                        id:buscaproveedores.id+'-tip_per_j',
+                                        boxLabel: "Juridica",name: "tip_per",
+                                        inputValue: "J"
+                                    }
+                                ],
+								listeners : {
+									change:function(){
+										if(Ext.getCmp(buscaproveedores.id+'-tip_per').getValue().getGroupValue()=='N'){
+											 Ext.getCmp(buscaproveedores.id+'-tip_doc_d').setVisible(true);
+											 Ext.getCmp(buscaproveedores.id+'-tip_doc_r').setVisible(true);
+											 Ext.getCmp(buscaproveedores.id+'-tip_doc').setValue("D");
+											 Ext.apply(Ext.getCmp(buscaproveedores.id+'-ruc'),{maxLength:8,minLength:8});
+											// Ext.getCmp(buscaproveedores.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaproveedores.id+'-ruc').el.dom.maxLength = 8;
+										}else{
+											 Ext.getCmp(buscaproveedores.id+'-tip_doc_d').setVisible(false);
+											 Ext.getCmp(buscaproveedores.id+'-tip_doc_r').setVisible(true);					
+											 Ext.getCmp(buscaproveedores.id+'-tip_doc').setValue("R");					
+											 Ext.apply(Ext.getCmp(buscaproveedores.id+'-ruc'),{maxLength:11,minLength:11});
+											 //Ext.getCmp(buscaproveedores.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaproveedores.id+'-ruc').el.dom.maxLength = 11;
+											  
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Documento",
+                                id: buscaproveedores.id+'-tip_doc',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tip_doc"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:buscaproveedores.id+'-tip_doc_d',
+                                        boxLabel: "DNI",name: "tip_doc",
+                                        inputValue: "D",
+                                        checked:true
+                                    },
+                                    {
+                                        id:buscaproveedores.id+'-tip_doc_r',
+                                        boxLabel: "RUC",name: "tip_doc",
+                                        inputValue: "R"
+                                    }
+                                ],
+								listeners : {
+									change:function(){
+										if(Ext.getCmp(buscaproveedores.id+'-tip_doc').getValue().getGroupValue()=='D'){
+											 //Ext.getCmp(buscaproveedores.id+'-tip_doc_d').setVisible(true);
+											// Ext.getCmp(buscaproveedores.id+'-tip_doc_r').setVisible(true);
+											 //Ext.getCmp(buscaproveedores.id+'-tip_doc').setValue("D");
+											 Ext.apply(Ext.getCmp(buscaproveedores.id+'-ruc'),{maxLength:8,minLength:8});
+											// Ext.getCmp(buscaproveedores.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaproveedores.id+'-ruc').el.dom.maxLength = 8;
+										}else{
+											 //Ext.getCmp(buscaproveedores.id+'-tip_doc_d').setVisible(false);
+											 //Ext.getCmp(buscaproveedores.id+'-tip_doc_r').setVisible(true);					
+											// Ext.getCmp(buscaproveedores.id+'-tip_doc').setValue("R");					
+											 Ext.apply(Ext.getCmp(buscaproveedores.id+'-ruc'),{maxLength:11,minLength:11});
+											 //Ext.getCmp(buscaproveedores.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaproveedores.id+'-ruc').el.dom.maxLength = 11;
+											  
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            new Ext.form.NumberField({
+                                /*xtype:'textfield',*/
+                                id:buscaproveedores.id+'-ruc',
+                                fieldLabel:'Nro Doc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+								allowBlank:false,
+								maxLength:8,
+								minLength:8,
+								enforceMaxLength:true,
+								allowBlank:false,
+								decimalPrecision:0,
+								autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '8'}
+                            })
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaproveedores.id+'-direccion',
+                                fieldLabel:'Dirección',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaproveedores.id+'-telefono',
+                                fieldLabel:'Teléfono',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaproveedores.id+'-rep_leg',
+                                fieldLabel:'Representante Legal',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: buscaproveedores.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:buscaproveedores.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:buscaproveedores.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            'Buscar por :',
+                            combo_buscaproveedores_describe,
+							new Ext.app.SearchField({
+								id:buscaproveedores.id+'-buscar', 
+								emptyText : 'Valor a buscar...',
+								enableKeyEvents: true,
+								store: store_buscaproveedores_lista,
+								hasSearch : false,
+								width: 120,
+								listeners:
+								{
+									specialkey:function(obj, e)
+									{
+										if (e.getKey() == 13)
+										{
+											buscaproveedores.fn_habilitar(false,0);
+										store_buscaproveedores_lista.load({params:{campo:Ext.getCmp(buscaproveedores.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaproveedores.id+'-buscar').getValue()}});
+											Ext.getCmp(buscaproveedores.id+'-grid_lista').focus(0);
+										}
+									}
+								}
+							}),'-',btn_seleccionar,'-', 'Presione enter para buscar, (utilice % para obviar caracteres)'
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_buscaproveedores_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:buscaproveedores.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+             new Ext.Window({
+                                        id:'win_buscaproveedores',
+                                        title:'Busqueda de Proveedores', 
+                                        width: 700,
+                                        height:400,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_buscaproveedores').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+			});
+                Ext.getCmp('win_buscaproveedores').show();
+                Ext.getCmp('win_buscaproveedores').center();
+                Ext.getCmp('win_buscaproveedores').toFront();
+                buscaproveedores.fn_habilitar(false,0);
+                Ext.getCmp(buscaproveedores.id+'-panel_derecho').collapse();
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(false);
+				Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(false);
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando código de proveedor... por favor espere!');
+            Ext.Ajax.request({
+                    url:'maestros/proveedores-codigo',
+                    params:
+                    {
+                        table:'maestros_proveedores'
+                    },
+                    success:function(response,options)
+                    {             
+						Ext.Msg.hide();
+                        var res = Ext.decode(response.responseText);
+                        var numero="000000"+res.AUTO_INCREMENT;
+                        var codigo="PV"+numero.substr(numero.length-6,6)
+                        Ext.getCmp(buscaproveedores.id+'-codigo').setValue(codigo);
+                    }
+                });
+            Ext.getCmp(buscaproveedores.id+'-prv_id').setValue('');
+            Ext.getCmp(buscaproveedores.id+'-nombre').setValue('');
+			
+			Ext.getCmp(buscaproveedores.id+'-tip_per').items.items[0].setValue(true);
+            Ext.getCmp(buscaproveedores.id+'-tip_per').items.items[1].setValue(false);
+			
+			Ext.getCmp(buscaproveedores.id+'-tip_doc').items.items[0].setValue(true);
+            Ext.getCmp(buscaproveedores.id+'-tip_doc').items.items[1].setValue(false);
+			
+            Ext.getCmp(buscaproveedores.id+'-ruc').setValue('');
+            Ext.getCmp(buscaproveedores.id+'-direccion').setValue('');
+            Ext.getCmp(buscaproveedores.id+'-telefono').setValue('');
+			Ext.getCmp(buscaproveedores.id+'-rep_leg').setValue('');
+            Ext.getCmp(buscaproveedores.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(buscaproveedores.id+'-estado').items.items[1].setValue(false);
+            Ext.getCmp(buscaproveedores.id+'-codigo').focus(true,10);
+            buscaproveedores.fn_habilitar(true,1);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(buscaproveedores.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(buscaproveedores.id+'-panel_derecho').expand();
+				Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(buscaproveedores.id+'-prv_id').setValue(rs.get('prv_id'));
+                Ext.getCmp(buscaproveedores.id+'-codigo').setValue(rs.get('codigo'));
+                Ext.getCmp(buscaproveedores.id+'-nombre').setValue(rs.get('nombre'));
+				
+				Ext.getCmp(buscaproveedores.id+'-tip_per').setValue('N');
+				if(rs.get('tip_per')!=null){
+					Ext.getCmp(buscaproveedores.id+'-tip_per').setValue(rs.get('tip_per'));
+					if(rs.get('tip_per')=='N'){
+						 Ext.getCmp(buscaproveedores.id+'-tip_doc_d').setVisible(true);
+						 Ext.getCmp(buscaproveedores.id+'-tip_doc_r').setVisible(true);
+						 Ext.getCmp(buscaproveedores.id+'-tip_doc').setValue("D");
+						 Ext.apply(Ext.getCmp(buscaproveedores.id+'-ruc'),{maxLength:8,minLength:8});
+						 Ext.getCmp(buscaproveedores.id+'-ruc').el.dom.maxLength = 8;
+					}else{
+						 Ext.getCmp(buscaproveedores.id+'-tip_doc_d').setVisible(true);
+						 Ext.getCmp(buscaproveedores.id+'-tip_doc_r').setVisible(true);
+						 Ext.getCmp(buscaproveedores.id+'-tip_doc').setValue("D");
+						 Ext.apply(Ext.getCmp(buscaproveedores.id+'-ruc'),{maxLength:11,minLength:11});
+						 Ext.getCmp(buscaproveedores.id+'-ruc').el.dom.maxLength = 11;				
+					}
+				}				
+				if(rs.get('tip_doc')!=null){
+					Ext.getCmp(buscaproveedores.id+'-tip_doc').setValue(rs.get('tip_doc'));
+				}
+				
+                Ext.getCmp(buscaproveedores.id+'-ruc').setValue(rs.get('ruc'));
+                Ext.getCmp(buscaproveedores.id+'-direccion').setValue(rs.get('direccion'));
+                Ext.getCmp(buscaproveedores.id+'-telefono').setValue(rs.get('telefono'));
+				Ext.getCmp(buscaproveedores.id+'-rep_leg').setValue(rs.get('rep_leg'));
+                Ext.getCmp(buscaproveedores.id+'-estado').setValue(rs.get('activo'));
+                
+                buscaproveedores.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(buscaproveedores.fn_validar()){
+				Ext.getCmp(buscaproveedores.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/proveedores-actualizar',
+					params:{ 
+						prv_id:Ext.getCmp(buscaproveedores.id+'-prv_id').getValue(),
+						codigo:Ext.getCmp(buscaproveedores.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(buscaproveedores.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(buscaproveedores.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(buscaproveedores.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(buscaproveedores.id+'-ruc').getValue(),
+						direccion:Ext.getCmp(buscaproveedores.id+'-direccion').getValue().toUpperCase(),
+						telefono:Ext.getCmp(buscaproveedores.id+'-telefono').getValue(),
+						rep_leg:Ext.getCmp(buscaproveedores.id+'-rep_leg').getValue().toUpperCase(),
+						estado:Ext.getCmp(buscaproveedores.id+'-estado').getValue().getGroupValue()
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').collapse();
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							buscaproveedores.fn_habilitar(false,0);
+							Ext.getCmp(buscaproveedores.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(buscaproveedores.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaproveedores.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(buscaproveedores.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(buscaproveedores.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(buscaproveedores.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Msg.wait('Actualizando información de proveedor... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/proveedores-actualizar',
+					params:
+					{
+						prv_id:Ext.getCmp(buscaproveedores.id+'-prv_id').getValue(),
+						codigo:Ext.getCmp(buscaproveedores.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(buscaproveedores.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(buscaproveedores.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(buscaproveedores.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(buscaproveedores.id+'-ruc').getValue(),
+						direccion:Ext.getCmp(buscaproveedores.id+'-direccion').getValue().toUpperCase(),
+						telefono:Ext.getCmp(buscaproveedores.id+'-telefono').getValue(),
+						rep_leg:Ext.getCmp(buscaproveedores.id+'-rep_leg').getValue().toUpperCase(),
+						estado:Ext.getCmp(buscaproveedores.id+'-estado').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{             
+						Ext.Msg.hide();
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').collapse();
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							buscaproveedores.fn_habilitar(false,0);
+							Ext.getCmp(buscaproveedores.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(buscaproveedores.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+            if(buscaproveedores.fn_validar()){    
+				Ext.getCmp(buscaproveedores.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/proveedores-guardar',
+					params:{ 
+						codigo:Ext.getCmp(buscaproveedores.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(buscaproveedores.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(buscaproveedores.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(buscaproveedores.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(buscaproveedores.id+'-ruc').getValue(),
+						direccion:Ext.getCmp(buscaproveedores.id+'-direccion').getValue().toUpperCase(),
+						telefono:Ext.getCmp(buscaproveedores.id+'-telefono').getValue(),
+						rep_leg:Ext.getCmp(buscaproveedores.id+'-rep_leg').getValue().toUpperCase(),
+						estado:Ext.getCmp(buscaproveedores.id+'-estado').getValue().getGroupValue()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').collapse();
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							buscaproveedores.fn_habilitar(false,0);
+							Ext.getCmp(buscaproveedores.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(buscaproveedores.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaproveedores.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(buscaproveedores.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(buscaproveedores.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(buscaproveedores.id+res.campo).focus(true,10);
+					}
+				});        
+				/*Ext.Msg.wait('Guardando información de proveedor... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/proveedores-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(buscaproveedores.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(buscaproveedores.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(buscaproveedores.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(buscaproveedores.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(buscaproveedores.id+'-ruc').getValue(),
+						direccion:Ext.getCmp(buscaproveedores.id+'-direccion').getValue().toUpperCase(),
+						telefono:Ext.getCmp(buscaproveedores.id+'-telefono').getValue(),
+						rep_leg:Ext.getCmp(buscaproveedores.id+'-rep_leg').getValue().toUpperCase(),
+						estado:Ext.getCmp(buscaproveedores.id+'-estado').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{    
+						Ext.Msg.hide();         
+						//alert(response.responseText);
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').collapse();
+							Ext.getCmp(buscaproveedores.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							buscaproveedores.fn_habilitar(false,0);
+							Ext.getCmp(buscaproveedores.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(buscaproveedores.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(buscaproveedores.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?', function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando proveedor... por favor espere!');
+						Ext.Ajax.request({
+							url:'maestros/proveedores-eliminar',
+							params:
+							{
+								prv_id:rs.get('prv_id')
+							},
+							success:function(response,options)
+							{         
+								Ext.Msg.hide();    
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									buscaproveedores.fn_habilitar(false,0);
+									Ext.getCmp(buscaproveedores.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(buscaproveedores.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaproveedores.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(buscaproveedores.id+res.campo).focus(true,10);							
+								}									
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(buscaproveedores.id+'-codigo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código");
+                Ext.getCmp(buscaproveedores.id+'-codigo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(buscaproveedores.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(buscaproveedores.id+'-nombre').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(buscaproveedores.id+'-ruc').isValid())
+            {
+				if(Ext.getCmp(buscaproveedores.id+'-tip_doc').getValue().getGroupValue()=='D'){
+	                og.msg("Error", "Ingrese el campo DNI");
+				}else{
+					og.msg("Error", "Ingrese el campo Ruc");
+				}
+                Ext.getCmp(buscaproveedores.id+'-ruc').focus(true,10);
+                return false;
+            }
+            /*if(!Ext.getCmp(buscaproveedores.id+'-direccion').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Dirección");
+                Ext.getCmp(buscaproveedores.id+'-direccion').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(buscaproveedores.id+'-telefono').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Teléfono");
+                Ext.getCmp(buscaproveedores.id+'-telefono').focus(true,10);
+                return false;
+            }*/
+			return true;	
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-buscaproveedores').action="maestros/proveedores-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(buscaproveedores.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(buscaproveedores.id+'-buscar').getValue();
+            document.getElementById('frmReporte-buscaproveedores').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			/*if(!sw){
+				Ext.getCmp(buscaproveedores.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(buscaproveedores.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(buscaproveedores.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(buscaproveedores.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(buscaproveedores.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(buscaproveedores.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(buscaproveedores.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(buscaproveedores.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(buscaproveedores.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(buscaproveedores.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(buscaproveedores.id+'-btn_editar').disable();
+			Ext.getCmp(buscaproveedores.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(buscaproveedores.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(buscaproveedores.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(buscaproveedores.id+'-btn_imprimir').setVisible(!sw);*/			
+        },
+		fn_seleccionar:function(){
+			var rs=Ext.getCmp(buscaproveedores.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {                
+				//alert(vgVentana);
+				if(vgVentana=='compras'){
+					compras.fn_ubicaproveedor('prv_id', rs.get('prv_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc') );
+					Ext.getCmp('win_buscaproveedores').close();
+				}
+				
+				if(vgVentana=='altas'){
+					altas.fn_ubicaproveedor('prv_id', rs.get('prv_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc') );
+					Ext.getCmp('win_buscaproveedores').close();
+				}
+				
+				if(vgVentana=='notacompras'){
+					notacompras.fn_ubicaproveedor('prv_id', rs.get('prv_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc') );
+					Ext.getCmp('win_buscaproveedores').close();
+				}
+				if(vgVentana=='cuota'){
+					cuota.fn_ubicaproveedor('prv_id', rs.get('prv_id'), rs.get('nombre'), rs.get('ruc') );
+					Ext.getCmp('win_buscaproveedores').close();
+				}
+				if(vgVentana=='caja'){
+					caja.fn_ubicaproveedor('prv_id', rs.get('prv_id'), rs.get('nombre'), rs.get('ruc') );
+					Ext.getCmp('win_buscaproveedores').close();
+				}
+				if(vgVentana=='prerecibo'){
+					prerecibo.fn_ubicaproveedor('prv_id', rs.get('prv_id'), rs.get('nombre'), rs.get('ruc') );
+					Ext.getCmp('win_buscaproveedores').close();
+				}
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+			
+		}
+         
+    }
+    Ext.onReady(buscaproveedores.init,buscaproveedores);
+
+</script>

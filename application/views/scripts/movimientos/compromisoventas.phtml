@@ -1,0 +1,394 @@
+<script>
+$(document).ready(function(e){
+	
+	$('#nuevoCompromiso').hide();	
+	
+	$('#compromiso').dialog({
+		height:500,
+		width:880,
+		resizable:false,
+		close:function(){
+			$(this).remove();
+			$("#cliente").remove();
+		}
+	});
+	
+	$(document).delegate('#valorCompromiso','keypress',function(e){
+		if(e.which==13){
+			$.post('movimientos/canje-lista',function(data){
+				cadena = '';
+				$.each(data.data,function(i,item){
+					cadena += '<tr>';
+					cadena += '<td align="center">' + data.data[i].canje_id + '</td>';
+					cadena += '<td align="center">' + data.data[i].fecha_canje + '</td>';
+					cadena += '<td align="center">' + data.data[i].canje_codigo + '</td>';
+					cadena += '<td>' + data.data[i].persona + '</td>';
+					cadena += '<td>' + data.data[i].moneda + '</td>';
+					cadena += '<td>' + data.data[i].condicion + '</td>';
+					cadena += '<td align="right">' + data.data[i].total_canje + '</td>';
+					cadena += '<td align="center"><img src="../../../public/ui/img/modify.png" /></td>';
+					cadena += '</tr>';
+				});
+				$('.tbItems tbody').html(cadena);
+			},'json');
+		}
+	});
+	
+	$(document).delegate('#valorCliente','keypress',function(e){
+		campo = $('.selectCampo').val(); query = $(this).val(); sorta = campo; dir = 'ASC';
+		if(e.which==13){
+			$.post('maestros/clientes-lista',{campo:campo,query:query,sort:sorta,dir:dir},function(data){
+				cadena = '';
+				$.each(data.data,function(i,item){
+					cadena += '<tr>';
+					cadena += '<td>' + data.data[i].cli_id + '</td>\n';
+					cadena += '<td>' + data.data[i].codigo + '</td>\n';
+					cadena += '<td>' + data.data[i].nombre + '</td>\n';
+					cadena += '<td align="center">' + data.data[i].tipo_per + '</td>\n';
+					cadena += '<td align="center">' + data.data[i].tipo_doc + '</td>\n';
+					cadena += '<td align="center">' + data.data[i].ruc + '</td>\n';
+					cadena += '<td>' + data.data[i].nom_dep + '</td>';
+					cadena += '</tr>';
+				});
+				$('.tbCliente tbody').html(cadena);
+			},'json');
+			e.preventDefault();
+		}
+	});
+	
+	$(document).delegate('.tbCliente tbody tr td','dblclick',function(){
+		tr = $(this).closest('tr');
+		row = tr.eq(0).text();
+		separar = row.split('\n');
+		$('.idCliente').val(separar[0]);
+		$('.cliente').val(separar[2]);
+		$('.ruc').val(separar[5]);
+		$('#cliente').dialog('close');
+	});
+	
+	$(document).delegate('.iconNew','click',function(e){
+		$('#contentCompromiso').hide();
+		$('#nuevoCompromiso').show();
+	});
+	
+	$(document).delegate('.iconSave','click',function(){
+		saldoPendiente = $('#formSaldoPendiente').serialize();
+		//alert(saldoPendiente);
+		$.post('movimientos/saldo-pendiente-cliente-actualizar',saldoPendiente,function(data){
+			alert(data);
+		});
+	});
+	
+	$('.iconCancel').click(function(){
+		$('#contentCompromiso').show();
+		$('#nuevoCompromiso').hide();
+	});
+	
+	$('.iconMoneyAdd').click(function(){
+		cliente = $('.idCliente').val();
+		if($('.cliente').val()!=''){
+			$.post('movimientos/saldo-pendiente-cliente',{cliente:cliente},function(data){
+				cadena = '';
+				$.each(data,function(i,item){
+					cadena += '<tr>';
+					cadena += '<td align="center">' + data[i].OP + '</td>\n';
+					cadena += '<td align="center">' + data[i].descripcion_documento + '</td>\n';
+					cadena += '<td>' + data[i].doc_n + '</td>\n';
+					cadena += '<td align="center">' + data[i].fec_mov + '</td>\n';
+					cadena += '<td align="center">' + data[i].fec_ven + '</td>\n';
+					cadena += '<td align="center">' + data[i].moneda + '</td>\n';
+					cadena += '<td align="right">' + data[i].total_venta + '</td>\n';
+					cadena += '<td align="right">' + data[i].saldo + '</td>\n';
+					cadena += '<td align="right" width="10%"><input class="form-control saldoCanje" name="saldoPendiente[]" type="text" value="0.00" /><input name="mveId[]" type="hidden" value="'+data[i].mve_id+'" /></td>\n';
+					cadena += '</tr>'
+				});
+				$('.tbNuevoCompromiso tbody').html(cadena);
+			},'json');
+		} else {
+			alert('Seleccionar cliente.');
+		}
+	});
+	
+	$(document).delegate('.saldoCanje','change',function(){
+		canjear = $(this).val();
+		tr = $(this).closest('tr');
+		separar = tr.eq(0).text();
+		saldo = separar.split('\n');
+		
+		if(parseFloat(canjear) > parseFloat(saldo[6])){
+			alert('El monto a canjear no debe superar el saldo.');
+			$(this).val('');
+			calcular();
+			$(this).focus();
+		} else {	
+			calcular();
+		}
+	});
+
+	$('.fechaCanje').datepicker({dateFormat:'yy-mm-dd'});
+
+	$('.iconPrint').click(function(){
+		window.open('<?php echo PUBLIC_PATH ?>/movimientos/canje-lista-impresion','_blank');
+	});
+
+	$(document).delegate('.iconGenerar','click',function(){
+		canje = $('.totalCanje').val();
+		condicion = $('.condicionPago').val();
+		if(canje>0){
+			$.post('movimientos/condicion-pago',{cpa:condicion},function(data){
+				$.each(data,function(i,item){
+					letra = data[i].letras;
+					dia = data[i].dias;
+				});
+			},'json');
+			
+			$.post('tablas/banco-lista',{campo:'',query:''},function(data){
+				bancos = '<select class="form-control" id="seleccionarBanco">';
+				bancos += '<option value="">Seleccionar</option>';
+				$.each(data,function(i,item){
+					bancos += '<option value="' + data[i].ban_id + '">' + data[i].nombre + '</option>';
+				});
+				bancos += '</select>';
+			},'json');
+			
+			diaLetra = dia.split(',');
+			montoLetra = parseFloat(canje/letra).toFixed(2);
+						
+			/*fechaLetra = [];
+			for(i=0;i<=letra-1;i++){
+				fechaLetra[i] = fechaCanje(20);
+			}*/
+			
+			fechaLetra = [];
+			$.each(diaLetra,function(i,item){
+				 fechaLetra[i] = fechaCanje(diaLetra[i]);
+			});
+
+			cadena = '';
+			for(i=0;i<=letra-1;i++){
+				cadena += '<tr>';
+				cadena += '<td align="center">' + (i+1) + '</td>\n';
+				cadena += '<td align="center">Cuota ' + (i+1) + '</td>\n';
+				cadena += '<td align="center">' + fechaLetra[i] + '</td>\n';
+				cadena += '<td align="right" class="montoPorCanjear">'+ montoLetra + '\n</td>';
+				cadena += '<td>' + bancos + '</td>\n';
+				cadena += '<td><select class="form-control cuentaBanco input-small"><option>Seleccionar</option></select></td>\n';
+				cadena += '<td><input class="form-control input-small" type="text"></td>';
+				cadena += '<td><input class="form-control input-small" type="text"></td>';
+				cadena += '<td><select class="form-control"><option value="">Seleccionar</option></select></td>';
+				cadena += '</tr>';
+			}
+			cadena += '<tr>';
+			cadena += '<td align="right" colspan="3">Total a canjear &nbsp;</td>';
+			cadena += '<td align="right" class="totalPorCanjear"></td>';
+			cadena += '</tr>';			
+			$('.tbLetra tbody').html(cadena);
+			
+			valor = 0;
+			$('.montoPorCanjear').each(function() {
+            	valor += parseFloat($(this).text());    
+            });
+			valorFinal = Math.round(valor).toFixed(2);
+			$('.totalPorCanjear').html(valorFinal);
+		}else{
+			alert('Seleccionar documentos a canjear.');
+		}
+	});
+	
+	$(document).delegate('#seleccionarBanco','change',function(){
+		tr = $(this).closest('tr');
+		banco = $(this).val();
+		if(banco){
+			$.post('tablas/cuenta-banco-lista',{banco:banco},function(data){
+				cadena = '<select class="form-control">';
+				cadena += '<option value="">Seleccionar</option>';
+				$.each(data,function(i,item){
+					cadena += '<option value="' + data[i].cta_id + '">' + data[i].nro_cta + '</option>'
+				});
+				cadena += '</select>';
+				tr.find('td').eq(5).html(cadena);
+				
+			},'json');
+		}
+	});
+
+	$('#searchCliente').click(function(){
+		$('#cliente').dialog({
+			height:400,
+			width:800,
+			resizable:false
+		});
+	});
+	
+	$(document).delegate('.tbCliente tbody tr','mouseover',function(){
+		color = $('.red');
+		$(this).toggleClass('gris').siblings().removeClass('gris');		
+		
+		if(color.length){
+			color.removeClass('gris');
+		}
+	});
+
+	$(document).delegate('.tbCliente tbody tr td','click',function(){
+		tr = $(this).closest('tr');
+		tr.removeClass('gris');
+		tr.toggleClass('red').siblings().removeClass('red');
+	});
+	
+	function calcular(){
+		importe = 0;
+		$('.saldoCanje').each(function() {
+			valor = $(this).val();
+		   if(valor == ''){ valor = 0;};
+		   importe += parseFloat(valor);
+		});
+		$('.totalCanje').val(importe.toFixed(2));
+	}	
+
+	function fechaCanje(num) {
+		hoy = new Date();
+	  	for (i=0; i<num; i++)
+			hoy.setTime(hoy.getTime()+24*60*60*1000);
+	  		mes = hoy.getMonth()+1;
+	  	if (mes<10) mes = '0'+mes;
+	  	fecha = hoy.getDate()+ '/' + mes + '/' + hoy.getFullYear();
+		return fecha;
+	}
+	
+});
+</script>
+
+	<div id="compromiso" title="Generaci&oacute;n de Compromisos de ventas">
+    	<div id="contentCompromiso">
+            <div class="toolCompromisos">
+                <span class="iconNew">Nuevo</span>
+                <span class="iconDelete">Eliminar</span>
+                <span class="iconPrint">Imprimir</span>
+                <select class="form-control">
+                    <option>Campo</option>
+                </select>
+                <input class="form-control" id="valorCompromiso" type="text" placeholder="Valor a buscar..." />
+            </div>
+        
+            <table class="tbItems">
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Fecha</th>
+                    <th>Codigo</th>
+                    <th>Persona</th>
+                    <th>Moneda</th>
+                    <th>Condici&oacute;n</th>
+                    <th>Total Canje</th>
+                    <th>Acci&oacute;n</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+		</div>
+        
+   		<div id="nuevoCompromiso" title="Nuevo compromiso de ventas">
+ 			<div  class="toolCompromisos">
+            	<span class="iconSave">Guardar</span>
+ 				<span class="iconCancel">Cancelar</span>
+            </div>
+            <form id="formSaldoPendiente">
+            	<label>Cliente:</label> <input class="form-control cliente" readonly="readonly" />
+                <label>RUC/DNI</label> <input class="form-control ruc" readonly="readonly" />
+                <input id="searchCliente" type="button" value="Buscar" />
+                <input class="idCliente" name="cli_id" type="hidden" />
+            <div class="toolCompromisos">
+            	<span class="iconMoneyAdd">Ver Saldo Pendientes</span>
+           	</div>
+            <table class="tbNuevoCompromiso">
+              	<thead>
+            	<tr>
+                  	<th>OP</th>
+                    <th>Tipo Doc.</th>
+                    <th>N&deg; Doc.</th>
+                  	<th>Fecha</th>
+                	<th>Fecha Venc.</th>
+                    <th>Moneda</th>
+                    <th>Monto</th>
+                    <th>Saldo</th>
+                    <th>Canjear</th>
+                   </tr>
+               	</thead>
+                <tbody>
+                	<td align="center" colspan="9">No hay saldos pendientes.</td>
+                </tbody>
+          	</table>
+            
+            Fecha: <input class="form-control fechaCanje" name="fecha_canje" value="<?php echo date('Y-m-d'); ?>" /> 
+            <select class="form-control" name="mon_id">
+            	<option value="1">SOLES</option>
+                <option value="2">DOLARES</option>
+            </select>
+            <select class="form-control condicionPago" name="cpa_id">
+            	<option value="1">CONTADO</option>
+            	<option value="2" selected="selected">CREDITO</option>
+                <option value="3">CREDITO A 30 DIAS</option>
+                <option value="4">CREDITO A 180 DIAS</option>
+                <option value="5">CONTADO A 45 DIAS</option>
+                <option value="6">LETRAS</option>
+                <option value="7">DEPOSITO</option>
+                <option value="8">TRANSFERENCIA</option>
+            </select>
+            <input name="forma" type="radio" value="1" checked="checked" /><label id="name" name="formato"> Forma 1</label>
+            <input name="forma" type="radio" value="2" /><label id="name" name="formato"> Forma 2</label>
+            <span class="contentTotalCanje">Total de Canje: <input class="form-control totalCanje" readonly="readonly" value="0.00" /></span>
+			<br /><br />
+            <div class="toolCompromisos">
+            	<span class="iconGenerar">Generar</span>
+			</div>
+            <table class="tbLetra">
+            	<thead>
+                <tr>
+                	<th>Cuota</th>
+                    <th>Letra</th>
+                    <th>Fecha Canc.</th>
+                    <th>Total</th>
+                    <th>Banco</th>
+                    <th>Cuenta Bancaria</th>
+                    <th>Nro de Cobranza</th>
+                    <th>C&oacute;digo &Uacute;nico</th>
+                    <th>Situaci&oacute;n</th>
+                </tr>
+                </thead>
+                <tbody>
+                	<td align="center" colspan="9">No hay letras generadas.</td>
+                </tbody>
+            </table>
+            </form>
+    	</div>
+    
+    </div>
+    
+	<div id="cliente" title="Busqueda de Clientes">
+    	<form>
+        	<label>Buscar por:</label>
+            <select class="form-control selectCampo" name="campo">
+            	<option value="ruc">Por DNI o RUC</option>
+                <option value="nombre">Raz&oacute;n Social</option>
+            </select>
+            <input class="form-control" id="valorCliente" name="query"  />
+        </form>
+        
+        <table class="tbCliente">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Codigo</th>
+                <th>Nombres</th>
+                <th>Tipo Per</th>
+                <th>Tipo Doc.</th>
+                <th>Nro Doc.</th>
+                <th>Departamento</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        
+    </div>

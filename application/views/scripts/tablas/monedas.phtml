@@ -1,0 +1,559 @@
+<form id="frmReporte-monedas" name="frmReporte-monedas" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('monedas');
+    monedas={
+        id:'monedas',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+			var btn_nuevo=new Ext.Button({
+                id:monedas.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(monedas.id+'-panel_derecho').expand();
+				Ext.getCmp(monedas.id+'-panel_derecho').setVisible(true);
+                            monedas.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:monedas.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            monedas.fn_guardar();
+                        }
+                    }
+            });
+			
+            var btn_actualizar=new Ext.Button({
+                id:monedas.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            monedas.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:monedas.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            monedas.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:monedas.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(monedas.id+'-panel_derecho').collapse();
+							Ext.getCmp(monedas.id+'-panel_derecho').setVisible(false);
+                            monedas.fn_habilitar(false,0);
+                        }
+                    }
+            });
+			
+			var btn_eliminar=new Ext.Button({
+                id:monedas.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							monedas.fn_eliminar();                           
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:monedas.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							monedas.fn_imprimir();
+                        }
+                    }
+            });
+            
+            var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+
+            var store_usuarios_describe=new Ext.data.JsonStore({
+                url:'tablas/monedas-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_usuarios_describe.load({params:{table:'monedas'}});
+            
+            var combo_usuarios_describe=new Ext.form.ComboBox({
+                id:monedas.id+'-combo_describe',
+                store:store_usuarios_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_monedas_lista = new Ext.grid.GridPanel({
+                id:monedas.id+'-grid_lista',
+                store: store_monedas_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mon_id',width:25},
+                    {header:'Nombre',sortable :true,dataIndex:'nombre',width:150}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(monedas.id+'-btn_editar').isVisible()){
+							Ext.getCmp(monedas.id+'-panel_derecho').expand();
+				Ext.getCmp(monedas.id+'-panel_derecho').setVisible(true);
+                        	monedas.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(monedas.id+'-btn_editar').enable();
+						Ext.getCmp(monedas.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:monedas.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:monedas.id+'-mon_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:monedas.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:220,
+								allowBlank:false	
+                            }
+                        ]
+                    }
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            bodyStyle:'height:auto;width:70%;margin:auto;margin-top:10px;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'760',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_monedas_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:monedas.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'790',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_monedas',
+                                        title:'Monedas', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo, '-', btn_guardar, btn_actualizar, btn_editar, '-', btn_eliminar, btn_cancelar, '-', btn_imprimir,
+                            combo_usuarios_describe,
+                    new Ext.app.SearchField({
+                        id:monedas.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_monedas_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+									monedas.fn_habilitar(false,0);
+                                store_monedas_lista.load({params:{campo:Ext.getCmp(monedas.id+'-combo_describe').getValue(),query:Ext.getCmp(monedas.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+                                        onEsc:function(){Ext.getCmp('win_monedas').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+            });
+                Ext.getCmp('win_monedas').show();
+                Ext.getCmp('win_monedas').center();
+                Ext.getCmp('win_monedas').toFront();
+                monedas.fn_habilitar(false,0);
+        },
+		
+		fn_nuevo:function()
+        {            
+            Ext.getCmp(monedas.id+'-mon_id').setValue('');
+			Ext.getCmp(monedas.id+'-nombre').setValue('');
+                        
+            monedas.fn_habilitar(true,1);
+        },
+		
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(monedas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(monedas.id+'-panel_derecho').expand();
+				Ext.getCmp(monedas.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(monedas.id+'-mon_id').setValue(rs.get('mon_id'));
+                Ext.getCmp(monedas.id+'-nombre').setValue(rs.get('nombre'));
+                
+                monedas.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+        fn_actualizar:function()
+        {
+            if(monedas.fn_validar()){
+				Ext.getCmp(monedas.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/monedas-actualizar',
+					params:{ 
+						mon_id:Ext.getCmp(monedas.id+'-mon_id').getValue(),
+						nombre:Ext.getCmp(monedas.id+'-nombre').getValue().toUpperCase()
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(monedas.id+'-panel_derecho').collapse();
+							Ext.getCmp(monedas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							monedas.fn_habilitar(false,0);
+							Ext.getCmp(monedas.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(monedas.id+'-combo_describe').getValue(),query:Ext.getCmp(monedas.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(monedas.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(monedas.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(monedas.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/monedas-actualizar',
+					params:
+					{
+						mon_id:Ext.getCmp(monedas.id+'-mon_id').getValue(),
+						nombre:Ext.getCmp(monedas.id+'-nombre').getValue().toUpperCase()
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(monedas.id+'-panel_derecho').collapse();
+							Ext.getCmp(monedas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							monedas.fn_habilitar(false,0);
+							Ext.getCmp(monedas.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(monedas.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+		
+		fn_guardar:function()
+        {
+            if(monedas.fn_validar()){
+				Ext.getCmp(monedas.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'tablas/monedas-guardar',
+					params:{ 
+						nombre:Ext.getCmp(monedas.id+'-nombre').getValue().toUpperCase(),
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(monedas.id+'-panel_derecho').collapse();
+							Ext.getCmp(monedas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							monedas.fn_habilitar(false,0);
+							Ext.getCmp(monedas.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(monedas.id+'-combo_describe').getValue(),query:Ext.getCmp(monedas.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(monedas.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(monedas.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(monedas.id+res.campo).focus(true,10);
+					}
+				});
+				/*Ext.Ajax.request({
+					url:'tablas/monedas-guardar',
+					params:
+					{
+						nombre:Ext.getCmp(monedas.id+'-nombre').getValue().toUpperCase(),
+					},
+					success:function(response,options)
+					{             
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(monedas.id+'-panel_derecho').collapse();
+							Ext.getCmp(monedas.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							monedas.fn_habilitar(false,0);
+							Ext.getCmp(monedas.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(monedas.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+		
+		fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(monedas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar??<br>Moneda :<br>' + rs.get('nombre'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando moneda... por favor espere!');
+						Ext.Ajax.request({
+							url:'tablas/monedas-eliminar',
+							params:
+							{
+								mon_id:rs.get('mon_id')
+							},
+							success:function(response,options)
+							{            
+								Ext.Msg.hide(); 
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									monedas.fn_habilitar(false,0);
+									Ext.getCmp(monedas.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(monedas.id+res.campo).focus(true,10);							
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(monedas.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(monedas.id+'-nombre').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-monedas').action="tablas/monedas-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(monedas.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(monedas.id+'-buscar').getValue();
+            document.getElementById('frmReporte-monedas').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(monedas.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(monedas.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(monedas.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(monedas.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(monedas.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(monedas.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(monedas.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(monedas.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(monedas.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(monedas.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(monedas.id+'-btn_editar').disable();
+			Ext.getCmp(monedas.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(monedas.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(monedas.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(monedas.id+'-btn_imprimir').setVisible(!sw);			
+        }
+         
+    }
+    Ext.onReady(monedas.init,monedas);
+
+</script>

@@ -1,0 +1,2084 @@
+<form id="frmReporte-trasladoing" name="frmReporte-trasladoing" method="post" action="" target="_blank">
+<input type="hidden" name="txtpar1" id="txtpar1" />
+<input type="hidden" name="txtpar2" id="txtpar2" />
+<input type="hidden" name="txtpar3" id="txtpar3" />
+<input type="hidden" name="txtpar4" id="txtpar4" />
+</form>
+<script type="text/javascript">
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('trasladoing');
+    trasladoing={
+        id:'trasladoing',
+        store_reader:new Ext.data.ArrayStore({  //step 1
+            id:trasladoing.id+'-reader_guiasasignadas',
+            fields:[{name:'itemid'},{name:'id'},{name:'cantidad'},{name:'codigo'},{name:'detalle'},{name:'marca'},{name:'precio'},{name:'descuento'},{name:'total'},{name:'ume_id'},{name:'valor_desc'},{name:'valor_bruto'}]  
+            }),
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:trasladoing.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(trasladoing.id+'-panel_derecho').expand();
+				Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(true);
+                            trasladoing.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:trasladoing.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            trasladoing.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:trasladoing.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            trasladoing.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:trasladoing.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            trasladoing.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:trasladoing.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(trasladoing.id+'-panel_derecho').collapse();
+							Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(false);
+                            trasladoing.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_anular=new Ext.Button({
+                id:trasladoing.id+'-btn_anular',
+                text:'Anular',
+                icon:'images/icon/btn_cancelar.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							trasladoing.fn_anular();
+                        }
+                    }
+            });
+			
+			var btn_eliminar=new Ext.Button({
+                id:trasladoing.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							trasladoing.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:trasladoing.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    trasladoing.fn_imprimir();
+                                }
+                            });
+                        }
+                    }
+            });
+			
+			var btn_busprv=new Ext.Button({
+                id:trasladoing.id+'-btn_busprv',
+                text:'Buscar',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert(vgVentana);
+							vgVentana = 'trasladoing';
+                           inicio.getForm( 'maestros/buscaproveedores','Busca Clientes')
+                        }
+                    }
+            });
+
+            var store_trasladoing_lista=new Ext.data.JsonStore({
+                url:'movimientos/trasladoing-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['nombre_proveedor','descripcion_documento','tin_id','codigo','prv_id','tipo_ingreso','doc_id','doc_n', 'tmv_id','n_guia','cpa_id','mon_id','valor_compra','impuesto_igv','total_compra', 'fec_ven', 'fec_mov', 'moneda', 'prv_codigo', 'ruc', 'anulado', 'afecta', 'formato', 'observacion', 'age_id', 'tie_des', 'origen', 'destino', 'doc_abrev', 'mon_abrev', 'tipo_cambio'],
+				remoteSort:true,				
+				sortInfo: {field:'fec_mov', direction:'desc'}
+            });
+			
+			var pager = new Ext.PagingToolbar({
+                id:trasladoing.id+'_pager',
+                store:store_trasladoing_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(trasladoing.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(trasladoing.id+'-buscar').getValue();
+			});
+            
+            
+            
+            var vstore_proveedores_lista=new Ext.data.JsonStore({
+                url:'maestros/proveedores-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['prv_id','nombre','ruc','codigo']
+            });
+            
+            //vstore_proveedores_lista.load({params:{start:0,limit:100}});
+			
+			var pagerCmbPrv = new Ext.PagingToolbar({
+                id:trasladoing.id+'_pagerCmbPrb',
+                store:vstore_proveedores_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerCmbPrv.on('beforechange',function(bar,params){  
+				params.campo = 'nombre';
+				params.query = Ext.getCmp(trasladoing.id+'-combo_prv').getValue();
+			});
+            
+            var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+			
+			var store_tipo_movimiento_lista=new Ext.data.JsonStore({
+                url:'tablas/tipo-movimiento-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tmv_id','nombre']
+            });
+            
+            store_tipo_movimiento_lista.load({params:{campo:'indicador',query:'I'}});
+
+            var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','abrev','descripcion','ventas','trasladoing','n_ventas','n_trasladoing','nn_credito','nn_debito','str_serie_n_trasladoing','str_n_trasladoing','str_serie_n_ventas','str_n_ventas','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito']
+            });
+            
+            store_documentos_lista.load({params:{campo:'tsalidas',query:'SI'}});
+			
+			var store_tiendaini_lista=new Ext.data.JsonStore({
+                url:'maestros/tiendas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tie_id','nombre','descripcion','telefono','direccion','precio','suc_id','estado']
+            });
+
+            store_tiendaini_lista.load();
+			
+			var store_tiendafin_lista=new Ext.data.JsonStore({
+                url:'maestros/tiendas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tie_id','nombre','descripcion','telefono','direccion','precio','suc_id','estado']
+            });
+			store_tiendafin_lista.load({params:{quitar:'SI',mismo:'NO'}});
+            
+            var store_condiciones_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cpa_id','codigo','descripcion','dias','letras']
+            });
+            
+            store_condiciones_pago_lista.load();
+
+            var store_trasladoing_describe=new Ext.data.JsonStore({
+                url:'movimientos/trasladoing-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_trasladoing_describe.load({params:{table:'movimientos_trasladoing'}});
+            
+            var combo_trasladoing_describe=new Ext.form.ComboBox({
+                id:trasladoing.id+'-combo_describe',
+                store:store_trasladoing_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_trasladoing_lista = new Ext.grid.GridPanel({
+                id:trasladoing.id+'-grid_lista',
+                store: store_trasladoing_lista,
+                singleSelect:true,
+				forceSelection:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+				stateful: true,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'tin_id',width:25},
+					{header:'Fecha',sortable :true,dataIndex:'fec_ven',width:70},
+					{header:'Origen',sortable :true,dataIndex:'origen',width:100},
+					{header:'Destino',sortable :true,dataIndex:'destino',width:100},
+                    {header:'Doc',sortable :true,dataIndex:'doc_abrev',width:30},
+					{header:'Número',sortable :true,dataIndex:'doc_n',width:80, align:'center'},
+					{header:'Observacion',sortable :true,dataIndex:'observacion',width:200},
+                    {header:'Valor TS',sortable :true,dataIndex:'valor_compra',width:70, align:'right'},
+					{header:'IGV',sortable :true,dataIndex:'impuesto_igv',width:70, align:'right'},
+                    {header:'Total TS',sortable :true,dataIndex:'total_compra',width:70, align:'right'},
+					{header:'Mon',sortable :true,dataIndex:'mon_abrev',width:30, align:'left'},
+					{header:'X',sortable :true,dataIndex:'anulado',width:30, align:'left'},
+					{header:'T.Cambio',sortable :true,dataIndex:'tipo_cambio',width:70, align:'right'}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        Ext.getCmp(trasladoing.id+'-panel_derecho').expand();
+						Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(true);
+                        trasladoing.fn_editar();
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(trasladoing.id+'-btn_editar').enable();
+						Ext.getCmp(trasladoing.id+'-btn_eliminar').enable();
+						Ext.getCmp(trasladoing.id+'-btn_anular').enable();
+                    }
+                }
+            });
+
+            
+            var grid_guiasAsignadas=new Ext.grid.EditorGridPanel({
+                             //tabIndex:27,
+                             id:trasladoing.id+'-guias_asignadas',
+                             store: trasladoing.store_reader,
+                             clicksToEdit: 1,
+                             singleSelect:true,
+                             columnLines:true,
+                             monitorResize:true,
+                             enableKeyEvents: true,
+                             viewConfig:{forceFit:true},
+                             autoScroll:true,
+                             autoHeight:true,
+                             height:150,
+                             listeners:
+                                 {
+                                    afteredit:function()
+                                    {
+                                        trasladoing.calcular();
+                                    }
+                                 },
+                             columns:
+                             [
+                                {
+                                  header:"Item", width: 20, sortable: true, dataIndex: 'itemid'},
+                                {
+                                  header:"Cantidad", width: 30, sortable: true, dataIndex: 'cantidad',align:'right',
+                                  editor: new Ext.form.TextField(
+                                  {
+									  	style:{textAlign:'right'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+										listeners : {
+											change : function(obj, eve){
+												var index = grid_guiasAsignadas.getSelectionModel().getSelectedCell();
+												if (!index)
+												{
+													return false;
+												}												   
+												datos=Ext.getCmp(trasladoing.id+'-guias_asignadas').getStore(0).getAt(index[0]);
+												
+												vValor = Number(obj.getValue()) * Number(datos.get('precio'));
+												
+												vBruto = vValor;
+												datos.set('valor_bruto',vBruto);
+												
+												vDesc = datos.get('descuento');
+												var n=vDesc.split("+");
+												if(n==0){
+													vValor = vValor - (vValor*Number(vDesc))/100;
+													vValor = Math.round(vValor*100)/100;	
+												}else{
+													for(i=0;i<n.length;i++){
+														vValor = vValor - (vValor*Number(n[i]))/100;
+														vValor = Math.round(vValor*100)/100;	
+													}
+												}
+												datos.set('valor_desc',vBruto - vValor);
+												datos.set('total',vValor);
+												trasladoing.calcular();
+											},
+											specialkey:function(obj,e)
+											{
+												if(e.getKey() == 13)
+												{
+													//Ext.getCmp(trasladoing.id+'-guias_asignadas').startEditing(1,5);
+													return false;
+												}
+											}
+										}
+                                   })
+                                },
+                                {
+                                  header:"Código", width: 40, sortable: true, dataIndex: 'codigo'},
+                                {
+                                  header:"Detalle", width: 120, sortable: true, dataIndex: 'detalle'},
+                                {
+                                  header:"Marca", width: 40, sortable: true, dataIndex: 'marca'},
+                                {
+                                  header:"Precio", width: 50, sortable: true, dataIndex: 'precio',align:'right',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        style:{textAlign:'right'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+										listeners : {
+											change : function(obj, eve){
+												var index = grid_guiasAsignadas.getSelectionModel().getSelectedCell();
+												if (!index)
+												{
+													return false;
+												}												   
+												datos=Ext.getCmp(trasladoing.id+'-guias_asignadas').getStore(0).getAt(index[0]);
+												
+												vValor = Number(datos.get('cantidad')) * Number(obj.getValue());
+												vBruto = vValor;
+												vBruto = Math.round(vBruto*100)/100;	
+												datos.set('valor_bruto',vBruto);
+												
+												vDesc = datos.get('descuento');
+												var n=vDesc.split("+");
+												if(n==0){
+													vValor = vValor - (vValor*Number(vDesc))/100;
+													vValor = Math.round(vValor*100)/100;	
+												}else{
+													for(i=0;i<n.length;i++){
+														vValor = vValor - (vValor*Number(n[i]))/100;
+														vValor = Math.round(vValor*100)/100;	
+													}
+												}
+												datos.set('valor_desc',vBruto - vValor);
+												datos.set('total',vValor);
+												trasladoing.calcular();
+											},
+											specialkey:function(obj,e)
+											{
+												if(e.getKey() == 13)
+												{
+													//e.setKey(9);
+													return false;
+												}
+											}
+										}
+                                   })
+                                },
+                                {
+                                  header:"Desc. %", width: 40, sortable: true, dataIndex: 'descuento',align:'right',
+                                  editor: new Ext.form.TextField(
+                                  {
+									  style:{textAlign:'right'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+										listeners : {
+											change : function(obj, eve){
+												var index = grid_guiasAsignadas.getSelectionModel().getSelectedCell();
+												if (!index)
+												{
+													return false;
+												}												   
+												datos=Ext.getCmp(trasladoing.id+'-guias_asignadas').getStore(0).getAt(index[0]);
+												
+												vValor = Number(datos.get('cantidad')) * Number(datos.get('precio'));
+												vBruto = vValor;
+												datos.set('valor_bruto',vBruto);
+												
+												vDesc = obj.getValue();
+												var n=vDesc.split("+");
+												if(n==0){
+													vValor = vValor - (vValor*Number(vDesc))/100;
+													vValor = Math.round(vValor*100)/100;	
+												}else{
+													for(i=0;i<n.length;i++){
+														vValor = vValor - (vValor*Number(n[i]))/100;
+														vValor = Math.round(vValor*100)/100;	
+													}
+												}
+												datos.set('valor_desc',vBruto - vValor);
+												datos.set('total',vValor);
+												trasladoing.calcular();
+											},
+											specialkey:function(obj,e)
+											{
+												if(e.getKey() == 13)
+												{
+													//e.setKey(9);
+													return false;
+												}
+											}
+										}                          
+                                   })
+                                },
+                                {
+                                  header:"Total", width: 60, sortable: true, dataIndex: 'total',align:'right'}
+								
+                               ]
+                             ,
+                             tbar:
+                               [
+                                  {
+                                     xtype:'button',
+                                     text:'Añadir',
+                                     iconCls:'btn_add_log',
+                                     listeners:
+                                     {
+                                       click:function()
+                                       {
+									   	trasladoing.fn_buscar_producto();
+                                          
+                                        }
+                                  }
+                                }
+                                  ,
+                                  {
+                                     xtype:'button',
+                                     text:'Quitar',
+                                     iconCls:'btn_delete_log',
+                                     listeners:
+                                     {
+                                       click:function()
+                                       {
+                                          var index = grid_guiasAsignadas.getSelectionModel().getSelectedCell();
+                                          if (!index)
+                                          {
+                                              return false;
+                                          }
+                                          var rec =  trasladoing.store_reader.getAt(index[0]);
+                                           trasladoing.store_reader.remove(rec);
+                                           
+                                           trasladoing.calcular();
+                                           
+                                           
+                                       }
+                                     }
+                                  },
+                                    
+                                     ]
+                                }); 
+
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+				id:trasladoing.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+					{
+                      xtype:'hidden',
+                      id:trasladoing.id+'-tin_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:.7,hidden:true,
+                        items:
+                        [
+                            
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Compra",
+                                itemCls: 'label01',
+                                id: trasladoing.id+'-tipo_ingreso',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tipo_ingreso"},
+                                columns: [120,120,120],
+                                items: [
+                                    {
+                                        id:trasladoing.id+'-tipo_ingreso1',
+                                        boxLabel: "COMPRA PLAZA",name: "tipo_ingreso",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:trasladoing.id+'-tipo_ingreso2',
+                                        boxLabel: "IMPORTACIÓN",name: "tipo_ingreso",
+                                        inputValue: "2"
+                                    }/*,
+                                    {
+                                        id:trasladoing.id+'-tipo_ingreso3',
+                                        boxLabel: "TRASLADO",name: "tipo_ingreso",
+                                        inputValue: "3"
+                                    }*/
+                                ]
+                            }    
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:.7,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_tipo_movimiento_lista,
+                                id:trasladoing.id+'-tmv_id',
+                                fieldLabel:'Tipo Movimiento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'tmv_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								value:'1',
+                				editable:false,
+								hidden:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-codigo',
+                                fieldLabel:'Operación',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.38,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:vstore_proveedores_lista,
+                                id:trasladoing.id+'-prv_id',
+                                fieldLabel:'Proveedor',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                valueField:'prv_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+								pageSize:100,
+								hidden:true,
+                                listeners:
+                                    {
+										beforequery:function(obj){
+											vstore_proveedores_lista.setBaseParam('campo', 'nombre');
+											vstore_proveedores_lista.setBaseParam('query', Ext.getCmp(trasladoing.id+'-prv_id').getValue());						
+										},
+										specialkey:function(obj, e)
+										{
+											if (e.getKey() == 13)
+											{
+												vstore_proveedores_lista.load({params:{campo:'nombre',query:obj.getRawValue(),start:0,limit:100}});
+											}
+										},
+                                        select:function(cmb,record,index)
+                                        {
+                                            Ext.getCmp(trasladoing.id+'-prv_ruc').setValue(record.get('ruc'));
+                                            Ext.getCmp(trasladoing.id+'-prv_codigo').setValue(record.get('codigo'));
+                                        }
+                                    }
+                            }
+                        ]
+                    },
+					{
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.07,
+								hidden:true,
+                        items:
+                        [
+                            btn_busprv
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+								hidden:true,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'RUC/DNI',
+                                id:trasladoing.id+'-prv_ruc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.30,
+								hidden:true,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'Código',
+                                id:trasladoing.id+'-prv_codigo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:110,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_documentos_lista,
+                                id:trasladoing.id+'-doc_id',
+                                fieldLabel:'Documento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'doc_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+                				editable:false,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {				
+										Ext.Msg.wait('Obteniendo Nro de Documento... por favor espere!');
+										Ext.Ajax.request({
+											url:'tablas/numeracion-obtener-codigo',
+											params:
+											{
+												doc_id:record.get('doc_id'),
+												tipo:'8'
+											},
+											success:function(response,options)
+											{    
+												Ext.Msg.hide();  
+												//alert(response.responseText);  
+												var res = Ext.decode(response.responseText);
+												if(res.success){
+													var numero=(Math.pow(10,res.data[0]['lon'])).toString()+(Number(res.data[0]['nro'])+1);
+													var codigo=numero.substr(numero.length-res.data[0]['lon'],res.data[0]['lon'])
+													Ext.getCmp(trasladoing.id+'-numero').setValue(res.data[0]['serie']+ '-' + codigo);
+												}else{
+													Ext.getCmp(trasladoing.id+'-numero').setValue('');
+												}
+												
+											}
+										});
+										
+										if(record.get('doc_id')==1){
+											Ext.getCmp(trasladoing.id+'-afecta_almacen').setVisible(false);
+											Ext.getCmp(trasladoing.id+'-afecta_almacen').setValue(false);
+										}else{
+											Ext.getCmp(trasladoing.id+'-afecta_almacen').setVisible(true);
+											Ext.getCmp(trasladoing.id+'-afecta_almacen').setValue(true);
+										}										
+                                    }
+                                }
+                            } 
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.28,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-numero',
+                                fieldLabel:'Número',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vDoc = obj.getValue();
+										n=vDoc.indexOf("-");
+										
+										vSer = vDoc.substr(0,n);
+										vSer=(Math.pow(10,3)).toString()+(Number(vSer));
+										vSer=vSer.substr(vSer.length-3,3);
+										
+										vNro = vDoc.substr(n+1,vDoc.length - n);
+										var vNro=(Math.pow(10,7)).toString()+(Number(vNro));
+										var vNro=vNro.substr(vNro.length-7,7);
+										Ext.getCmp(trasladoing.id+'-numero').setValue(vSer+ '-' + vNro);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:trasladoing.id+'-fecha',
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                value:'<? echo date('d/m/Y');?>',
+                                style:'margin-left:7px'
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.7,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_tiendafin_lista,
+                                id:trasladoing.id+'-tie_ini_id',
+                                fieldLabel:'Elegir Tienda Inicio',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'tie_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:1,
+								hidden:true,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-guia_remision',
+                                fieldLabel:'Guía',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								listeners : {
+									blur:function(obj){
+										vDoc = obj.getValue();
+										n=vDoc.indexOf("-");
+										
+										vSer = vDoc.substr(0,n);
+										vSer=(Math.pow(10,3)).toString()+(Number(vSer));
+										vSer=vSer.substr(vSer.length-3,3);
+										
+										vNro = vDoc.substr(n+1,vDoc.length - n);
+										var vNro=(Math.pow(10,7)).toString()+(Number(vNro));
+										var vNro=vNro.substr(vNro.length-7,7);
+										Ext.getCmp(trasladoing.id+'-guia_remision').setValue(vSer+ '-' + vNro);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+								hidden:true,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_condiciones_pago_lista,
+                                id:trasladoing.id+'-cpa_id',
+                                fieldLabel:'Forma de Pago',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                mode:'local',
+                                valueField:'cpa_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+								value:'1',
+                				editable:false,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:0.3,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_monedas_lista,
+                                id:trasladoing.id+'-mon_id',
+                                fieldLabel:'Moneda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                mode:'local',
+                                valueField:'mon_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								value:'<?=$sesion->se_moneda_almacen?>',
+                				editable:false,
+								readOnly:true,
+								listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+										if(cmb.getValue()=='1'){											
+											document.getElementById(Ext.getCmp(trasladoing.id+'-valor_bruto').label.id).innerHTML = 'Valor Bruto S/.';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-valor_descuento').label.id).innerHTML = 'Descuento S/.';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-valor_compra').label.id).innerHTML = 'Valor Compra S/.';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-impuesto_igv').label.id).innerHTML = 'Imp. IGV S/.';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-total_compra').label.id).innerHTML = 'Total Compra S/.';
+											
+										}else{
+											document.getElementById(Ext.getCmp(trasladoing.id+'-valor_bruto').label.id).innerHTML = 'Valor Bruto $';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-valor_descuento').label.id).innerHTML = 'Descuento $';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-valor_compra').label.id).innerHTML = 'Valor Compra $';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-impuesto_igv').label.id).innerHTML = 'Imp. IGV $';
+											document.getElementById(Ext.getCmp(trasladoing.id+'-total_compra').label.id).innerHTML = 'Total Compra $';
+										}										
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:0.5,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_tiendafin_lista,
+                                id:trasladoing.id+'-tie_des_id',
+                                fieldLabel:'Elegir Tienda Destino',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'tie_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.2,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-tipocambio',
+                                fieldLabel:'Tipo de Cambio',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true,
+								value:vgTcC,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            /*{
+                                xtype:'datefield',
+                                id:trasladoing.id+'-fecha_vencimiento',
+                                emptyText:'Vencimiento',
+                                width:100,
+                                fieldLabel:'Vencimiento',
+                                format:'d/m/Y',
+                                altFormats : "d-m-Y",
+                                readOnly:true,
+                                style:'margin-left:7px'
+                            }*/
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:105,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+                                id:trasladoing.id+'-afecta_almacen',
+                                fieldLabel:'Afecta Almacén',
+                                checked:true,
+								readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [        
+                            {
+                                xtype:'checkbox',
+                                id:trasladoing.id+'-inc_igv',
+                                fieldLabel:'Incluye IGV',
+                                checked:true,
+								enableKeyEvents: true,
+								listeners:{
+									check:function(obj, even){
+										trasladoing.calcular();
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',layout:'form',
+                        border:true,columnWidth:1,height:150,autoScroll:true,
+                        bodyStyle:'margin-bottom:7px',
+                        items:
+                        [        
+                            grid_guiasAsignadas
+                        ]
+                    }					
+                    ,
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.2,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-valor_bruto',
+                                fieldLabel:'Valor Bruto',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.18,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-valor_descuento',
+                                fieldLabel:'Descuento',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:60,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.22,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-valor_compra',
+                                fieldLabel:'Valor Compra',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true
+                            }
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.18,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-impuesto_igv',
+                                fieldLabel:'Imp. IGV',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:60,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.22,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:trasladoing.id+'-total_compra',
+                                fieldLabel:'Total Compra',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:70,
+                                readOnly:true
+                            }
+                        ]
+                    }
+					,
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:0.6,
+                        items:
+                        [        
+                            {
+                                xtype:'textarea',
+                                id:trasladoing.id+'-observacion',
+                                fieldLabel:'Observacion',
+                                itemCls: 'label01',
+                                style:{marginLeft:'7px',textAlign:'left'},
+                                width:300,
+								height:40,
+								allowBlank:false,
+                            }
+                        ]
+                    }
+					,
+                    {
+                        xtype:'label',
+						id:trasladoing.id+'-msganulado',
+                        columnWidth:0.4,
+						text:'DOCUMENTO ANULADO',
+						style:{color:'#ff0000',fontSize:'20px'}
+                    }
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_anular,btn_eliminar,'-',btn_imprimir,btn_cancelar,
+                            combo_trasladoing_describe,'-',
+                    new Ext.app.SearchField({
+                        id:trasladoing.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_trasladoing_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj,e)
+                            {
+                                if(e.getKey() == 13)
+                                {
+                                    store_trasladoing_lista.load({params:{campo:Ext.getCmp(trasladoing.id+'-combo_describe').getValue(),query:Ext.getCmp(trasladoing.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_trasladoing_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:trasladoing.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_trasladoing',
+                                        title:'Listado de Salidas por Traslado', 
+                                        width: 1024,
+                                        height:600,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                        onEsc:function(){Ext.getCmp('win_trasladoing').close();}, resizable:true,
+                        items:panel,
+                        buttonAlign:'center'
+            });
+            
+            Ext.getCmp('win_trasladoing').show();
+            Ext.getCmp('win_trasladoing').center();
+            Ext.getCmp('win_trasladoing').toFront();
+            trasladoing.fn_habilitar(false,0);
+			//store_trasladoing_lista.load({params:{start:0,limit:100}});
+            Ext.getCmp(trasladoing.id+'-panel_derecho').collapse();
+							Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(false);
+            
+            
+                
+            
+        },
+        fn_nuevo:function()
+        {
+			Ext.Msg.wait('Generando código de Compra... por favor espere!');
+            Ext.Ajax.request({
+				url:'movimientos/trasladoing-codigo',
+				params:
+				{
+					table:'movimientos_trasladoing'
+				},
+				success:function(response,options)
+				{   
+					Ext.Msg.hide();
+					var res = Ext.decode(response.responseText);						
+					var numero="000000000"+res.codigo;
+					var codigo="TRS"+numero.substr(numero.length-9,9)
+					Ext.getCmp(trasladoing.id+'-codigo').setValue(codigo);
+				}
+			});           
+            
+			Ext.getCmp(trasladoing.id+'-tipo_ingreso').setValue('1');
+			Ext.getCmp(trasladoing.id+'-prv_id').setValue('');
+			Ext.getCmp(trasladoing.id+'-prv_ruc').setValue('');
+			Ext.getCmp(trasladoing.id+'-prv_codigo').setValue('');
+			Ext.getCmp(trasladoing.id+'-doc_id').setValue('');
+			Ext.getCmp(trasladoing.id+'-tmv_id').setValue('');
+			Ext.getCmp(trasladoing.id+'-tie_ini_id').setValue('<?=$this->sesion->se_age_id?>');
+			Ext.getCmp(trasladoing.id+'-tie_ini_id').setValue(vgTienda);
+			Ext.getCmp(trasladoing.id+'-tie_des_id').setValue('');
+			
+			
+			Ext.getCmp(trasladoing.id+'-numero').setValue('');
+			Ext.getCmp(trasladoing.id+'-guia_remision').setValue('');
+			Ext.getCmp(trasladoing.id+'-cpa_id').setValue('1');
+			Ext.getCmp(trasladoing.id+'-mon_id').setValue('<?=($this->sesion->se_moneda_almacen=='D'?'2':'1')?>');
+			Ext.getCmp(trasladoing.id+'-afecta_almacen').setValue(true);
+			Ext.getCmp(trasladoing.id+'-inc_igv').setValue(true);
+			Ext.getCmp(trasladoing.id+'-msganulado').setVisible(false);
+			Ext.getCmp(trasladoing.id+'-observacion').setValue('');
+			
+			trasladoing.fn_habilitar(true,1);
+			Ext.getCmp(trasladoing.id+'-guias_asignadas').store.removeAll(false);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(trasladoing.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				Ext.getCmp(trasladoing.id+'-panel_derecho').expand();
+				Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(true);
+				Ext.getCmp(trasladoing.id+'-msganulado').setVisible(false);
+                trasladoing.fn_habilitar(true,2);
+				if(rs.get('anulado')=='1'){
+					Ext.getCmp(trasladoing.id+'-btn_actualizar').setVisible(false);
+					Ext.getCmp(trasladoing.id+'-msganulado').setVisible(true);
+				}
+				
+				Ext.getCmp(trasladoing.id+'-tin_id').setValue(rs.get('tin_id'));
+				var numero="000000000"+rs.get('codigo');
+				var codigo="TRS"+numero.substr(numero.length-9,9)
+				Ext.getCmp(trasladoing.id+'-codigo').setValue(codigo);
+					
+				Ext.getCmp(trasladoing.id+'-tipo_ingreso').setValue(rs.get('tipo_ingreso'));
+				Ext.getCmp(trasladoing.id+'-fecha').setValue(rs.get('fec_ven'));
+				Ext.getCmp(trasladoing.id+'-prv_id').setValue(rs.get('prv_id'));
+				Ext.getCmp(trasladoing.id+'-prv_ruc').setValue(rs.get('ruc'));
+				Ext.getCmp(trasladoing.id+'-prv_codigo').setValue(rs.get('prv_codigo'));
+				Ext.getCmp(trasladoing.id+'-doc_id').setValue(rs.get('doc_id'));
+				Ext.getCmp(trasladoing.id+'-numero').setValue(rs.get('doc_n'));
+				
+				Ext.getCmp(trasladoing.id+'-tie_ini_id').setValue(rs.get('age_id'));
+				Ext.getCmp(trasladoing.id+'-tie_des_id').setValue(rs.get('tie_des'));
+			
+				Ext.getCmp(trasladoing.id+'-tmv_id').setValue(rs.get('tmv_id'));
+				Ext.getCmp(trasladoing.id+'-guia_remision').setValue(rs.get('n_guia'));
+				Ext.getCmp(trasladoing.id+'-cpa_id').setValue(rs.get('cpa_id'));
+				Ext.getCmp(trasladoing.id+'-mon_id').setValue(rs.get('mon_id'));
+				Ext.getCmp(trasladoing.id+'-observacion').setValue(rs.get('observacion'));
+				
+				if(rs.get('afecta')=='S'){
+					Ext.getCmp(trasladoing.id+'-afecta_almacen').setValue(true);
+				}else{
+					Ext.getCmp(trasladoing.id+'-afecta_almacen').setValue(false);
+				}
+				if(rs.get('formato')=='S'){
+					Ext.getCmp(trasladoing.id+'-inc_igv').setValue(true);
+				}else{
+					Ext.getCmp(trasladoing.id+'-inc_igv').setValue(false);	
+				}
+				Ext.Msg.wait('Cargando detalle de compra... por favor espere!');
+				Ext.Ajax.request({
+					url:'movimientos/trasladoing-detalle',
+					params:
+					{
+						tin_id:rs.get('tin_id')
+					},
+					success:function(response,options)
+					{     
+						Ext.Msg.hide();        
+						//alert(response.responseText);
+						var res = Ext.decode(response.responseText);
+						Ext.getCmp(trasladoing.id+'-guias_asignadas').store.removeAll(false);						
+						for (i=0;i<res.data.length;i++){
+							//alert(res.data[i]);
+							detalle = res.data[i];
+							var u = new trasladoing.store_reader.recordType({
+								id:detalle['pro_id'],cantidad:detalle['cantidad'],codigo:detalle['codigo1'],detalle:detalle['producto'],precio:detalle['precio_compra'],descuento:detalle['descuento'],total:detalle['total'],ume_id:detalle['ume_id'], marca:detalle['marca']
+							});
+							//alert(detalle['pro_id']);
+							Ext.getCmp(trasladoing.id+'-guias_asignadas').stopEditing();
+							trasladoing.store_reader.insert(trasladoing.store_reader.getCount(), u);
+							Ext.getCmp(trasladoing.id+'-guias_asignadas').startEditing(trasladoing.store_reader.getCount()-1,1);
+						}		
+						//alert("salir");			
+						trasladoing.calcular();			
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			if(trasladoing.fn_validar()){
+				if(Ext.getCmp(trasladoing.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(trasladoing.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}
+				var vData= new Array();
+				var v_detalle= new Array();
+				for(i=0;i<Ext.getCmp(trasladoing.id+'-guias_asignadas').store.getCount();i++)
+				{
+					datos=Ext.getCmp(trasladoing.id+'-guias_asignadas').getStore(0).getAt(i);
+					vValore = datos.get('id') + '.@.' + datos.get('cantidad') + '.@.' + datos.get('codigo') + '.@.' + datos.get('detalle') + '.@.' + datos.get('precio') + '.@.' + datos.get('descuento') + '.@.' + datos.get('total') + '.@.' + datos.get('ume_id') + '.@.' + vAfecta + '.@.' + datos.get('valor_bruto') + '.@.' + datos.get('valor_desc');
+					vData[i] = vValore;
+				}
+
+				Ext.getCmp(trasladoing.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/trasladoing-actualizar',
+					params:{ 
+						tin_id:Ext.getCmp(trasladoing.id+'-tin_id').getValue(),
+						codigo:Ext.getCmp(trasladoing.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(trasladoing.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(trasladoing.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(trasladoing.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(trasladoing.id+'-numero').getValue(),
+						tmv_id:Ext.getCmp(trasladoing.id+'-tmv_id').getValue(),
+						n_guia:Ext.getCmp(trasladoing.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(trasladoing.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(trasladoing.id+'-mon_id').getValue(),
+						tie_id:Ext.getCmp(trasladoing.id+'-tie_ini_id').getValue(),
+						tie_des:Ext.getCmp(trasladoing.id+'-tie_des_id').getValue(),
+						valor_compra:Ext.getCmp(trasladoing.id+'-valor_compra').getValue(),
+						valor_bruto:Ext.getCmp(trasladoing.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(trasladoing.id+'-valor_descuento').getValue(),
+						impuesto_igv:Ext.getCmp(trasladoing.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(trasladoing.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(trasladoing.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(trasladoing.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(trasladoing.id+'-observacion').getValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_detalle[]":vData,
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){
+						//alert(action.response.responseText);						
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(trasladoing.id+'-panel_derecho').collapse();
+							Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							trasladoing.fn_habilitar(false,0);
+							Ext.getCmp(trasladoing.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(trasladoing.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(trasladoing.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);	
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(trasladoing.id+res.campo).focus(true,10);							
+					}
+				});				
+				/*Ext.Ajax.request({
+					url:'movimientos/trasladoing-guardar',
+					params:
+					{
+						mve_id:Ext.getCmp(ventas.id+'-mve_id').getValue(),
+						codigo:Ext.getCmp(trasladoing.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(trasladoing.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(trasladoing.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(trasladoing.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(trasladoing.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(trasladoing.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(trasladoing.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(trasladoing.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(trasladoing.id+'-valor_compra').getValue(),
+						impuesto_igv:Ext.getCmp(trasladoing.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(trasladoing.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(trasladoing.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(trasladoing.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(trasladoing.id+'-panel_derecho').collapse();
+							Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							trasladoing.fn_habilitar(false,0);
+							Ext.getCmp(trasladoing.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(trasladoing.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {	
+			if(trasladoing.fn_validar()){
+				if(Ext.getCmp(trasladoing.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(trasladoing.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}
+				var vData= new Array();
+				var v_detalle= new Array();
+				for(i=0;i<Ext.getCmp(trasladoing.id+'-guias_asignadas').store.getCount();i++)
+				{
+					datos=Ext.getCmp(trasladoing.id+'-guias_asignadas').getStore(0).getAt(i);
+					vValore = datos.get('id') + '.@.' + datos.get('cantidad') + '.@.' + datos.get('codigo') + '.@.' + datos.get('detalle') + '.@.' + datos.get('precio') + '.@.' + datos.get('descuento') + '.@.' + datos.get('total') + '.@.' + datos.get('ume_id') + '.@.' + vAfecta + '.@.' + datos.get('valor_bruto') + '.@.' + datos.get('valor_desc');
+					vData[i] = vValore;
+				}
+				//alert("Antes");
+				Ext.getCmp(trasladoing.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/trasladoing-guardar',
+					params:{ 
+						codigo:Ext.getCmp(trasladoing.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(trasladoing.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(trasladoing.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(trasladoing.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(trasladoing.id+'-numero').getValue(),
+						tmv_id:Ext.getCmp(trasladoing.id+'-tmv_id').getValue(),
+						tie_id:Ext.getCmp(trasladoing.id+'-tie_ini_id').getValue(),
+						tie_des:Ext.getCmp(trasladoing.id+'-tie_des_id').getValue(),
+						n_guia:Ext.getCmp(trasladoing.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(trasladoing.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(trasladoing.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(trasladoing.id+'-valor_compra').getValue(),
+						valor_bruto:Ext.getCmp(trasladoing.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(trasladoing.id+'-valor_descuento').getValue(),
+						impuesto_igv:Ext.getCmp(trasladoing.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(trasladoing.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(trasladoing.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(trasladoing.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(trasladoing.id+'-observacion').getValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_detalle[]":vData,
+					},
+					waitTitle: 'Guardando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){	
+						//alert(action.response.responseText);				
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(trasladoing.id+'-panel_derecho').collapse();
+							Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							trasladoing.fn_habilitar(false,0);
+							Ext.getCmp(trasladoing.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(trasladoing.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(trasladoing.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(trasladoing.id+res.campo).focus(true,10);							
+					}
+				});				
+
+				/*Ext.Ajax.request({
+					url:'movimientos/trasladoing-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(trasladoing.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(trasladoing.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(trasladoing.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(trasladoing.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(trasladoing.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(trasladoing.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(trasladoing.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(trasladoing.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(trasladoing.id+'-valor_compra').getValue(),
+						impuesto_igv:Ext.getCmp(trasladoing.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(trasladoing.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(trasladoing.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(trasladoing.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(trasladoing.id+'-panel_derecho').collapse();
+							Ext.getCmp(trasladoing.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							trasladoing.fn_habilitar(false,0);
+							Ext.getCmp(trasladoing.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(trasladoing.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+		fn_anular:function()
+        {
+            var rs=Ext.getCmp(trasladoing.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				if(rs.get('anulado')=='1'){
+					og.msg("Error","Documento ya esta anulado");
+					return;
+				}
+				Ext.Msg.confirm('Alerta', 'Desea Anular?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Anulando compra... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/trasladoing-anular',
+							params:
+							{
+								tin_id:rs.get('tin_id')
+							},
+							success:function(response,options)
+							{           
+								Ext.Msg.hide();  
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha anulado");
+									trasladoing.fn_habilitar(false,0);
+									Ext.getCmp(trasladoing.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(trasladoing.id+'-combo_describe').getValue(),query:Ext.getCmp(trasladoing.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(trasladoing.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(trasladoing.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando compra... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/trasladoing-eliminar',
+							params:
+							{
+								tin_id:rs.get('tin_id')
+							},
+							success:function(response,options)
+							{             			
+								Ext.Msg.hide();
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									trasladoing.fn_habilitar(false,0);
+									Ext.getCmp(trasladoing.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(trasladoing.id+'-combo_describe').getValue(),query:Ext.getCmp(trasladoing.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(trasladoing.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },		
+        calcular:function()
+        {
+            var valor_compra='0';
+			var valor_bruto='0';
+            var impuesto_igv='0';
+            var total_compra='0';
+			var valor_desc ='0';
+            var datos='';
+            for(i=0;i<Ext.getCmp(trasladoing.id+'-guias_asignadas').store.getCount();i++)
+            {
+                datos=Ext.getCmp(trasladoing.id+'-guias_asignadas').getStore(0).getAt(i);
+				
+				vValor = Number(datos.get('cantidad')) * Number(datos.get('precio'));
+				vBruto = vValor;
+				vBruto = Math.round(vBruto*100)/100;	
+				datos.set('valor_bruto',vBruto);
+				
+				vDesc = datos.get('descuento');
+				var n=vDesc.split("+");
+				for(j=0;j<n.length;j++){
+					vValor = vValor - (vValor*Number(n[j]))/100;
+					vValor = Math.round(vValor*100)/100;	
+				}
+				
+				/*vValor = vValor - (vValor*Number(datos.get('descuento')))/100;
+				vValor = Math.round(vValor*100)/100;*/
+				datos.set('valor_desc',vBruto - vValor);
+				datos.set('total',vValor);
+				
+				//datos.beginEdit( );
+				//datos.set('detalle','Cambio de DATOS');
+				datos.set('itemid',i+1);
+                valor_compra=Number(valor_compra)+Number(datos.get('total'));
+				valor_desc = Number(valor_desc)+Number(datos.get('valor_desc'));
+				valor_bruto = Number(valor_bruto)+Number(datos.get('valor_bruto'));
+            }
+			
+			valor_compra= Math.round(valor_compra*100)/100;
+			if(Ext.getCmp(trasladoing.id+'-inc_igv').getValue()){
+				Ext.getCmp(trasladoing.id+'-total_compra').setValue(valor_compra);		
+				
+				impuesto_igv= (valor_compra * 18)  / 118 ;
+				impuesto_igv = Math.round(impuesto_igv*100 ) / 100;
+				valor_compra=(valor_compra-impuesto_igv);
+				
+				Ext.getCmp(trasladoing.id+'-impuesto_igv').setValue(impuesto_igv);	
+				valor_compra = Math.round(valor_compra*100)/100;
+				Ext.getCmp(trasladoing.id+'-valor_compra').setValue(valor_compra);
+			}else{
+				
+				Ext.getCmp(trasladoing.id+'-valor_compra').setValue(Math.round(valor_compra*100)/100);
+				impuesto_igv=Math.round(((valor_compra * 18)  / 100)*100)/100 ;
+				total_compra=(Number(Math.round(valor_compra*100)/100)+Number(impuesto_igv));
+				Ext.getCmp(trasladoing.id+'-impuesto_igv').setValue(impuesto_igv);
+				Ext.getCmp(trasladoing.id+'-total_compra').setValue(total_compra);
+			}			
+			valor_desc = Math.round(valor_desc*100)/100;	
+			Ext.getCmp(trasladoing.id+'-valor_descuento').setValue(valor_desc);
+			valor_bruto = Math.round(valor_bruto*100)/100;	
+			Ext.getCmp(trasladoing.id+'-valor_bruto').setValue(valor_bruto);
+        },
+		fn_validar:function(){
+			/*if(Ext.getCmp(trasladoing.id+'-tie_ini_id').getValue()==Ext.getCmp(trasladoing.id+'-tie_des').getValue())
+            {
+                og.msg("Error", "La tienda origen debe ser diferente a destino");
+                Ext.getCmp(trasladoing.id+'-tie_des').focus(true,10);
+                return false;
+            }*/
+			if(!Ext.getCmp(trasladoing.id+'-prv_id').isValid())
+            {
+                og.msg("Error", "Ingrese el Proveedor");
+                Ext.getCmp(trasladoing.id+'-prv_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(trasladoing.id+'-doc_id').isValid())
+            {
+                og.msg("Error", "Ingrese el Documento");
+                Ext.getCmp(trasladoing.id+'-doc_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(trasladoing.id+'-numero').isValid())
+            {
+                og.msg("Error", "Ingrese el Número del Documento");
+                Ext.getCmp(trasladoing.id+'-numero').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(trasladoing.id+'-cpa_id').isValid())
+            {
+                og.msg("Error", "Ingrese la Condición de Pago");
+                Ext.getCmp(trasladoing.id+'-cpa_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(trasladoing.id+'-mon_id').isValid())
+            {
+                og.msg("Error", "Ingrese la Moneda de Pago");
+                Ext.getCmp(trasladoing.id+'-mon_id').focus(true,10);
+                return false;
+            }
+			if(Ext.getCmp(trasladoing.id+'-guias_asignadas').store.getCount()==0){
+				og.msg("Error", "Por favor ingrese detalle del Documento");
+                Ext.getCmp(trasladoing.id+'-mon_id').focus(true,10);
+                return false;
+			}
+			return true;
+		},
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(trasladoing.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(trasladoing.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(trasladoing.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(trasladoing.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(trasladoing.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(trasladoing.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(trasladoing.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(trasladoing.id+'-btn_cancelar').setVisible(sw);
+			
+			Ext.getCmp(trasladoing.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(trasladoing.id+'-btn_eliminar').setVisible(!sw);
+			Ext.getCmp(trasladoing.id+'-btn_anular').setVisible(!sw);
+
+			Ext.getCmp(trasladoing.id+'-btn_editar').disable();
+			Ext.getCmp(trasladoing.id+'-btn_eliminar').disable();
+			Ext.getCmp(trasladoing.id+'-btn_anular').disable();
+			
+			Ext.getCmp(trasladoing.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(trasladoing.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(trasladoing.id+'-btn_imprimir').setVisible(!sw);			
+        },
+		fn_buscar_producto:function(){
+			var btn_cerrar=new Ext.Button({
+                id:trasladoing.id+'-btn_cerrar',
+                text:'Cerrar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp('win_buscar_mercaderias_trasladoing').close();
+                        }
+                    }
+            });
+            
+            var store_mercaderias_lista_stock=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mcd_id','codigo1','codigo2','codigo3','nombre','ume_id','mar_id','lin_id','precio_costo','precio_venta','stock_minimo','stock_actual', 'utilidad', 'desc1', 'desc2', 'desc3', 'desc4','activo', 'fam_id', 'ume_nom', 'precio_compra', 'ind_calculo','mar_nom', 'stock_pro'],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+
+            var store_mercaderias_describe=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_mercaderias_describe.load({params:{table:'maestros_mercaderias'}});
+            
+			var store_lineasbusq_lista=new Ext.data.JsonStore({
+                url:'tablas/lineas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['lin_id','nombre']
+            });
+			store_lineasbusq_lista.load();
+			var combo_lineas_busq=new Ext.form.ComboBox({
+                id:trasladoing.id+'-combo_lineas_busq',
+                store:store_lineasbusq_lista,
+                valueField:'lin_id',
+                displayField:'nombre',
+                triggerAction:'all',
+                emptyText:'Linea',
+                mode:'local',
+                width:200,
+                editable:false,
+				listeners:
+					{
+						select:function(cmb,record,index)
+						{
+							store_mercaderias_lista_stock.load({params:{lin_id:cmb.getValue(),campo:Ext.getCmp(trasladoing.id+'-combo_describe_mercaderias').getValue(),query:Ext.getCmp(trasladoing.id+'-buscar_mercaderia').getValue(),start:0,limit:100}});
+						}
+					}
+            });
+			
+            var pagerStock = new Ext.PagingToolbar({
+                id:trasladoing.id+'_pager',
+                store:store_mercaderias_lista_stock,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerStock.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(trasladoing.id+'-combo_describe_mercaderias').getValue();
+				params.query = Ext.getCmp(trasladoing.id+'-buscar_mercaderia').getValue();
+				params.lin_id = Ext.getCmp(trasladoing.id+'-combo_lineas_busq').getValue();
+			}); 
+            
+            var combo_mercaderias_describe=new Ext.form.ComboBox({
+                id:trasladoing.id+'-combo_describe_mercaderias',
+                store:store_mercaderias_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_mercaderias_lista_stock = new Ext.grid.GridPanel({
+                id:trasladoing.id+'-grid_mercaderias_lista_stock',
+                store: store_mercaderias_lista_stock,
+                singleSelect:true,
+                forceSelection:true,
+                columnLines:true,
+                width:'580',
+                stateful: true,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                bbar:pagerStock,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mcd_id',width:25,hidden:true},
+                    {header:'Código 1',sortable :true,dataIndex:'codigo1',width:100},
+                    {header:'Código 2',sortable :true,dataIndex:'codigo2',width:100},
+                    {header:'Código 3',sortable :true,dataIndex:'codigo3',width:100,hidden:true},
+                    {header:'Descripción',sortable :true,dataIndex:'nombre',width:250},
+                    {header:'Marca',sortable :true,dataIndex:'mar_nom',width:100},
+					{header:'Unidad de Medida',sortable :true,dataIndex:'ume_nom',width:100,hidden:true},
+					{header:'Stock',sortable :true,dataIndex:'stock_pro',width:75,align:'right'},
+                    {header:'P. Compra',sortable :true,dataIndex:'precio_compra',width:75,align:'right',hidden:true},
+					{header:'P. Costo',sortable :true,dataIndex:'precio_costo',width:75,align:'right'},
+                    {header:'P. Venta',sortable :true,dataIndex:'precio_venta',width:75,align:'right'},
+                    {header:'Stock Mínimo',sortable :true,dataIndex:'stock_minimo',width:100,align:'right',hidden:true},
+					{header:'% Incremento',sortable :true,dataIndex:'utilidad',width:100,align:'right',hidden:true},
+					{header:'% Desc 1',sortable :true,dataIndex:'desc1',width:100,align:'right',hidden:true},
+					{header:'% Desc 2',sortable :true,dataIndex:'desc2',width:100,align:'right',hidden:true},
+					{header:'% Desc 3',sortable :true,dataIndex:'desc3',width:100,align:'right',hidden:true},
+					{header:'% Desc 4',sortable :true,dataIndex:'desc4',width:100,align:'right',hidden:true},
+                    {header:'Estado',sortable :true,dataIndex:'activo',width:100,hidden:true}
+                    ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        var rs=Ext.getCmp(trasladoing.id+'-grid_mercaderias_lista_stock').getSelectionModel().getSelected();
+						
+						if(rs)
+			            {
+							Ext.getCmp('win_buscar_mercaderias_trasladoing').close();
+							var u = new trasladoing.store_reader.recordType({
+								id:rs.get('mcd_id'),cantidad:'',codigo:rs.get('codigo1'),detalle:rs.get('nombre'),marca:rs.get('mar_nom'),precio:rs.get('precio_venta'),descuento:'0',total:rs.get('precio_venta'),ume_id:rs.get('ume_id')
+							});
+							//alert("antes");
+							Ext.getCmp(trasladoing.id+'-guias_asignadas').stopEditing();
+							trasladoing.store_reader.insert(trasladoing.store_reader.getCount(), u);
+							Ext.getCmp(trasladoing.id+'-guias_asignadas').startEditing(trasladoing.store_reader.getCount()-1,1);
+							//alert("despues");
+							trasladoing.calcular();
+						}else{
+							alert('No ha seleccionado ningun producto');
+						}
+                    }
+                }
+            });
+            
+            
+            
+            
+            var panel2 = new Ext.Panel({  
+            layout: 'border',
+
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            combo_lineas_busq, combo_mercaderias_describe,'-',
+                    new Ext.app.SearchField({
+                        id:trasladoing.id+'-buscar_mercaderia', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_mercaderias_lista_stock,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+                                store_mercaderias_lista_stock.load({params:{lin_id:Ext.getCmp(trasladoing.id+'-combo_lineas_busq').getValue(),campo:Ext.getCmp(trasladoing.id+'-combo_describe_mercaderias').getValue(),query:Ext.getCmp(trasladoing.id+'-buscar_mercaderia').getValue(),start:0,limit:100}});
+                                }
+                            }
+                        }
+                    }),'-',btn_cerrar
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:650px;margin:auto;',
+            border:false,
+            items: [
+            {  
+				region: 'center',
+				layout:'fit',
+				xtype: 'panel',
+				width:'640',
+				autoScroll: true,  
+				border:false,
+				items:
+				[
+					grid_mercaderias_lista_stock
+					
+				]
+			}
+					
+			  ]  
+			});
+            
+             new Ext.Window({
+				id:'win_buscar_mercaderias_trasladoing',
+				title:'Mercaderías',
+				width: 800,
+				height:450,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:false,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_buscar_mercaderias_trasladoing').close();},
+				resizable:true,
+				items:panel2,
+				buttonAlign:'center',
+				listeners: {
+					'beforeclose': function(){ inicio.setActiveStyleSheet('gray'); }
+				}
+			});
+			Ext.getCmp('win_buscar_mercaderias_trasladoing').show();
+			Ext.getCmp(trasladoing.id+'-combo_describe_mercaderias').setValue('codigo1');
+			inicio.setActiveStyleSheet('blue');
+			//Ext.getCmp(trasladoing.id+'-grid_mercaderias_lista_stock').store.load({params:{start:0,limit:100}});
+		},
+		fn_ubicaproveedor:function(vcampo, vvalor, vcodigo, vnombre, vruc){
+			//alert('entra');
+			Ext.getCmp(trasladoing.id+'-prv_id').store.load({params:{campo:vcampo,query:vvalor,start:0,limit:100}});
+			Ext.getCmp(trasladoing.id+'-prv_id').setValue(vvalor);
+			Ext.getCmp(trasladoing.id+'-prv_id').setRawValue(vnombre);
+			Ext.getCmp(trasladoing.id+'-prv_ruc').setValue(vruc);
+			Ext.getCmp(trasladoing.id+'-prv_codigo').setValue(vcodigo);
+			
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-trasladoing').action="movimientos/trasladoing-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(trasladoing.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(trasladoing.id+'-buscar').getValue();
+			var activePage = Math.ceil((Ext.getCmp(trasladoing.id+'_pager').cursor + Ext.getCmp(trasladoing.id+'_pager').pageSize) / Ext.getCmp(trasladoing.id+'_pager').pageSize);
+			document.getElementById('txtpar3').value = activePage;
+			document.getElementById('txtpar4').value = 'TS';
+            document.getElementById('frmReporte-trasladoing').submit();
+        },
+         
+    }
+    Ext.onReady(trasladoing.init,trasladoing);
+
+</script>

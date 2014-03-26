@@ -1,0 +1,2024 @@
+<form id="frmReporte-ventas-formato" name="frmReporte-ventas-formato" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+  <input type="hidden" name="txtpar4" id="txtpar4" />
+  <input type="hidden" name="txttitulo" id="txttitulo" />
+  <input type="hidden" name="txtfiltro" id="txtfiltro" />
+  <input type="hidden" name="txtsort" id="txtsort" />
+  <input type="hidden" name="txtdir" id="txtdir" />
+</form>
+<form id="frmReporte-buscaclientes" name="frmReporte-buscaclientes" method="post" action="" target="_blank">
+
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+
+</form>
+
+<script type="text/javascript">	
+
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+
+    //if(!Ext.getCmp('tiponovedades-tab')){
+
+    Ext.ns('buscaclientes');
+
+	
+
+
+
+    buscaclientes={
+
+        id:'buscaclientes',
+
+        init:function(){
+
+            Ext.Ajax.timeout = 180000;
+
+            Ext.QuickTips.init();
+
+            
+
+            var btn_nuevo=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_nuevo',
+
+                text:'Nuevo',
+
+                iconCls:'btn_add_log',
+
+				hidden:true,
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+                            Ext.getCmp(buscaclientes.id+'-panel_derecho').expand();
+
+				Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(true);
+
+                            buscaclientes.fn_nuevo();
+
+                        }
+
+                    }
+
+            });
+
+            
+
+            var btn_guardar=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_guardar',
+
+                text:'Guardar',
+				
+				hidden:true,
+
+                iconCls:'btn_save_log',
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+                            buscaclientes.fn_guardar();
+
+                        }
+
+                    }
+
+            });
+
+            
+
+            var btn_actualizar=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_actualizar',
+
+                text:'Actualizar',
+
+                iconCls:'btn_update_log',
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+                            buscaclientes.fn_actualizar();
+
+                        }
+
+                    }
+
+            });
+
+            
+
+            var btn_editar=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_editar',
+
+                text:'Editar',
+
+                iconCls:'btn_edit_log',
+
+				hidden:true,
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+                            buscaclientes.fn_editar();
+
+                        }
+
+                    }
+
+            });
+
+            
+
+            var btn_cancelar=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_cancelar',
+
+                text:'Cancelar',
+				
+				hidden:true,
+
+                iconCls:'btn_cancel_log',
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+                            Ext.getCmp(buscaclientes.id+'-panel_derecho').collapse();
+
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(false);
+
+                            buscaclientes.fn_habilitar(false,0);
+
+                        }
+
+                    }
+
+            });
+
+            
+
+            var btn_eliminar=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_eliminar',
+
+                text:'Eliminar',
+
+                iconCls:'btn_delete_log',
+
+				hidden:true,
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+							buscaclientes.fn_eliminar();
+
+                        }
+
+                    }
+
+            });
+
+			
+
+			var btn_imprimir=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_imprimir',
+
+                text:'Imprimir',
+
+                icon:'images/icon/printer.png',
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+
+                                if(btn == 'yes')
+
+                                {
+
+                                    buscaclientes.fn_imprimir();
+
+                                }
+
+                            });
+
+
+
+                            
+
+                        }
+
+                    }
+
+            });
+
+			
+
+			var btn_seleccionar=new Ext.Button({
+
+                id:buscaclientes.id+'-btn_seleccionar',
+
+                text:'Seleccionar',
+
+                listeners:
+
+                    {
+
+                        click:function()
+
+                        {
+
+                            buscaclientes.fn_seleccionar();
+
+                        }
+
+                    }
+
+            });
+
+            
+
+            var store_dep_lista=new Ext.data.JsonStore({
+                url:'maestros/ubigeo-dep',
+                root:'data',
+                totalProperty:'total',
+                fields:['dep_id','nom_dep']
+            });
+            
+            store_dep_lista.load();
+            
+            var store_ciu_lista=new Ext.data.JsonStore({
+                url:'maestros/ubigeo-ciu',
+                root:'data',
+                totalProperty:'total',
+                fields:['dep_id','ciu_id','nom_ciu']
+            });
+            
+            var store_dis_lista=new Ext.data.JsonStore({
+                url:'maestros/ubigeo-dis',
+                root:'data',
+                totalProperty:'total',
+                fields:['dep_id','ciu_id','dis_id','nom_dis']
+            });
+			
+			var store_sit_lista=new Ext.data.JsonStore({
+                url:'tablas/situacion-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['sit_id','nombre']
+            });
+            
+            store_sit_lista.load();
+            
+            var store_buscaclientes_lista=new Ext.data.JsonStore({
+                url:'maestros/clientes-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cli_id','codigo','nombre','ruc','telefono','email','web','dep_id','ciu_id','dis_id','direccion','observacion','activo','tip_per','tip_doc','rep_leg','sit_id', 'tipo_per', 'tipo_doc', 'nom_dep', 'nom_ciu', 'nom_dis'],
+				remoteSort:true,
+				sortInfo: {field:'ruc', direction:'asc'}
+            });
+            
+            var store_buscaclientes_describe=new Ext.data.JsonStore({
+                data:[{campo: 'codigo', valor:'Por Codigo'},{campo: 'nombre', valor:'Nombre o Razon Social'},{campo: 'ruc', valor:'Por DNI o RUC'},{campo: 'telefono', valor:'Por telefono'},{campo: 'email', valor:'Por Email'}],
+                fields:['campo', 'valor']
+            });
+
+            
+
+            //store_buscaclientes_describe.load({params:{table:'maestros_clientes'}});
+
+			
+
+			 var pager = new Ext.PagingToolbar({
+
+                id:buscaclientes.id+'_pager',
+
+                store:store_buscaclientes_lista,
+
+                displayInfo: true,
+
+                displayMsg: '{0} - {1} de {2} Registros',
+
+                emptyMsg: 'No existen registros',
+
+                pageSize:100
+
+            });
+
+			
+
+			pager.on('beforechange',function(bar,params){  
+
+				params.campo = Ext.getCmp(buscaclientes.id+'-combo_describe').getValue();
+
+				params.query = Ext.getCmp(buscaclientes.id+'-buscar').getValue();
+
+			}); 
+
+            
+
+            var combo_buscaclientes_describe=new Ext.form.ComboBox({
+
+                id:buscaclientes.id+'-combo_describe',
+
+                store:store_buscaclientes_describe,
+
+                valueField:'campo',
+
+                displayField:'valor',
+
+                triggerAction:'all',
+
+                emptyText:'Seleccione Campo',
+
+                mode:'local',
+
+                width:100,
+
+                editable:false,
+
+				value:'ruc'
+
+            });
+
+            
+
+            var grid_buscaclientes_lista = new Ext.grid.GridPanel({
+
+                id:buscaclientes.id+'-grid_lista',
+
+                store: store_buscaclientes_lista,
+
+                singleSelect:true,
+
+                columnLines:true,
+
+                monitorResize:true,
+
+                width:226,
+
+                height:300,
+
+                loadMask:true,
+
+				bbar:pager,
+
+                sm: new Ext.grid.RowSelectionModel({
+
+                    singleSelect:true
+
+                }),
+
+                columns:
+
+                [
+
+                    {header:'Id',sortable :true,dataIndex:'cli_id',width:25},
+
+                    {header:'Código',sortable :true,dataIndex:'codigo',width:70},
+
+                    {header:'Nombres',sortable :true,dataIndex:'nombre',width:150},
+
+					{header:'Tip Per',sortable :true,dataIndex:'tipo_per',width:80},
+
+					{header:'Tip Doc',sortable :true,dataIndex:'tipo_doc',width:80},
+
+                    {header:'Nro Doc',sortable :true,dataIndex:'ruc',width:80},
+
+                    {header:'Teléfono',sortable :true,dataIndex:'telefono',width:100,hidden:true},
+
+                    {header:'E-mail',sortable :true,dataIndex:'email',width:100,hidden:true},
+
+                    {header:'Web',sortable :true,dataIndex:'web',width:100,hidden:true},
+
+                    {header:'Departamento',sortable :true,dataIndex:'dep_id',width:100,hidden:true},
+
+                    {header:'Ciudad',sortable :true,dataIndex:'ciu_id',width:100,hidden:true},
+
+                    {header:'Distrito',sortable :true,dataIndex:'dis_id',width:100,hidden:true},
+
+                    {header:'Dirección',sortable :true,dataIndex:'direccion',width:100,hidden:true},
+
+					{header:'Departamento',sortable :true,dataIndex:'nom_dep',width:100},
+
+					{header:'Representante legal',sortable :true,dataIndex:'rep_leg',width:100},
+
+					{header:'Sit Id',sortable :true,dataIndex:'sit_id',width:100,hidden:true},
+
+                    {header:'Observación',sortable :true,dataIndex:'observacion',width:100,hidden:true},
+
+                    {header:'Activo',sortable :true,dataIndex:'activo',width:100,hidden:true},
+
+                ]
+
+                ,
+
+                listeners:
+
+                {
+
+                    rowdblclick:function()
+
+                    {
+
+                        /*if(Ext.getCmp(buscaclientes.id+'-btn_editar').isVisible()){
+
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').expand();
+
+				Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(true);
+
+                        	buscaclientes.fn_editar();
+
+						}*/
+
+						buscaclientes.fn_seleccionar();
+
+                    },
+
+					rowclick:function()
+
+                    {
+
+                        //Ext.getCmp(buscaclientes.id+'-btn_editar').enable();
+
+						//Ext.getCmp(buscaclientes.id+'-btn_eliminar').enable();
+
+                    }
+
+                }
+
+            });
+
+
+
+            
+
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:buscaclientes.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:buscaclientes.id+'-cli_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaclientes.id+'-codigo',
+                                fieldLabel:'Código',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaclientes.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false,								
+								value:''/*,
+								regex: /^[a-zA-Z]{1}[a-zA-Z ]{0,}$/*/
+								
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Persona",
+                                id: buscaclientes.id+'-tip_per',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tip_per"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:buscaclientes.id+'-tip_per_n',
+                                        boxLabel: "Natural",name: "tip_per",
+                                        inputValue: "N",
+                                        checked:true
+                                    },
+                                    {
+                                        id:buscaclientes.id+'-tip_per_j',
+                                        boxLabel: "Juridica",name: "tip_per",
+                                        inputValue: "J"
+                                    }
+                                ],
+								listeners : {
+									change:function(){
+										if(Ext.getCmp(buscaclientes.id+'-tip_per').getValue().getGroupValue()=='N'){
+											 Ext.getCmp(buscaclientes.id+'-tip_doc_d').setVisible(true);
+											 Ext.getCmp(buscaclientes.id+'-tip_doc_r').setVisible(true);
+											 Ext.getCmp(buscaclientes.id+'-tip_doc').setValue("D");
+											 Ext.apply(Ext.getCmp(buscaclientes.id+'-ruc'),{maxLength:8,minLength:8});
+											// Ext.getCmp(buscaclientes.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaclientes.id+'-ruc').el.dom.maxLength = 8;
+										}else{
+											 Ext.getCmp(buscaclientes.id+'-tip_doc_d').setVisible(false);
+											 Ext.getCmp(buscaclientes.id+'-tip_doc_r').setVisible(true);					
+											 Ext.getCmp(buscaclientes.id+'-tip_doc').setValue("R");					
+											 Ext.apply(Ext.getCmp(buscaclientes.id+'-ruc'),{maxLength:11,minLength:11});
+											 //Ext.getCmp(buscaclientes.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaclientes.id+'-ruc').el.dom.maxLength = 11;
+											  
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Documento",
+                                id: buscaclientes.id+'-tip_doc',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tip_doc"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:buscaclientes.id+'-tip_doc_d',
+                                        boxLabel: "DNI",name: "tip_doc",
+                                        inputValue: "D",
+                                        checked:true
+                                    },
+                                    {
+                                        id:buscaclientes.id+'-tip_doc_r',
+                                        boxLabel: "RUC",name: "tip_doc",
+                                        inputValue: "R"
+                                    }
+                                ],
+								listeners : {
+									change:function(){
+										if(Ext.getCmp(buscaclientes.id+'-tip_doc').getValue().getGroupValue()=='D'){
+											 //Ext.getCmp(buscaclientes.id+'-tip_doc_d').setVisible(true);
+											 //Ext.getCmp(buscaclientes.id+'-tip_doc_r').setVisible(true);
+											 //Ext.getCmp(buscaclientes.id+'-tip_doc').setValue("D");
+											 Ext.apply(Ext.getCmp(buscaclientes.id+'-ruc'),{maxLength:8,minLength:8});
+											// Ext.getCmp(buscaclientes.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaclientes.id+'-ruc').el.dom.maxLength = 8;
+										}else{
+											 //Ext.getCmp(buscaclientes.id+'-tip_doc_d').setVisible(false);
+											 //Ext.getCmp(buscaclientes.id+'-tip_doc_r').setVisible(true);					
+											 //Ext.getCmp(buscaclientes.id+'-tip_doc').setValue("R");					
+											 Ext.apply(Ext.getCmp(buscaclientes.id+'-ruc'),{maxLength:11,minLength:11});
+											 //Ext.getCmp(buscaclientes.id+'-ruc').setValue('');
+											 Ext.getCmp(buscaclientes.id+'-ruc').el.dom.maxLength = 11;
+											  
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            new Ext.form.TextField({
+                                /*xtype:'textfield',*/
+                                id:buscaclientes.id+'-ruc',
+                                fieldLabel:'Nro Doc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								maxLength:8,
+								minLength:8,
+                                width:100,
+								allowBlank:false,
+								decimalPrecision:0,
+								autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '8'}
+                            })
+                        ]
+						
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaclientes.id+'-telefono',
+                                fieldLabel:'Teléfono',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+								regex: /^\d*/i,
+								maskRe: /\d/i
+                            }
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaclientes.id+'-email',
+                                fieldLabel:'E-mail',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:200,
+								vtype:'email'
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaclientes.id+'-web',
+                                fieldLabel:'Web',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:350,
+								vtype:'url'
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_dep_lista,
+                                id:buscaclientes.id+'-dep_id',
+                                fieldLabel:'Departamento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'dep_id',
+								allowBlank:false,
+                                displayField:'nom_dep',
+                                triggerAction:'all',
+                                forceSelection:true,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(buscaclientes.id+'-ciu_id').setValue('');
+                                        Ext.getCmp(buscaclientes.id+'-dis_id').setValue('');
+                                        store_ciu_lista.load({params:{dep_id:record.get('dep_id')}});
+                                        //store_dis_lista.load();
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_ciu_lista,
+                                id:buscaclientes.id+'-ciu_id',
+                                fieldLabel:'Ciudad',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'ciu_id',
+                                displayField:'nom_ciu',
+								allowBlank:false,
+                                triggerAction:'all',
+                                forceSelection:true,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(buscaclientes.id+'-dis_id').setValue('');
+                                        store_dis_lista.load({params:{dep_id:record.get('dep_id'),ciu_id:record.get('ciu_id')}});
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_dis_lista,
+                                id:buscaclientes.id+'-dis_id',
+                                fieldLabel:'Distrito',
+								allowBlank:false,
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'dis_id',
+                                displayField:'nom_dis',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaclientes.id+'-direccion',
+                                fieldLabel:'Dirección',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:buscaclientes.id+'-rep_leg',
+                                fieldLabel:'Representante Legal',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_sit_lista,
+                                id:buscaclientes.id+'-sit_id',
+                                fieldLabel:'Situacion',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'sit_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textarea',
+                                id:buscaclientes.id+'-observacion',
+                                fieldLabel:'Observación',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:350
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:130,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: buscaclientes.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:buscaclientes.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:buscaclientes.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+
+			
+
+			
+
+            
+
+            var panel = new Ext.Panel({  
+
+            layout: 'border',
+
+            tbar:[
+
+                    {
+
+                        xtype: 'toolbar',
+
+                        dock: 'top',
+
+                        items: [
+
+                            'Buscar por :',
+
+                            combo_buscaclientes_describe,
+
+							new Ext.app.SearchField({
+
+								id:buscaclientes.id+'-buscar', 
+
+								emptyText : 'Valor a buscar...',
+
+								enableKeyEvents: true,
+
+								store: store_buscaclientes_lista,
+
+								hasSearch : false,
+
+								width: 120,
+
+								listeners:
+
+								{
+
+									specialkey:function(obj, e)
+
+									{
+
+										if (e.getKey() == 13)
+
+										{
+
+											buscaclientes.fn_habilitar(false,0);
+
+										store_buscaclientes_lista.load({params:{campo:Ext.getCmp(buscaclientes.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaclientes.id+'-buscar').getValue()}});
+
+										}
+
+									}
+
+								}
+
+							}),'-',btn_seleccionar,'-', btn_nuevo, '-',btn_guardar, btn_cancelar, 'Presione enter para buscar, (utilice % para obviar caracteres)'
+
+                    
+
+                        ]
+
+                    }],
+
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+
+            border:false,
+
+            items: [
+
+            {  
+
+                region: 'west',
+
+                layout:'fit',
+
+                xtype: 'panel',
+
+                width:'96%',
+
+                autoScroll: true,  
+
+                border:false,
+
+                items:
+
+                [
+
+                    grid_buscaclientes_lista
+
+                    
+
+                ]
+
+            }
+
+            ,
+
+            {
+
+            region:'center',
+
+            width:'0',
+
+            height:'0'
+
+            }
+
+            ,
+
+            {  
+
+                id:buscaclientes.id+'-panel_derecho',
+
+                region: 'east',
+
+                xtype: 'panel',
+
+                collapsible:true,
+
+                layout: 'form',
+
+                split:true,
+
+                collapsed:true,
+
+                width:'100%',
+
+                border:false,
+
+                items:
+
+                [
+
+                    panel_form
+
+                ]  
+
+            }
+
+      ]  
+
+    });
+
+            
+
+            new Ext.Window({
+
+                                        id:'win_buscaclientes',
+
+                                        title:'Búsqueda de Clientes', 
+
+                                        width: 700,
+
+                                        height:550,
+
+                                        layout:'fit',
+
+                                        border:false,
+
+                                        frame:true,
+
+                                        autoDestroy:true,
+
+                                        autoScroll:false,
+
+                                        minimizable: false,
+
+                                        maximizable: false,
+
+										modal:true,
+
+                                        closable:true,
+
+                                        collapsible:false,
+
+                                        draggable:true,
+
+                                        onEsc:function(){Ext.getCmp('win_buscaclientes').close();}, resizable:true,
+
+                                        items:panel,
+
+                                        buttonAlign:'center',
+
+										listeners: {
+
+											'beforeclose': function(){ inicio.setActiveStyleSheet('gray'); }
+
+										}
+
+			});
+
+				
+
+                Ext.getCmp('win_buscaclientes').show();
+
+				
+
+                Ext.getCmp('win_buscaclientes').center();
+
+                Ext.getCmp('win_buscaclientes').toFront();
+
+				inicio.setActiveStyleSheet('blue');
+
+                
+
+
+if(vgVentana == 'ventasrapida'){
+
+				if(vgBuscar == ''){
+					
+
+					buscaclientes.fn_habilitar(false,0);
+
+					Ext.getCmp(buscaclientes.id+'-panel_derecho').collapse();
+	
+					Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(false);
+					
+					Ext.getCmp(buscaclientes.id+'-buscar').focus(true,10);
+
+				}else{
+
+					if(vgBuscar.length == 8 || vgBuscar.length == 11){
+						Ext.getCmp(buscaclientes.id+'-panel_derecho').expand();
+
+						Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(true);
+	
+						buscaclientes.fn_nuevo();
+					}else{
+						
+						Ext.getCmp(buscaclientes.id+'-buscar').setValue(vgBuscar);	
+						
+						
+						
+						buscaclientes.fn_habilitar(false,0);
+
+						Ext.getCmp(buscaclientes.id+'-panel_derecho').collapse();
+		
+						Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(false);
+						Ext.getCmp(buscaclientes.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(buscaclientes.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaclientes.id+'-buscar').getValue()}});
+						Ext.getCmp(buscaclientes.id+'-buscar').focus(true,10);
+					}
+				}
+}else{
+				buscaclientes.fn_habilitar(false,0);
+
+                Ext.getCmp(buscaclientes.id+'-panel_derecho').collapse();
+
+				Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(false);	
+				Ext.getCmp(buscaclientes.id+'-buscar').focus(true,10);
+}
+										
+
+        },
+
+        fn_nuevo:function()
+
+        {
+
+			Ext.Msg.wait('Generando código de cliente... por favor espere!');
+
+            Ext.Ajax.request({
+
+                    url:'maestros/clientes-codigo',
+
+                    params:
+
+                    {
+
+                        table:'maestros_clientes'
+
+                    },
+
+                    success:function(response,options)
+
+                    {        
+
+						Ext.Msg.hide();     
+
+                        var res = Ext.decode(response.responseText);
+
+                        var numero="0000"+res.AUTO_INCREMENT;
+
+                        var codigo="CL"+numero.substr(numero.length-4,4)
+
+                        Ext.getCmp(buscaclientes.id+'-codigo').setValue(codigo);
+
+                    }
+
+                });
+
+            Ext.getCmp(buscaclientes.id+'-cli_id').setValue('');
+
+            Ext.getCmp(buscaclientes.id+'-codigo').setValue('');
+
+
+
+			Ext.getCmp(buscaclientes.id+'-nombre').setValue('');
+
+			
+
+			Ext.getCmp(buscaclientes.id+'-tip_per').items.items[0].setValue(true);
+
+            Ext.getCmp(buscaclientes.id+'-tip_per').items.items[1].setValue(false);
+
+			
+
+			Ext.getCmp(buscaclientes.id+'-tip_doc').items.items[0].setValue(true);
+
+            Ext.getCmp(buscaclientes.id+'-tip_doc').items.items[1].setValue(false);
+
+
+            Ext.getCmp(buscaclientes.id+'-ruc').setValue(vgBuscar);
+
+            Ext.getCmp(buscaclientes.id+'-telefono').setValue('');
+
+            Ext.getCmp(buscaclientes.id+'-email').setValue('');
+
+            Ext.getCmp(buscaclientes.id+'-web').setValue('');
+
+            Ext.getCmp(buscaclientes.id+'-dep_id').setValue('');
+
+			Ext.getCmp(buscaclientes.id+'-ciu_id').setValue('');
+
+            Ext.getCmp(buscaclientes.id+'-ciu_id').store.load();
+
+			Ext.getCmp(buscaclientes.id+'-dis_id').setValue('');
+
+            Ext.getCmp(buscaclientes.id+'-dis_id').store.load();
+
+            Ext.getCmp(buscaclientes.id+'-direccion').setValue('');
+
+            Ext.getCmp(buscaclientes.id+'-observacion').setValue('');
+
+			Ext.getCmp(buscaclientes.id+'-rep_leg').setValue('');
+
+			Ext.getCmp(buscaclientes.id+'-sit_id').setValue('');
+
+			Ext.getCmp(buscaclientes.id+'-sit_id').store.load();
+
+            
+
+            Ext.getCmp(buscaclientes.id+'-estado').items.items[0].setValue(true);
+
+            Ext.getCmp(buscaclientes.id+'-estado').items.items[1].setValue(false);
+
+            
+
+            buscaclientes.fn_habilitar(true,1);
+
+
+
+        },
+
+        fn_editar:function()
+
+        {
+
+            var rs=Ext.getCmp(buscaclientes.id+'-grid_lista').getSelectionModel().getSelected();
+
+            if(rs)
+
+            {
+
+				Ext.getCmp(buscaclientes.id+'-panel_derecho').expand();
+
+				Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(true);
+
+                Ext.getCmp(buscaclientes.id+'-cli_id').setValue(rs.get('cli_id'));
+
+                Ext.getCmp(buscaclientes.id+'-codigo').setValue(rs.get('codigo'));
+
+                Ext.getCmp(buscaclientes.id+'-nombre').setValue(rs.get('nombre'));
+
+				
+
+				Ext.getCmp(buscaclientes.id+'-tip_per').setValue('N');
+
+				if(rs.get('tip_per')!=null){
+
+					Ext.getCmp(buscaclientes.id+'-tip_per').setValue(rs.get('tip_per'));
+
+					if(rs.get('tip_per')=='N'){
+
+						 Ext.getCmp(buscaclientes.id+'-tip_doc_d').setVisible(true);
+
+						 Ext.getCmp(buscaclientes.id+'-tip_doc_r').setVisible(true);
+
+						 Ext.getCmp(buscaclientes.id+'-tip_doc').setValue("D");
+
+						 Ext.apply(Ext.getCmp(buscaclientes.id+'-ruc'),{maxLength:8,minLength:8});
+
+						 Ext.getCmp(buscaclientes.id+'-ruc').el.dom.maxLength = 8;
+
+					}else{
+
+						 Ext.getCmp(buscaclientes.id+'-tip_doc_d').setVisible(true);
+
+						 Ext.getCmp(buscaclientes.id+'-tip_doc_r').setVisible(true);
+
+						 Ext.getCmp(buscaclientes.id+'-tip_doc').setValue("D");
+
+						 Ext.apply(Ext.getCmp(buscaclientes.id+'-ruc'),{maxLength:11,minLength:11});
+
+						 Ext.getCmp(buscaclientes.id+'-ruc').el.dom.maxLength = 11;				
+
+					}
+
+				}				
+
+				if(rs.get('tip_doc')!=null){
+
+					Ext.getCmp(buscaclientes.id+'-tip_doc').setValue(rs.get('tip_doc'));
+
+				}
+
+                Ext.getCmp(buscaclientes.id+'-ruc').setValue(rs.get('ruc'));
+
+                Ext.getCmp(buscaclientes.id+'-telefono').setValue(rs.get('telefono'));
+
+                Ext.getCmp(buscaclientes.id+'-email').setValue(rs.get('email'));
+
+                Ext.getCmp(buscaclientes.id+'-web').setValue(rs.get('web'));
+
+                Ext.getCmp(buscaclientes.id+'-dep_id').setValue(rs.get('dep_id'));
+
+
+
+                Ext.getCmp(buscaclientes.id+'-ciu_id').store.load({params:{dep_id:rs.get('dep_id')},
+
+                callback:function()
+
+                {
+
+                    Ext.getCmp(buscaclientes.id+'-ciu_id').setValue(rs.get('ciu_id'));
+
+                    Ext.getCmp(buscaclientes.id+'-dis_id').store.load({params:{dep_id:rs.get('dep_id'),ciu_id:rs.get('ciu_id')},
+
+                callback:function()
+
+                {
+
+                    Ext.getCmp(buscaclientes.id+'-dis_id').setValue(rs.get('dis_id'));
+
+                }}
+
+                );
+
+                    
+
+                }});
+
+
+
+                Ext.getCmp(buscaclientes.id+'-dis_id').setValue(rs.get('dis_id'));
+
+                Ext.getCmp(buscaclientes.id+'-direccion').setValue(rs.get('direccion'));
+
+				Ext.getCmp(buscaclientes.id+'-rep_leg').setValue(rs.get('rep_leg'));
+
+				Ext.getCmp(buscaclientes.id+'-sit_id').setValue(rs.get('sit_id'));
+
+                Ext.getCmp(buscaclientes.id+'-observacion').setValue(rs.get('observacion'));
+
+                Ext.getCmp(buscaclientes.id+'-estado').setValue(rs.get('activo'));
+
+                buscaclientes.fn_habilitar(true,2);
+
+            }
+
+            else
+
+            {
+
+                og.msg("Error","Seleccione un registro");
+
+            }
+
+        },
+
+        fn_actualizar:function()
+
+        {
+
+            if(buscaclientes.fn_validar()){
+
+				Ext.getCmp(buscaclientes.id+'-formulario').getForm().submit({						
+
+					method: 'POST',
+
+					url:'maestros/clientes-actualizar',
+
+					params:{ 
+
+						cli_id:Ext.getCmp(buscaclientes.id+'-cli_id').getValue(),
+
+						codigo:Ext.getCmp(buscaclientes.id+'-codigo').getValue(),
+
+						nombre:Ext.getCmp(buscaclientes.id+'-nombre').getValue().toUpperCase(),
+
+						tip_per:Ext.getCmp(buscaclientes.id+'-tip_per').getValue().getGroupValue(),
+
+						tip_doc:Ext.getCmp(buscaclientes.id+'-tip_doc').getValue().getGroupValue(),
+
+						
+
+						ruc:Ext.getCmp(buscaclientes.id+'-ruc').getValue(),
+
+						telefono:Ext.getCmp(buscaclientes.id+'-telefono').getValue(),
+
+						email:Ext.getCmp(buscaclientes.id+'-email').getValue(),
+
+						web:Ext.getCmp(buscaclientes.id+'-web').getValue(),
+
+						dep_id:Ext.getCmp(buscaclientes.id+'-dep_id').getValue(),
+
+						ciu_id:Ext.getCmp(buscaclientes.id+'-ciu_id').getValue(),
+
+						dis_id:Ext.getCmp(buscaclientes.id+'-dis_id').getValue(),
+
+						direccion:Ext.getCmp(buscaclientes.id+'-direccion').getValue().toUpperCase(),
+
+						rep_leg:Ext.getCmp(buscaclientes.id+'-rep_leg').getValue().toUpperCase(),
+
+						sit_id:Ext.getCmp(buscaclientes.id+'-sit_id').getValue(),
+
+						
+
+						observacion:Ext.getCmp(buscaclientes.id+'-observacion').getValue(),
+
+						estado:Ext.getCmp(buscaclientes.id+'-estado').getValue().getGroupValue()
+
+					},
+
+					waitTitle: 'Actualizando Informacion',
+
+					waitMsg: 'Enviando datos..',
+
+					success: function(form, action){					
+
+						var res = Ext.decode(action.response.responseText);
+
+						if(res.success){
+
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').collapse();
+
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(false);
+
+							og.msg("Ok","El registro se ha actualizado");
+
+							buscaclientes.fn_habilitar(false,0);
+
+							Ext.getCmp(buscaclientes.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(buscaclientes.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaclientes.id+'-buscar').getValue(),start:0,limit:100}});
+
+						}else{
+
+							og.msg("Error",res.mensaje);
+
+							Ext.getCmp(buscaclientes.id+res.campo).focus(true,10);						
+
+						}
+
+						Ext.getCmp(buscaclientes.id+'-formulario').getForm().reset();
+
+					},
+
+					failure: function(form, action){
+
+						var res = Ext.decode(action.response.responseText);
+
+						Ext.Msg.show({
+
+							title:'Error',
+
+							msg: res.mensaje,
+
+							   buttons: Ext.Msg.OK,
+
+							   icon: Ext.MessageBox.ERROR
+
+						});
+
+						Ext.getCmp(buscaclientes.id+res.campo).focus(true,10);
+
+					}
+
+				});
+
+				/*Ext.Msg.wait('Actualizando... por favor espere!');
+
+				Ext.Ajax.request({
+
+					url:'maestros/clientes-actualizar',
+
+					params:
+
+					{
+
+						cli_id:Ext.getCmp(buscaclientes.id+'-cli_id').getValue(),
+
+						codigo:Ext.getCmp(buscaclientes.id+'-codigo').getValue(),
+
+						nombre:Ext.getCmp(buscaclientes.id+'-nombre').getValue().toUpperCase(),
+
+						tip_per:Ext.getCmp(buscaclientes.id+'-tip_per').getValue().getGroupValue(),
+
+						tip_doc:Ext.getCmp(buscaclientes.id+'-tip_doc').getValue().getGroupValue(),
+
+						
+
+						ruc:Ext.getCmp(buscaclientes.id+'-ruc').getValue(),
+
+						telefono:Ext.getCmp(buscaclientes.id+'-telefono').getValue(),
+
+						email:Ext.getCmp(buscaclientes.id+'-email').getValue(),
+
+						web:Ext.getCmp(buscaclientes.id+'-web').getValue(),
+
+						dep_id:Ext.getCmp(buscaclientes.id+'-dep_id').getValue(),
+
+						ciu_id:Ext.getCmp(buscaclientes.id+'-ciu_id').getValue(),
+
+						dis_id:Ext.getCmp(buscaclientes.id+'-dis_id').getValue(),
+
+						direccion:Ext.getCmp(buscaclientes.id+'-direccion').getValue().toUpperCase(),
+
+						rep_leg:Ext.getCmp(buscaclientes.id+'-rep_leg').getValue().toUpperCase(),
+
+						sit_id:Ext.getCmp(buscaclientes.id+'-sit_id').getValue(),
+
+						
+
+						observacion:Ext.getCmp(buscaclientes.id+'-observacion').getValue(),
+
+						estado:Ext.getCmp(buscaclientes.id+'-estado').getValue().getGroupValue()
+
+					},
+
+					success:function(response,options)
+
+					{        
+
+						Ext.Msg.hide();     
+
+						var res = Ext.decode(response.responseText);
+
+						if(res.success){
+
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').collapse();
+
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(false);
+
+							og.msg("Ok","El registro se ha actualizado");
+
+							buscaclientes.fn_habilitar(false,0);
+
+							Ext.getCmp(buscaclientes.id+'-grid_lista').store.load();
+
+						}else{
+
+							og.msg("Error",res.mensaje);
+
+							Ext.getCmp(buscaclientes.id+res.campo).focus(true,10);							
+
+						}							
+
+					}
+
+				});*/
+
+			}
+
+        },
+
+        fn_guardar:function()
+
+        {            
+
+			if(buscaclientes.fn_validar()){
+				Ext.getCmp(buscaclientes.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/clientes-guardar',
+					params:{ 
+						codigo:Ext.getCmp(buscaclientes.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(buscaclientes.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(buscaclientes.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(buscaclientes.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(buscaclientes.id+'-ruc').getValue(),
+						telefono:Ext.getCmp(buscaclientes.id+'-telefono').getValue(),
+						email:Ext.getCmp(buscaclientes.id+'-email').getValue(),
+						web:Ext.getCmp(buscaclientes.id+'-web').getValue(),
+						dep_id:Ext.getCmp(buscaclientes.id+'-dep_id').getValue(),
+						ciu_id:Ext.getCmp(buscaclientes.id+'-ciu_id').getValue(),
+						dis_id:Ext.getCmp(buscaclientes.id+'-dis_id').getValue(),
+						direccion:Ext.getCmp(buscaclientes.id+'-direccion').getValue().toUpperCase(),
+						rep_leg:Ext.getCmp(buscaclientes.id+'-rep_leg').getValue().toUpperCase(),
+						sit_id:Ext.getCmp(buscaclientes.id+'-sit_id').getValue(),
+						observacion:Ext.getCmp(buscaclientes.id+'-observacion').getValue(),
+						estado:Ext.getCmp(buscaclientes.id+'-estado').getValue().getGroupValue()
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							og.msg("Ok","El registro se ha guardado");
+							ventasrapida.fn_ubicacliente('cli_id', res.codigo,Ext.getCmp(buscaclientes.id+'-codigo').getValue(), Ext.getCmp(buscaclientes.id+'-nombre').getValue(), Ext.getCmp(buscaclientes.id+'-ruc').getValue(), Ext.getCmp(buscaclientes.id+'-direccion').getValue() + ' ' + Ext.getCmp(buscaclientes.id+'-dep_id').getRawValue() + '-' + Ext.getCmp(buscaclientes.id+'-ciu_id').getRawValue() + '-' + Ext.getCmp(buscaclientes.id+'-dis_id').getRawValue() );
+							
+							if(Ext.getCmp(buscaclientes.id+'-tip_per').getValue()=='J'){
+								Ext.getCmp(ventasrapida.id+'-doc_id').setValue('2');
+								Ext.getCmp(ventasrapida.id+'-doc_id').setRawValue('FACTURA');
+							}else{
+								Ext.getCmp(ventasrapida.id+'-doc_id').setValue('3');
+								Ext.getCmp(ventasrapida.id+'-doc_id').setRawValue('BOLETA DE VENTA');
+							}
+							Ext.Msg.wait('Obteniendo Nro de Documento... por favor espere!');
+							Ext.Ajax.request({
+								url:'tablas/numeracion-obtener-codigo',
+								params:
+								{
+									doc_id:Ext.getCmp(ventasrapida.id+'-doc_id').getValue(),
+									tipo:'2'
+								},
+								success:function(response,options)
+								{    
+									Ext.Msg.hide();    
+									var res = Ext.decode(response.responseText);
+									if(res.success){
+										var numero=(Math.pow(10,res.data[0]['lon'])).toString()+(Number(res.data[0]['nro'])+1);
+										var codigo=numero.substr(numero.length-res.data[0]['lon'],res.data[0]['lon'])
+										Ext.getCmp(ventasrapida.id+'-numero').setValue(res.data[0]['serie']+ '-' + codigo);
+									}else{
+										Ext.getCmp(ventasrapida.id+'-numero').setValue('');
+									}
+									
+								}
+							});
+
+							Ext.getCmp('win_buscaclientes').close();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(buscaclientes.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(buscaclientes.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(buscaclientes.id+res.campo).focus(true,10);							
+					}
+				});
+				/*Ext.Msg.wait('Guardando información del Cliente... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/clientes-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(buscaclientes.id+'-codigo').getValue(),
+						nombre:Ext.getCmp(buscaclientes.id+'-nombre').getValue().toUpperCase(),
+						tip_per:Ext.getCmp(buscaclientes.id+'-tip_per').getValue().getGroupValue(),
+						tip_doc:Ext.getCmp(buscaclientes.id+'-tip_doc').getValue().getGroupValue(),
+						ruc:Ext.getCmp(buscaclientes.id+'-ruc').getValue(),
+						telefono:Ext.getCmp(buscaclientes.id+'-telefono').getValue(),
+						email:Ext.getCmp(buscaclientes.id+'-email').getValue(),
+						web:Ext.getCmp(buscaclientes.id+'-web').getValue(),
+						dep_id:Ext.getCmp(buscaclientes.id+'-dep_id').getValue(),
+						ciu_id:Ext.getCmp(buscaclientes.id+'-ciu_id').getValue(),
+						dis_id:Ext.getCmp(buscaclientes.id+'-dis_id').getValue(),
+						direccion:Ext.getCmp(buscaclientes.id+'-direccion').getValue().toUpperCase(),
+						rep_leg:Ext.getCmp(buscaclientes.id+'-rep_leg').getValue().toUpperCase(),
+						sit_id:Ext.getCmp(buscaclientes.id+'-sit_id').getValue(),
+						observacion:Ext.getCmp(buscaclientes.id+'-observacion').getValue(),
+						estado:Ext.getCmp(buscaclientes.id+'-estado').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{             
+						Ext.Msg.hide();
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').collapse();
+							Ext.getCmp(buscaclientes.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							buscaclientes.fn_habilitar(false,0);
+							Ext.getCmp(buscaclientes.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(buscaclientes.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+
+        },
+
+        fn_eliminar:function()
+
+        {
+
+            var rs=Ext.getCmp(buscaclientes.id+'-grid_lista').getSelectionModel().getSelected();
+
+            if(rs)
+
+            {
+
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?', function(btn) {
+
+					if(btn == 'yes')
+
+					{
+
+						Ext.Msg.wait('Eliminando Cliente... por favor espere!');
+
+						Ext.Ajax.request({
+
+							url:'maestros/clientes-eliminar',
+
+							params:
+
+							{
+
+								cli_id:rs.get('cli_id')
+
+							},
+
+							success:function(response,options)
+
+							{             
+
+								Ext.Msg.hide();
+
+								var res = Ext.decode(response.responseText);
+
+								if(res.success){
+
+									og.msg("Ok","El registro se ha eliminado");
+
+									buscaclientes.fn_habilitar(false,0);
+
+									Ext.getCmp(buscaclientes.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(buscaclientes.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaclientes.id+'-buscar').getValue(),start:0,limit:100}});
+
+								}else{
+
+									og.msg("Error",res.mensaje);
+
+									Ext.getCmp(buscaclientes.id+res.campo).focus(true,10);							
+
+								}								
+
+							}
+
+						});
+
+					}
+
+				 });
+
+            }
+
+            else
+
+            {
+
+                og.msg("Error","Seleccione un registro");
+
+            }
+
+        },
+
+		
+
+		fn_validar:function(){
+
+			if(!Ext.getCmp(buscaclientes.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(buscaclientes.id+'-nombre').focus(true,10);
+                return false;
+            }
+			
+            if(!Ext.getCmp(buscaclientes.id+'-ruc').isValid())
+            {
+                if(Ext.getCmp(buscaclientes.id+'-tip_doc').getValue().getGroupValue()=='D'){
+	                og.msg("Error", "Ingrese el campo DNI");
+				}else{
+					og.msg("Error", "Ingrese el campo Ruc");
+				}
+                Ext.getCmp(buscaclientes.id+'-ruc').focus(true,10);
+                return false;
+            }	
+			
+			/*if(!Ext.getCmp(buscaclientes.id+'-email').isValid())
+            {
+                og.msg("Error", "E-mail no es valido");
+                Ext.getCmp(buscaclientes.id+'-email').focus(true,10);
+                return false;
+            }*/
+			
+            if(!Ext.getCmp(buscaclientes.id+'-dep_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Departamento");
+                Ext.getCmp(buscaclientes.id+'-dep_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(buscaclientes.id+'-ciu_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Ciudad");
+                Ext.getCmp(buscaclientes.id+'-ciu_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(buscaclientes.id+'-dis_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Distrito");
+                Ext.getCmp(buscaclientes.id+'-dis_id').focus(true,10);
+                return false;
+            }
+           /* if(!Ext.getCmp(buscaclientes.id+'-direccion').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Dirección");
+                Ext.getCmp(buscaclientes.id+'-direccion').focus(true,10);
+                return false;
+            }*/
+			return true;
+
+		},
+
+		
+
+		fn_imprimir:function()
+
+        {
+
+			document.getElementById('frmReporte-buscaclientes').action="maestros/clientes-lista-impresion";
+
+			document.getElementById('txtpar1').value = Ext.getCmp(buscaclientes.id+'-combo_describe').getValue();
+
+			document.getElementById('txtpar2').value = Ext.getCmp(buscaclientes.id+'-buscar').getValue();
+
+            document.getElementById('frmReporte-buscaclientes').submit();
+
+        },
+
+		
+
+		fn_habilitar:function(sw, tipo)
+
+        {
+			if(vgVentana == 'ventasrapida'){
+			if(!sw){
+				Ext.getCmp(buscaclientes.id+'-btn_guardar').setVisible(sw);
+				//Ext.getCmp(buscaclientes.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(buscaclientes.id+'-btn_guardar').setVisible(sw);
+					//Ext.getCmp(buscaclientes.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(buscaclientes.id+'-btn_guardar').setVisible(!sw);
+					//Ext.getCmp(buscaclientes.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			}
+			if(vgVentana == 'ventasrapida'){
+				Ext.getCmp(buscaclientes.id+'-btn_nuevo').setVisible(!sw);			
+			}
+			Ext.getCmp(buscaclientes.id+'-btn_seleccionar').setVisible(!sw);			
+			
+			if(vgVentana == 'ventasrapida'){
+			Ext.getCmp(buscaclientes.id+'-btn_cancelar').setVisible(sw);
+			}
+			Ext.getCmp(buscaclientes.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(buscaclientes.id+'-combo_describe').setVisible(!sw);
+			//Ext.getCmp(buscaclientes.id+'-tip_per_buscar').setVisible(!sw);
+			
+			//Ext.getCmp(buscaclientes.id+'-btn_imprimir').setVisible(!sw);			
+
+        },
+
+		fn_seleccionar:function(){
+
+			var rs=Ext.getCmp(buscaclientes.id+'-grid_lista').getSelectionModel().getSelected();
+
+            if(rs)
+
+            {                
+
+				//alert(vgVentana);
+
+				if(vgVentana=='ventas'){
+
+					ventas.fn_ubicacliente('cli_id', rs.get('cli_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc'), rs.get('direccion') + ' ' + rs.get('nom_dep') + '-' + rs.get('nom_ciu') + '-' + rs.get('nom_dis') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='ventasrapida'){
+
+					ventasrapida.fn_ubicacliente('cli_id', rs.get('cli_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc'), rs.get('direccion') + ' ' + rs.get('nom_dep') + '-' + rs.get('nom_ciu') + '-' + rs.get('nom_dis') );
+					
+					
+					if(rs.get('tip_per')=='J'){
+						Ext.getCmp(ventasrapida.id+'-doc_id').setValue('2');
+						Ext.getCmp(ventasrapida.id+'-doc_id').setRawValue('FACTURA');
+					}else{
+						Ext.getCmp(ventasrapida.id+'-doc_id').setValue('3');
+						Ext.getCmp(ventasrapida.id+'-doc_id').setRawValue('BOLETA DE VENTA');
+					}
+					Ext.Msg.wait('Obteniendo Nro de Documento... por favor espere!');
+					Ext.Ajax.request({
+						url:'tablas/numeracion-obtener-codigo',
+						params:
+						{
+							doc_id:Ext.getCmp(ventasrapida.id+'-doc_id').getValue(),
+							tipo:'2'
+						},
+						success:function(response,options)
+						{    
+							Ext.Msg.hide();    
+							var res = Ext.decode(response.responseText);
+							if(res.success){
+								var numero=(Math.pow(10,res.data[0]['lon'])).toString()+(Number(res.data[0]['nro'])+1);
+								var codigo=numero.substr(numero.length-res.data[0]['lon'],res.data[0]['lon'])
+								Ext.getCmp(ventasrapida.id+'-numero').setValue(res.data[0]['serie']+ '-' + codigo);
+							}else{
+								Ext.getCmp(ventasrapida.id+'-numero').setValue('');
+							}
+							
+						}
+					});
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='saldoventas'){
+
+					saldoventas.fn_ubicacliente('cli_id', rs.get('cli_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='bajas'){
+
+					bajas.fn_ubicacliente('cli_id', rs.get('cli_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='notaventas'){
+
+					notaventas.fn_ubicacliente('prv_id', rs.get('cli_id'),rs.get('codigo'), rs.get('nombre'), rs.get('ruc'), rs.get('direccion') + ' ' + rs.get('nom_dep') + '-' + rs.get('nom_ciu') + '-' + rs.get('nom_dis') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='canje'){
+
+					canje.fn_ubicacliente('cli_id', rs.get('cli_id'), rs.get('nombre'), rs.get('ruc') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='caja'){
+
+					caja.fn_ubicacliente('cli_id', rs.get('cli_id'), rs.get('nombre'), rs.get('ruc') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='prerecibo'){
+
+					prerecibo.fn_ubicacliente('cli_id', rs.get('cli_id'), rs.get('nombre'), rs.get('ruc') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+				if(vgVentana=='compromisoventas'){
+
+                                        //alert(rs.get('cli_id')+"-"+ rs.get('nombre')+"-"+ rs.get('ruc') )
+					compromisoventas.fn_ubicacliente('cli_id', rs.get('cli_id'), rs.get('nombre'), rs.get('ruc') );
+
+					Ext.getCmp('win_buscaclientes').close();
+
+				}
+
+            }
+
+            else
+
+            {
+
+                og.msg("Error","Seleccione un registro");
+
+            }
+
+			
+
+		}
+
+         
+
+    }
+
+    Ext.onReady(buscaclientes.init,buscaclientes);
+
+
+
+</script>

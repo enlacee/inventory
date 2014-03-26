@@ -1,0 +1,282 @@
+<form id="frmReporte-cierre" name="frmReporte-cierre" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+  <input type="hidden" name="txtpar4" id="txtpar4" />
+  <input type="hidden" name="txtpar5" id="txtpar5" />
+  <input type="hidden" name="txtpar6" id="txtpar6" />
+  <input type="hidden" name="txtpar7" id="txtpar7" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    Ext.ns('cierre');
+    cierre={
+        id:'cierre',
+        init:function(){
+            /*Ext.Ajax.timeout = 180000;*/
+            Ext.QuickTips.init();
+			
+			//Panel 1 >>>
+			
+
+			var btn_producto=new Ext.Button({
+                id:cierre.id+'-btn_producto',
+                text:'Producto...',
+                icon:'images/icon/ver.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//cierre.fn_producto();                            
+                        }
+                    }
+            });
+			
+			var btn_actualizar=new Ext.Button({
+                id:cierre.id+'-btn_actualizar',
+                text:'Actualizar Cierre y Apertura de Saldo',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea Cierre y Apertura de Saldo?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    cierre.fn_actualizar();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+			
+			var combo_monedas=new Ext.form.ComboBox({
+                id:cierre.id+'-combo_monedas',
+                store:store_monedas_lista,
+                valueField:'mon_id',
+                displayField:'nombre',
+                triggerAction:'all',
+                emptyText:'Moneda...',
+                mode:'local',
+                width:100,
+                editable:false,
+				listeners:{
+					select:function(obj){
+						//alert(obj.getValue());
+						if(Ext.getCmp(cierre.id+'-txt_anio').getValue()<0){
+							return;
+						}
+						if(obj.getValue()==''){
+							return;
+						}
+						if(Ext.getCmp(cierre.id+'-mcd_id').getValue()=='0'){
+							return;
+						}
+						//alert(Ext.getCmp(cierre.id+'-txt_anio').getValue() +  '-'+Ext.getCmp(cierre.id+'-mcd_id').getValue());
+						Ext.getCmp(cierre.id+'-grid_lista').store.removeAll();
+							Ext.getCmp(cierre.id+'-grid_lista').store.load({params:{anio:Ext.getCmp(cierre.id+'-txt_anio').getValue(), mon_id:obj.getValue(),pro_id:Ext.getCmp(cierre.id+'-mcd_id').getValue(),start:0,limit:100}});
+					}
+				}
+            });
+            
+            		
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+			tbar:[{
+				xtype: 'toolbar',
+				dock: 'top',
+				items: [btn_actualizar]
+				}],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                //layout:'fit',
+                xtype: 'panel',
+                width:'100%',
+				height:'100%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    {
+						id:cierre.id+'-formulario',
+						xtype:'form',
+						frame: true,
+						layout:'column',
+						border:false,
+						height:'100px',
+						items:
+						[
+							{
+							  xtype:'hidden',
+							  id:cierre.id+'-mcd_id',
+							  value:'0'
+							},
+							{
+								xtype:'panel',labelWidth:150,layout:'form',
+								border:false,columnWidth:1,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:cierre.id+'-txt_anio',
+										value:'<?php echo date('Y');?>',
+										fieldLabel:'Año',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'left'},
+										width:80,
+										allowBlank:false
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:150,layout:'form',
+								border:false,columnWidth:0.8,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:cierre.id+'-txt_producto' , 
+										value:'',
+										width:250,
+										readOnly:true,
+										fieldLabel:'Elegir un Producto',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'left'},
+									}
+								]
+							},btn_producto,
+							{
+								xtype:'panel',labelWidth:150,layout:'form',
+								border:false,columnWidth:1,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:cierre.id+'-marca',
+										fieldLabel:'Marca del Producto',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'left'},
+										width:300,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:150,layout:'form',
+								border:false,columnWidth:1,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:cierre.id+'-linea',
+										fieldLabel:'Linea del Producto',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'left'},
+										width:300,
+										readOnly:true
+									}
+								]
+							},
+						]
+					}                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+      		]  
+    		});
+            
+			new Ext.Window({
+				id:'win_cierre',
+				title:'CIERRE Y APERTURA DE SALDOS.',
+				width: 600,
+				height:200,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:true,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_cierre').close();}, resizable:true,
+				items:panel,
+				buttonAlign:'center'
+			});
+			
+			Ext.getCmp('win_cierre').show();
+			Ext.getCmp('win_cierre').center();
+			Ext.getCmp('win_cierre').toFront();
+			Ext.getCmp(cierre.id+'-combo_monedas').setValue('1');
+			Ext.getCmp(cierre.id+'-combo_monedas').setRawValue('SOLES');			
+        },
+				
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-cierre').action="maestros/cierre-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(cierre.id+'-txt_anio').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(cierre.id+'-combo_monedas').getValue();
+			document.getElementById('txtpar3').value = Ext.getCmp(cierre.id+'-mcd_id').getValue();
+			document.getElementById('txtpar4').value = Ext.getCmp(cierre.id+'-txt_producto').getValue();
+			document.getElementById('txtpar5').value = Ext.getCmp(cierre.id+'-marca').getValue();
+			document.getElementById('txtpar6').value = Ext.getCmp(cierre.id+'-linea').getValue();
+			document.getElementById('txtpar7').value = Ext.getCmp(cierre.id+'-combo_monedas').getRawValue();
+			
+            document.getElementById('frmReporte-cierre').submit();
+        },		
+		fn_actualizar:function()
+        {
+			if(!Ext.getCmp(cierre.id+'-txt_anio').isValid())
+            {
+                og.msg("Error", "Ingrese el año correcto");
+                Ext.getCmp(cierre.id+'-txt_anio').focus(true,10);
+                return false;
+            }
+			//alert(Ext.getCmp(cierre.id+'-mcd_id').getValue());
+			//alert(Ext.getCmp(cierre.id+'-txt_anio').getValue());
+			Ext.Msg.wait('Actualizando cierre y apertura de saldos de Stock... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/stock-actualizar',
+					params:
+					{
+						anio:Ext.getCmp(cierre.id+'-txt_anio').getValue(),
+						pro_id:Ext.getCmp(cierre.id+'-mcd_id').getValue()
+					},
+					success:function(response,options)
+					{         
+						//alert(response.responseText);
+						Ext.Msg.hide();       
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							og.msg("Ok","El registro se ha actualizado");
+						}else{
+							og.msg("Error",res.mensaje);
+						}
+					}
+				});
+        },
+    }
+    Ext.onReady(cierre.init,cierre);
+
+</script>

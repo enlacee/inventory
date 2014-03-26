@@ -1,0 +1,209 @@
+<form id="frmReporte-buscacanje" name="frmReporte-buscacanje" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('buscacanje');
+    buscacanje={
+        id:'buscacanje',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+			
+			var btn_seleccionar=new Ext.Button({
+                id:buscacanje.id+'-btn_seleccionar',
+                text:'Seleccionar',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            buscacanje.fn_seleccionar();
+                        }
+                    }
+            });
+			            
+            var store_buscacanje_lista=new Ext.data.JsonStore({
+                url:'movimientos/canje-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['canje_id', 'canje_codigo', 'cpa_id', 'fecha_canje', 'formato', 'mon_id', 'total_canje', 'tie_id', 'cli_id', 'condicion', 'moneda', 'persona'],
+				remoteSort:true,				
+				sortInfo: {field:'canje_id', direction:'desc'}
+            });            
+			
+			var pager = new Ext.PagingToolbar({
+                id:buscacanje.id+'_pager',
+                store:store_buscacanje_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(buscacanje.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(buscacanje.id+'-buscar').getValue();
+				params.modo = '1';
+				params.cli_id = vgId;
+			});
+			
+            var store_buscacanje_describe=new Ext.data.JsonStore({
+                url:'movimientos/ventas-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_buscacanje_describe.load({params:{table:'movimientos_ventas'}});
+            
+            var combo_buscacanje_describe=new Ext.form.ComboBox({
+                id:buscacanje.id+'-combo_describe',
+                store:store_buscacanje_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_buscacanje_lista = new Ext.grid.GridPanel({
+                id:buscacanje.id+'-grid_lista',
+                store: store_buscacanje_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'canje_id',width:25},
+					{header:'Fecha',sortable :true,dataIndex:'fecha_canje',width:70},
+                    {header:'Codigo',sortable :true,dataIndex:'canje_codigo',width:70},
+					{header:'Persona',sortable :true,dataIndex:'persona',width:200},
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:80, align:'center'},
+					{header:'Condicion',sortable :true,dataIndex:'condicion',width:100},
+                    {header:'Total Canje',sortable :true,dataIndex:'total_canje',width:80, align:'right'},
+                ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+						buscacanje.fn_seleccionar();
+                    },
+                }
+            });
+            
+			var panel = new Ext.Panel({  
+				layout: 'border',
+				tbar:[
+					{
+						xtype: 'toolbar',
+						dock: 'top',
+						items: [
+							'Buscar','-',combo_buscacanje_describe,'-',
+							new Ext.app.SearchField({
+								id:buscacanje.id+'-buscar', 
+								emptyText : 'Valor a buscar...',
+								enableKeyEvents: true,
+								store: store_buscacanje_lista,
+								hasSearch : false,
+								width: 120,
+								listeners:
+								{
+									specialkey:function(obj,e)
+									{
+										if(e.getKey() == 13)
+										{
+											store_buscacanje_lista.load({params:{campo:Ext.getCmp(buscacanje.id+'-combo_describe').getValue(),query:Ext.getCmp(buscacanje.id+'-buscar').getValue(),modo:'1', cli_id:vgId}});
+										}
+									}
+								}
+							}), '-',btn_seleccionar
+					
+						]
+					}],
+				bodyStyle:'height:auto;width:70%;margin:auto;',
+				border:false,
+				items: [
+					{  
+						region: 'west',
+						layout:'fit',
+						xtype: 'panel',
+						width:'96%',
+						autoScroll: true,  
+						border:false,
+						items:
+						[
+							grid_buscacanje_lista
+							
+						]
+					}
+					,
+					{
+						region:'center',
+						width:'0',
+						height:'0'
+					},
+					{  
+						region: 'east',
+						width:'0',
+						height:'0'
+					}
+		  		]  
+	    	});
+            
+        	new Ext.Window({
+				id:'win_buscacanje',
+				title:'Busqueda de Ventas', 
+				width: 650,
+				height:450,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:true,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_buscacanje').close();}, resizable:true,
+                items:panel,
+                buttonAlign:'center'
+            });
+            
+            Ext.getCmp('win_buscacanje').show();
+            Ext.getCmp('win_buscacanje').center();
+            Ext.getCmp('win_buscacanje').toFront();               
+            
+        },
+		fn_seleccionar:function(){
+			var rs=Ext.getCmp(buscacanje.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {                
+				//alert(vgVentana);
+				if(vgVentana=='cuota'){
+					cuota.fn_ubicaventa(rs.get('mve_id'), rs.get('descripcion_documento'),rs.get('doc_n'),rs.get('fec_ven'),rs.get('mon_id'),rs.get('moneda'), rs.get('saldo') );
+					Ext.getCmp('win_buscacanje').close();
+				}
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+			
+		},
+    }
+	Ext.onReady(buscacanje.init,buscacanje);
+
+</script>

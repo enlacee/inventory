@@ -1,0 +1,1065 @@
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('traslados_entradas');
+    traslados_entradas={
+        id:'traslados_entradas',
+        store_reader:new Ext.data.ArrayStore({  //step 1
+            id:traslados_entradas.id+'-reader_guiasasignadas',
+            fields:[{name:'id'},{name:'cantidad'},{name:'codigo'},{name:'detalle'},{name:'precio'},{name:'descuento'},{name:'total'}]  
+            }),
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:traslados_entradas.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(traslados_entradas.id+'-panel_derecho').expand();
+				Ext.getCmp(clientes.id+'-panel_derecho').setVisible(true);
+                            traslados_entradas.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:traslados_entradas.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(traslados_entradas.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+                            traslados_entradas.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:traslados_entradas.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(traslados_entradas.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+                            traslados_entradas.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:traslados_entradas.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(traslados_entradas.id+'-panel_derecho').expand();
+				Ext.getCmp(clientes.id+'-panel_derecho').setVisible(true);
+                            traslados_entradas.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:traslados_entradas.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(traslados_entradas.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+                            traslados_entradas.fn_cancelar();
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:traslados_entradas.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea eliminar?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    traslados_entradas.fn_eliminar();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+            
+            var vstore_clientes_lista=new Ext.data.JsonStore({
+                url:'maestros/clientes-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cli_id','nombre','ruc','codigo']
+            });
+            
+            vstore_clientes_lista.load();
+            
+            var store_compras_lista=new Ext.data.JsonStore({
+                url:'movimientos/compras-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['nombre_proveedor','descripcion_documento','mco_id','codigo','prv_id','tipo_ingreso','doc_id','doc_n','n_guia','cpa_id','mon_id','valor_compra','impuesto_igv','total_compra']
+            });
+            
+            store_compras_lista.load();
+            
+            var store_proveedores_lista=new Ext.data.JsonStore({
+                url:'maestros/proveedores-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['prv_id','nombre','ruc','codigo']
+            });
+            
+            store_proveedores_lista.load();
+            
+            var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+
+            var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','abrev','descripcion','compras','ventas','n_compras','n_ventas','nn_credito','nn_debito','str_serie_n_compras','str_n_compras','str_serie_n_ventas','str_n_ventas','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito']
+            });
+            
+            store_documentos_lista.load({params:{campo:'compras',query:'SI'}});
+            
+            var store_condiciones_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cpa_id','codigo','descripcion','dias','letras']
+            });
+            
+            store_condiciones_pago_lista.load();
+
+            var store_compras_describe=new Ext.data.JsonStore({
+                url:'movimientos/compras-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_compras_describe.load({params:{table:'movimientos_compras'}});
+            
+            var combo_compras_describe=new Ext.form.ComboBox({
+                id:traslados_entradas.id+'-combo_describe',
+                store:store_compras_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_compras_lista = new Ext.grid.GridPanel({
+                id:traslados_entradas.id+'-grid_lista',
+                store: store_compras_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mco_id',width:25},
+                    {header:'Proveedor',sortable :true,dataIndex:'nombre_proveedor',width:150},
+                    {header:'Documento',sortable :true,dataIndex:'descripcion_documento',width:150},
+                    {header:'Guía',sortable :true,dataIndex:'n_guia',width:150},
+                    {header:'Total Compra',sortable :true,dataIndex:'total_compra',width:150}
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        Ext.getCmp(traslados_entradas.id+'-panel_derecho').expand();
+				Ext.getCmp(clientes.id+'-panel_derecho').setVisible(true);
+                        traslados_entradas.fn_editar();
+                    }
+                }
+            });
+
+            
+            var grid_guiasAsignadas=new Ext.grid.EditorGridPanel({
+                             //tabIndex:27,
+                             id:traslados_entradas.id+'-guias_asignadas',
+                             store: traslados_entradas.store_reader,
+                             clicksToEdit: 1,
+                             singleSelect:true,
+                             columnLines:true,
+                             monitorResize:true,
+                             enableKeyEvents: true,
+                             viewConfig:{forceFit:true},
+                             autoScroll:true,
+                             autoHeight:true,
+                             height:150,
+                             listeners:
+                                 {
+                                    afteredit:function()
+                                    {
+                                        traslados_entradas.calcular();
+                                    }
+                                 },
+                             columns:
+                             [
+                                {
+                                  header:"Id", width: 20, sortable: true, dataIndex: 'id',
+                                  editor: new Ext.form.TextField(
+                                  {
+                                        enableKeyEvents: true,
+                                        readOnly:true
+                                   })
+                                },
+                                {
+                                  header:"Cantidad", width: 30, sortable: true, dataIndex: 'cantidad',
+                                  editor: new Ext.form.TextField(
+                                  {
+                                        enableKeyEvents: true
+                                   })
+                                },
+                                {
+                                  header:"Código", width: 80, sortable: true, dataIndex: 'codigo',
+                                  editor: new Ext.form.TextField(
+                                  {
+                                        enableKeyEvents: true,
+                                        readOnly:true
+                                   })
+                                },
+                                {
+                                  header:"Detalle", width: 120, sortable: true, dataIndex: 'detalle',
+                                  editor: new Ext.form.TextField(
+                                  {
+                                        enableKeyEvents:true,
+                                        readOnly:true
+                                   })
+                                },
+                                {
+                                  header:"Precio", width: 50, sortable: true, dataIndex: 'precio',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        enableKeyEvents: true,
+                                        readOnly:true
+                                   })
+                                },
+                                {
+                                  header:"Desc. %", width: 40, sortable: true, dataIndex: 'descuento',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        enableKeyEvents: true,
+                                        readOnly:true                                     
+                                   })
+                                },
+                                {
+                                  header:"Total", width: 60, sortable: true, dataIndex: 'total',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        enableKeyEvents: true,
+                                        readOnly:true                                       
+                                   })
+                                }
+                               ]
+                             ,
+                             tbar:
+                               [
+                                  {
+                                     xtype:'button',
+                                     text:'Añadir',
+                                     iconCls:'btn_add_log',
+                                     listeners:
+                                     {
+                                       click:function()
+                                       {
+                                          Ext.getCmp('win_buscar_mercaderias_traslados_entradas').show();
+                                        }
+                                  }
+                                }
+                                  ,
+                                  {
+                                     xtype:'button',
+                                     text:'Quitar',
+                                     iconCls:'btn_delete_log',
+                                     listeners:
+                                     {
+                                       click:function()
+                                       {
+                                          var index = grid_guiasAsignadas.getSelectionModel().getSelectedCell();
+                                          if (!index)
+                                          {
+                                              return false;
+                                          }
+                                          var rec =  traslados_entradas.store_reader.getAt(index[0]);
+                                           traslados_entradas.store_reader.remove(rec);
+                                           
+                                           traslados_entradas.calcular();
+                                           
+                                           
+                                       }
+                                     }
+                                  },
+                                    
+                                     ]
+                                }); 
+
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                xtype:'panel',
+                layout:'column',
+                border:false,
+                items:
+                [
+                    
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:vstore_clientes_lista,
+                                id:traslados_entradas.id+'-cli_id',
+                                fieldLabel:'Cliente',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'cli_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                listeners:
+                                    {
+                                        select:function(cmb,record,index)
+                                        {
+                                            Ext.getCmp(traslados_entradas.id+'-prv_ruc').setValue(record.get('ruc'));
+                                            Ext.getCmp(traslados_entradas.id+'-prv_codigo').setValue(record.get('codigo'));
+                                        }
+                                    }
+                            } 
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.28,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'Ruc',
+                                id:traslados_entradas.id+'-prv_ruc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.30,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'Código',
+                                id:traslados_entradas.id+'-prv_codigo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:110,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.42,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_documentos_lista,
+                                id:traslados_entradas.id+'-doc_id',
+                                fieldLabel:'Documento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'doc_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        var numero="0000000"+(Number(record.get('str_n_compras'))+1);
+                                        var codigo=record.get('str_serie_n_compras')+"-"+numero.substr(numero.length-7,7)
+                                        Ext.getCmp(traslados_entradas.id+'-numero').setValue(codigo);
+                                    }
+                                }
+                            } 
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.28,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:traslados_entradas.id+'-numero',
+                                fieldLabel:'Número',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:traslados_entradas.id+'-fecha',
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha',
+                                format:'d/m/Y',
+                                altFormats : "d-m-Y",
+                                value:'<? echo date('d-m-Y');?>',
+                                readOnly:true,
+                                style:'margin-left:7px'
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_monedas_lista,
+                                id:traslados_entradas.id+'-mon_id',
+                                fieldLabel:'Moneda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                mode:'local',
+                                valueField:'mon_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:70,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            /*{
+                                xtype:'datefield',
+                                id:traslados_entradas.id+'-fecha_vencimiento',
+                                emptyText:'Vencimiento',
+                                width:100,
+                                fieldLabel:'Vencimiento',
+                                format:'d/m/Y',
+                                altFormats : "d-m-Y",
+                                readOnly:true,
+                                style:'margin-left:7px'
+                            }*/
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:traslados_entradas.id+'-observacion',
+                                fieldLabel:'Observación',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220
+                            }
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:105,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [
+                            {
+                                xtype:'checkbox',
+                                id:traslados_entradas.id+'-afecta_almacen',
+                                fieldLabel:'Afecta Almacén',
+                                checked:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [        
+                            {
+                                xtype:'checkbox',
+                                id:traslados_entradas.id+'-inc_igv',
+                                fieldLabel:'Incluye IGV',
+                                checked:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',layout:'form',
+                        border:true,columnWidth:1,height:150,autoScroll:true,
+                        bodyStyle:'margin-bottom:7px',
+                        items:
+                        [        
+                            grid_guiasAsignadas
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:traslados_entradas.id+'-valor_compra',
+                                fieldLabel:'Valor de Compra',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                readOnly:true
+                            }
+                        ]
+                    }
+                    ,
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:traslados_entradas.id+'-impuesto_igv',
+                                fieldLabel:'Impuesto IGV',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:85,layout:'form',
+                        border:false,columnWidth:.4,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:traslados_entradas.id+'-total_compra',
+                                fieldLabel:'Total Compra',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                readOnly:true
+                            }
+                        ]
+                    }
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar,
+                            combo_compras_describe,'-',
+                    new Ext.app.SearchField({
+                        id:traslados_entradas.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_compras_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj,e)
+                            {
+                                if(e.getKey() == 13)
+                                {
+                                    store_compras_lista.load({params:{campo:Ext.getCmp(traslados_entradas.id+'-combo_describe').getValue(),query:Ext.getCmp(traslados_entradas.id+'-buscar').getValue()}});
+                                }
+                            },
+                            keyup:function(obj,e)
+                            {
+                                store_compras_lista.load({params:{campo:Ext.getCmp(traslados_entradas.id+'-combo_describe').getValue(),query:Ext.getCmp(traslados_entradas.id+'-buscar').getValue()}});
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_compras_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:traslados_entradas.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_traslados_entradas',
+                                        title:'Traslados Entradas', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                        onEsc:function(){Ext.getCmp('win_traslados_entradas').close();}, resizable:true,
+                        items:panel,
+                        buttonAlign:'center'
+            });
+            
+            Ext.getCmp('win_traslados_entradas').show();
+            Ext.getCmp('win_traslados_entradas').center();
+            Ext.getCmp('win_traslados_entradas').toFront();
+            btn_guardar.setVisible(false);
+            btn_actualizar.setVisible(false);
+            btn_cancelar.setVisible(false);
+            Ext.getCmp(traslados_entradas.id+'-panel_derecho').collapse();
+							Ext.getCmp(clientes.id+'-panel_derecho').setVisible(false);
+            
+            var btn_cerrar=new Ext.Button({
+                id:traslados_entradas.id+'-btn_cerrar',
+                text:'Cerrar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp('win_buscar_mercaderias_traslados_entradas').hide();
+                        }
+                    }
+            });
+                        
+            var store_mercaderias_lista=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mcd_id','codigo1','codigo2','codigo3','nombre','unidad_medida','mar_id','lin_id','precio_costo','precio_venta','stock_minimo','stock_actual','activo']
+            });
+
+            var store_mercaderias_describe=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_mercaderias_describe.load({params:{table:'maestros_mercaderias'}});
+            
+            var pager = new Ext.PagingToolbar({
+                id:traslados_entradas.id+'_pager',
+                store:store_mercaderias_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+            
+            var combo_mercaderias_describe=new Ext.form.ComboBox({
+                id:traslados_entradas.id+'-combo_describe_mercaderias',
+                store:store_mercaderias_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_mercaderias_lista = new Ext.grid.GridPanel({
+                id:traslados_entradas.id+'-grid_mercaderias_lista',
+                store: store_mercaderias_lista,
+                singleSelect:true,
+                forceSelection:true,
+                columnLines:true,
+                width:'580',
+                stateful: true,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mcd_id',width:25},
+                    {header:'Código 1',sortable :true,dataIndex:'codigo1',width:100},
+                    {header:'Código 2',sortable :true,dataIndex:'codigo2',width:100},
+                    {header:'Código 3',sortable :true,dataIndex:'codigo3',width:100},
+                    {header:'Nombre',sortable :true,dataIndex:'nombre',width:150},
+                    {header:'Unidad de Medida',sortable :true,dataIndex:'unidad_medida',width:100,hidden:true},
+                    {header:'Precio Costo',sortable :true,dataIndex:'precio_costo',width:100,hidden:true},
+                    {header:'Precio Venta',sortable :true,dataIndex:'precio_venta',width:100},
+                    {header:'Stock Mínimo',sortable :true,dataIndex:'stock_minimo',width:100,hidden:true},
+                    {header:'Stock Actual',sortable :true,dataIndex:'stock_actual',width:100,hidden:true},
+                    {header:'Estado',sortable :true,dataIndex:'activo',width:100,hidden:true}
+                    ],
+                listeners:
+                {
+                    rowclick:function()
+                    {
+                        var rs=Ext.getCmp(traslados_entradas.id+'-grid_mercaderias_lista').getSelectionModel().getSelected();
+                        Ext.getCmp('win_buscar_mercaderias_traslados_entradas').hide();
+                        var u = new traslados_entradas.store_reader.recordType({
+                            id:rs.get('mcd_id'),cantidad:'1',codigo:rs.get('codigo1'),detalle:rs.get('nombre'),precio:rs.get('precio_venta'),descuento:'0',total:rs.get('precio_venta')
+                        });
+                        grid_guiasAsignadas.stopEditing();
+                        traslados_entradas.store_reader.insert(traslados_entradas.store_reader.getCount(), u);
+                        grid_guiasAsignadas.startEditing(traslados_entradas.store_reader.getCount()-1,1)
+                        
+                        traslados_entradas.calcular();
+                    }
+                }
+            });
+            
+            
+            
+            
+            var panel2 = new Ext.Panel({  
+            layout: 'border',
+
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            combo_mercaderias_describe,'-',
+                    new Ext.app.SearchField({
+                        id:traslados_entradas.id+'-buscar_mercaderia', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_mercaderias_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj, e)
+                            {
+                                if (e.getKey() == 13)
+                                {
+                                store_mercaderias_lista.load({params:{campo:Ext.getCmp(traslados_entradas.id+'-combo_describe_mercaderias').getValue(),query:Ext.getCmp(traslados_entradas.id+'-buscar_mercaderia').getValue(),start:0,limit:100}});
+                                }
+                            },
+                            keyup:function(obj,e)
+                            {
+                                store_mercaderias_lista.load({params:{campo:Ext.getCmp(traslados_entradas.id+'-combo_describe_mercaderias').getValue(),query:Ext.getCmp(traslados_entradas.id+'-buscar_mercaderia').getValue(),start:0,limit:100}});
+                            }
+                        }
+                    }),'-',btn_cerrar
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:650px;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'center',
+                layout:'fit',
+                xtype: 'panel',
+                width:'640',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_mercaderias_lista
+                    
+                ]
+            }
+            
+      ]  
+    });
+            
+             new Ext.Window({
+                                        id:'win_buscar_mercaderias_traslados_entradas',
+                                        title:'Mercaderías',
+                                        width: 650,
+                                        height:450,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:false,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_buscar_mercaderias_traslados_entradas').hide();},
+                                        resizable:true,
+                                        items:panel2,
+                                        buttonAlign:'center'
+			});
+                //store_mercaderias_lista.load({params:{start:0,limit:100}});
+            
+        },
+        fn_cancelar:function()
+        {
+            Ext.getCmp(traslados_entradas.id+'-btn_nuevo').setVisible(true);
+            Ext.getCmp(traslados_entradas.id+'-btn_guardar').setVisible(false);
+            Ext.getCmp(traslados_entradas.id+'-btn_actualizar').setVisible(false);
+            Ext.getCmp(traslados_entradas.id+'-btn_editar').setVisible(true);
+            Ext.getCmp(traslados_entradas.id+'-btn_eliminar').setVisible(true);
+            Ext.getCmp(traslados_entradas.id+'-btn_cancelar').setVisible(false);
+        }
+        ,
+        fn_limpiar:function()
+        {
+        },
+        fn_nuevo:function()
+        {
+            Ext.Ajax.request({
+                    url:'movimientos/compras-codigo',
+                    params:
+                    {
+                        table:'movimientos_compras'
+                    },
+                    success:function(response,options)
+                    {             
+                        var res = Ext.decode(response.responseText);
+                        var numero="000000"+res.AUTO_INCREMENT;
+                        var codigo="CO"+numero.substr(numero.length-6,6)
+                        Ext.getCmp(traslados_entradas.id+'-codigo').setValue(codigo);
+                    }
+                });           
+            
+            Ext.getCmp(traslados_entradas.id+'-btn_nuevo').setVisible(false);
+            Ext.getCmp(traslados_entradas.id+'-btn_guardar').setVisible(true);
+            Ext.getCmp(traslados_entradas.id+'-btn_actualizar').setVisible(false);
+            Ext.getCmp(traslados_entradas.id+'-btn_editar').setVisible(false);
+            Ext.getCmp(traslados_entradas.id+'-btn_eliminar').setVisible(false);
+            Ext.getCmp(traslados_entradas.id+'-btn_cancelar').setVisible(true);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(traslados_entradas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+                Ext.getCmp(traslados_entradas.id+'-btn_nuevo').setVisible(false);
+                Ext.getCmp(traslados_entradas.id+'-btn_guardar').setVisible(false);
+                Ext.getCmp(traslados_entradas.id+'-btn_actualizar').setVisible(true);
+                Ext.getCmp(traslados_entradas.id+'-btn_editar').setVisible(false);
+                Ext.getCmp(traslados_entradas.id+'-btn_eliminar').setVisible(false);
+                Ext.getCmp(traslados_entradas.id+'-btn_cancelar').setVisible(true);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            Ext.Ajax.request({
+                url:'movimientos/compras-actualizar',
+                params:
+                {
+                    
+                },
+                success:function(response,options)
+                {             
+                    var res = Ext.decode(response.responseText);
+                    traslados_entradas.fn_limpiar();
+                    Ext.getCmp(traslados_entradas.id+'-btn_nuevo').setVisible(true);
+                    Ext.getCmp(traslados_entradas.id+'-btn_guardar').setVisible(false);
+                    Ext.getCmp(traslados_entradas.id+'-btn_actualizar').setVisible(false);
+                    Ext.getCmp(traslados_entradas.id+'-btn_editar').setVisible(true);
+                    Ext.getCmp(traslados_entradas.id+'-btn_eliminar').setVisible(true);
+                    Ext.getCmp(traslados_entradas.id+'-btn_cancelar').setVisible(false);
+                    og.msg("Ok","El registro se ha actualizado");
+                    Ext.getCmp(traslados_entradas.id+'-grid_lista').store.load();
+            }
+            });
+        },
+        fn_guardar:function()
+        {
+           
+
+            Ext.Ajax.request({
+                url:'movimientos/compras-guardar',
+                params:
+                {
+                    codigo:Ext.getCmp(traslados_entradas.id+'-codigo').getValue(),
+                    prv_id:Ext.getCmp(traslados_entradas.id+'-prv_id').getValue(),
+                    tipo_ingreso:Ext.getCmp(traslados_entradas.id+'-tipo_ingreso').getValue().getGroupValue(),
+                    doc_id:Ext.getCmp(traslados_entradas.id+'-doc_id').getValue(),
+                    doc_n:Ext.getCmp(traslados_entradas.id+'-numero').getValue(),
+                    n_guia:Ext.getCmp(traslados_entradas.id+'-guia_remision').getValue(),
+                    cpa_id:Ext.getCmp(traslados_entradas.id+'-cpa_id').getValue(),
+                    mon_id:Ext.getCmp(traslados_entradas.id+'-mon_id').getValue(),
+                    valor_compra:Ext.getCmp(traslados_entradas.id+'-valor_compra').getValue(),
+                    impuesto_igv:Ext.getCmp(traslados_entradas.id+'-impuesto_igv').getValue(),
+                    total_compra:Ext.getCmp(traslados_entradas.id+'-total_compra').getValue()
+                },
+                success:function(response,options)
+                {             
+                    var res = Ext.decode(response.responseText);
+                    traslados_entradas.fn_limpiar();
+                    Ext.getCmp(traslados_entradas.id+'-btn_nuevo').setVisible(true);
+                    Ext.getCmp(traslados_entradas.id+'-btn_guardar').setVisible(false);
+                    Ext.getCmp(traslados_entradas.id+'-btn_actualizar').setVisible(false);
+                    Ext.getCmp(traslados_entradas.id+'-btn_editar').setVisible(true);
+                    Ext.getCmp(traslados_entradas.id+'-btn_eliminar').setVisible(true);
+                    Ext.getCmp(traslados_entradas.id+'-btn_cancelar').setVisible(false);
+                    og.msg("Ok","El registro se ha actualizado");
+                    Ext.getCmp(traslados_entradas.id+'-grid_lista').store.load();
+            },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(traslados_entradas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+                Ext.Ajax.request({
+                    url:'movimientos/compras-eliminar',
+                    params:
+                    {
+                        
+                    },
+                    success:function(response,options)
+                    {             
+                        var res = Ext.decode(response.responseText);
+                        traslados_entradas.fn_limpiar();
+                        Ext.getCmp(traslados_entradas.id+'-btn_nuevo').setVisible(true);
+                        Ext.getCmp(traslados_entradas.id+'-btn_guardar').setVisible(false);
+                        Ext.getCmp(traslados_entradas.id+'-btn_actualizar').setVisible(false);
+                        Ext.getCmp(traslados_entradas.id+'-btn_editar').setVisible(true);
+                        Ext.getCmp(traslados_entradas.id+'-btn_eliminar').setVisible(true);
+                        Ext.getCmp(traslados_entradas.id+'-btn_cancelar').setVisible(false);
+                        og.msg("Ok","El registro se ha guardado");
+                        Ext.getCmp(traslados_entradas.id+'-grid_lista').store.load();
+                    }
+                });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        }
+            });
+        },
+        calcular:function()
+        {
+            var valor_compra='0';
+            var impuesto_igv='0';
+            var total_compra='0';
+            var datos='';
+            for(i=0;i<Ext.getCmp(traslados_entradas.id+'-guias_asignadas').store.getCount();i++)
+            {
+                datos=Ext.getCmp(traslados_entradas.id+'-guias_asignadas').getStore(0).getAt(i);
+                valor_compra=Number(valor_compra)+Number(datos.get('total'));
+            }
+            Ext.getCmp(traslados_entradas.id+'-valor_compra').setValue(valor_compra);
+            impuesto_igv=(valor_compra*18)/100;
+            Ext.getCmp(traslados_entradas.id+'-impuesto_igv').setValue(impuesto_igv);
+            total_compra=Number(valor_compra)+Number(impuesto_igv);
+            Ext.getCmp(traslados_entradas.id+'-total_compra').setValue(total_compra);
+        }
+         
+    }
+    Ext.onReady(traslados_entradas.init,traslados_entradas);
+
+</script>

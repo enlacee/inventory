@@ -1,0 +1,309 @@
+<form id="frm-rptdocs" name="frm-rptdocs" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+  <input type="hidden" name="txtpar4" id="txtpar4" />
+  <input type="hidden" name="txtpar5" id="txtpar5" />
+  <input type="hidden" name="txtpar6" id="txtpar6" />
+  <input type="hidden" name="txtpar7" id="txtpar7" />
+</form>
+<script type="text/javascript">
+    Ext.ns('rptdocs');
+    rptdocs={
+        id:'rptdocs',
+		vwidth:570,
+		vheight:300,
+        init:function(){		
+			Ext.QuickTips.init();
+			
+			var btn_rptdocs_guardar=new Ext.Button({
+                id:rptdocs.id+'-btn_guardar',
+                text:'Imprimir',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            rptdocs.fn_grabar();
+                        }
+                    }
+            });
+			
+			var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','abrev','descripcion','ventas','compras','n_ventas','n_compras','nn_credito','nn_debito','str_serie_n_compras','str_n_compras','str_serie_n_ventas','str_n_ventas','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito']
+            });
+            
+            store_documentos_lista.load({params:{campo:'ventas',query:'SI',vacio:'TODOS'}});
+				
+			var form_rptdocs_mant = new Ext.form.FormPanel({
+				id:rptdocs.id+'-form_mant',
+				layout:'column',
+				frame:true,
+				url:'save-form.php',
+				defaultType: 'textfield',
+				title:'Datos de Reporte',
+				labelWidth: 75,
+				width: '100%',
+				bodyStyle:'height:auto;margin:auto;padding:10px;',
+				autoScroll: true,
+				items: [
+					{
+                        xtype:'panel',labelWidth:75,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo Docs.",
+                                id: rptdocs.id+'-tip_doc',
+                                defaults: {xtype: "radio",name: "tip_doc"},
+                                columns: [80, 90, 100, 150, 80, 90, 100, 90],
+                                items: [
+                                    {
+                                        id:rptdocs.id+'-tip_doc_v',
+                                        boxLabel: "Ventas",name: "tip_doc",
+                                        inputValue: "ventas",
+                                        checked:true
+                                    },
+                                    {
+                                        id:rptdocs.id+'-tip_doc_c',
+                                        boxLabel: "Compras",name: "tip_doc",
+                                        inputValue: "compras"
+                                    },
+									{
+                                        id:rptdocs.id+'-tip_doc_i',
+                                        boxLabel: "Ingresos",name: "tip_doc",
+                                        inputValue: "altas"
+                                    },
+                                    {
+                                        id:rptdocs.id+'-tip_doc_s',
+                                        boxLabel: "Salidas",name: "tip_doc",
+                                        inputValue: "bajas"
+                                    },
+									{
+                                        id:rptdocs.id+'-tip_doc_nv',
+                                        boxLabel: "NC Ventas",name: "tip_doc",
+                                        inputValue: "nventas"
+                                    },
+                                    {
+                                        id:rptdocs.id+'-tip_doc_nc',
+                                        boxLabel: "NC Compras",name: "tip_doc",
+                                        inputValue: "ncompras"
+                                    },
+									{
+                                        id:rptdocs.id+'-tip_doc_ti',
+                                        boxLabel: "Traslados Ing",name: "tip_doc",
+                                        inputValue: "tingresos"
+                                    },
+                                    {
+                                        id:rptdocs.id+'-tip_doc_ts',
+                                        boxLabel: "Traslados Sal",name: "tip_doc",
+                                        inputValue: "tsalidas"
+                                    }
+                                ],
+								listeners : {
+									change:function(cmb){
+										store_documentos_lista.load({params:{campo:cmb.getValue().getGroupValue(),query:'SI',vacio:'TODOS'}});
+									}	
+								}
+                            }
+                        ]
+                    },{
+                        xtype:'panel',labelWidth:75,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_documentos_lista,
+                                id:rptdocs.id+'-doc_id',
+                                fieldLabel:'Documento',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'doc_id',
+                                displayField:'descripcion',
+                                triggerAction:'all',
+                                forceSelection:true,
+                				editable:false,
+								value:''
+                            } 
+                        ]
+                    },{
+                        xtype:'panel',labelWidth:75,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Orden",
+                                id: rptdocs.id+'-tip_orden',
+                                defaults: {xtype: "radio",name: "tip_orden"},
+                                columns: [120, 100],
+                                items: [
+                                    {
+                                        id:rptdocs.id+'-tip_orden_1',
+                                        boxLabel: "Tipo y Nro Doc",name: "tip_orden",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:rptdocs.id+'-tip_orden_2',
+                                        boxLabel: "Fecha",name: "tip_orden",
+                                        inputValue: "2"
+                                    }
+                                ]
+                            }
+                        ]
+                    },{
+                        xtype:'panel',labelWidth:75,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: rptdocs.id+'-estado',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [120, 120, 100],
+                                items: [
+                                    {
+                                        id:rptdocs.id+'-estado_1',
+                                        boxLabel: "Doc Habiles",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:rptdocs.id+'-estado_2',
+                                        boxLabel: "Solo anulados",name: "estado",
+                                        inputValue: "2"
+                                    },
+                                    {
+                                        id:rptdocs.id+'-estado_3',
+                                        boxLabel: "Ambos",name: "estado",
+                                        inputValue: "3"
+                                    }
+                                ]
+                            }
+                        ]
+                    },{
+						xtype:'panel',
+						columnWidth:.35,
+						labelWidth: 75,
+						layout: 'form',
+						border:false,
+						items: [{
+							xtype:'datefield',
+							id:rptdocs.id+'-ini',
+							allowBlank:false,
+							fieldLabel: 'Fecha',
+							format:'d/m/Y',
+							altFormats : "d/m/Y",
+							value:'<?=date('d/m/Y', strtotime('-31 day'))?>',
+							width:95
+						}]
+					},{
+						xtype:'panel',
+						columnWidth:.65,
+						layout: 'form',
+						border:false,
+						items: [{
+							xtype:'datefield',
+							hideLabel:true,
+							id:rptdocs.id+'-fin',
+							format:'d/m/Y',
+							altFormats : "d/m/Y",
+							value:'<?=date('d/m/Y', strtotime('+12 hour'))?>',
+							allowBlank:false,
+							width:95
+						}]
+					}
+				]
+			});		
+			
+			tabGen = new Ext.TabPanel({
+				id:rptdocs.id+'-tab',
+				width: '100%',
+				region: 'center',
+				bodyStyle:'height:auto;margin:auto;padding:0px;',
+				activeTab: 0,
+				tabPosition: 'top',
+				items:[
+					form_rptdocs_mant
+				]
+			});			
+			
+			var panel = new Ext.Panel({
+				layout: 'border',
+				viewConfig: {
+                            forceFit:true
+                        },
+				width: '100%',
+				bodyStyle:'height:auto;margin:auto;padding:0px;',
+		
+				tbar: [
+					btn_rptdocs_guardar
+				],
+		
+				items: [
+				   tabGen
+				]
+			});
+			
+			var window = new Ext.Window({
+				id:'win_rptdocs',
+				title: 'Reporte de Programacion',				
+				width: rptdocs.vwidth,
+				height:rptdocs.vheight,
+				layout: 'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: true,
+				closable:true,
+				modal:true,
+				collapsible:false,
+				draggable:true,
+				shim:false,
+                animCollapse:false,
+                constrainHeader:true,
+				onEsc:function(){Ext.getCmp('win_rptdocs').close();}, resizable:true,
+				items: panel
+			});
+		
+			window.show();
+			window.center();
+            window.toFront();
+			//rptdocs.fn_habilitar(false,0);
+			Ext.getCmp(rptdocs.id+'-form_mant').setVisible(true);
+			Ext.getCmp(rptdocs.id+'-doc_id').setRawValue('TODOS');
+			//rptdocs.fn_consultar();		
+        },
+		fn_grabar:function()
+        {
+			document.getElementById('frm-rptdocs').action="maestros/rptdocs-pdf";
+			document.getElementById('txtpar1').value = Ext.util.Format.date(Ext.getCmp(rptdocs.id+'-ini').getValue(),'Y-m-d');
+			document.getElementById('txtpar2').value = Ext.util.Format.date(Ext.getCmp(rptdocs.id+'-fin').getValue(),'Y-m-d');
+			document.getElementById('txtpar3').value = Ext.getCmp(rptdocs.id+'-tip_doc').getValue().getGroupValue();
+			document.getElementById('txtpar4').value = Ext.getCmp(rptdocs.id+'-doc_id').getValue();
+			document.getElementById('txtpar5').value = Ext.getCmp(rptdocs.id+'-tip_orden').getValue().getGroupValue();
+			document.getElementById('txtpar6').value = Ext.getCmp(rptdocs.id+'-estado').getValue().getGroupValue();
+			document.getElementById('txtpar7').value = Ext.getCmp(rptdocs.id+'-doc_id').getRawValue();
+			document.getElementById('frm-rptdocs').submit();
+		},
+		fn_ubica_vendedor:function(vid, vrazon){
+			Ext.getCmp(rptdocs.id+'-idvendedor').setValue(vid);
+			Ext.getCmp(rptdocs.id+'-vendedor').setValue(vrazon);
+		},
+		fn_ubica_transportista:function(vid, vrazon){
+			Ext.getCmp(rptdocs.id+'-idtransportista').setValue(vid);
+			Ext.getCmp(rptdocs.id+'-transportista').setValue(vrazon);
+		}
+    }
+    Ext.onReady(rptdocs.init,rptdocs);
+</script>

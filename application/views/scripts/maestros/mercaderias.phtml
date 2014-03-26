@@ -1,0 +1,1666 @@
+<form id="frmReporte-mercaderias" name="frmReporte-mercaderias" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+  <input type="hidden" name="txtpar4" id="txtpar4" />
+  <input type="hidden" name="txtpar5" id="txtpar5" />
+  <input type="hidden" name="txttitulo" id="txttitulo" />
+  <input type="hidden" name="txtfiltro" id="txtfiltro" />
+  <input type="hidden" name="txtsort" id="txtsort" />
+  <input type="hidden" name="txtdir" id="txtdir" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('mercaderias');
+    mercaderias={
+        id:'mercaderias',
+        init:function(){
+            /*Ext.Ajax.timeout = 180000;*/
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:mercaderias.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(mercaderias.id+'-panel_derecho').expand();
+				Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(true);
+                            mercaderias.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:mercaderias.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            mercaderias.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:mercaderias.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            mercaderias.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:mercaderias.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            mercaderias.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:mercaderias.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(mercaderias.id+'-panel_derecho').collapse();
+							Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(false);
+                            mercaderias.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:mercaderias.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							mercaderias.fn_eliminar();                            
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:mercaderias.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    mercaderias.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var btn_excel=new Ext.Button({
+                id:mercaderias.id+'-btn_excel',
+                text:'Excel',
+                icon:'images/icon/excel.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea exportar listado de stock?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    mercaderias.fn_imprimir_excel();
+									
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var btn_buspro=new Ext.Button({
+                id:mercaderias.id+'-btn_buspro',
+                text:'Buscar',
+                listeners:
+                    {
+                        click:function()
+                        {
+                           inicio.getForm( 'maestros/activacion','Activacion de Productos')
+                        }
+                    }
+            });
+			
+			var store_fam_lista=new Ext.data.JsonStore({
+                url:'tablas/familias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['fam_id','nombre']
+            });
+            
+            store_fam_lista.load();
+            
+            var store_marcas_lista=new Ext.data.JsonStore({
+                url:'tablas/marcas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mar_id','nombre']
+            });
+			//store_marcas_lista.load({params:{start:0,limit:100}});
+			
+			var pagerCmbPrv = new Ext.PagingToolbar({
+                id:mercaderias.id+'_pagerCmbPrb',
+                store:store_marcas_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerCmbPrv.on('beforechange',function(bar,params){  
+				params.campo = 'nombre';
+				params.query = Ext.getCmp(mercaderias.id+'-mar_id').getValue();
+			});
+			
+            
+            var store_lineas_lista=new Ext.data.JsonStore({
+                url:'tablas/lineas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['lin_id','nombre']
+            });
+            
+            var store_unidad_medida_lista=new Ext.data.JsonStore({
+                url:'tablas/unidad-medida-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ume_id','codigo','abreviatura','descripcion']
+            });
+            
+            store_unidad_medida_lista.load();
+            
+            var store_mercaderias_lista=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mcd_id','codigo1','codigo2','codigo3','nombre','ume_id','mar_id','lin_id','precio_costo','precio_venta','stock_minimo','stock_actual', 'utilidad', 'desc1', 'desc2', 'desc3', 'desc4','activo', 'fam_id', 'ume_nom', 'precio_compra', 'ind_calculo','mar_nom', 'stock_pro', 'ubicacion', 'aplicacion', 'observacion', 'url_imagen', 'tipo_mcd', 'familia', 'linea'],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+            
+            var store_mercaderias_describe=new Ext.data.JsonStore({
+                data:[{campo: 'codigo1', valor:'Por Codigo 1'},{campo: 'codigo2', valor:'Por Codigo 2'},{campo: 'codigo3', valor:'Por Codigo 3'},{campo: 'nombre', valor:'Por Nombre'}],
+                fields:['campo', 'valor']
+            });
+            
+            var pager = new Ext.PagingToolbar({
+                id:mercaderias.id+'_pager',
+                store:store_mercaderias_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(mercaderias.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(mercaderias.id+'-buscar').getValue();
+				params.lin_id = Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue();
+			}); 
+            
+            var combo_mercaderias_describe=new Ext.form.ComboBox({
+                id:mercaderias.id+'-combo_describe',
+                store:store_mercaderias_describe,
+                valueField:'campo',
+                displayField:'valor',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+			
+			var store_lineasbusq_lista=new Ext.data.JsonStore({
+                url:'tablas/lineas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['lin_id','nombre']
+            });
+			store_lineasbusq_lista.load();
+			var combo_lineas_busq=new Ext.form.ComboBox({
+                id:mercaderias.id+'-combo_lineas_busq',
+                store:store_lineasbusq_lista,
+                valueField:'lin_id',
+                displayField:'nombre',
+                triggerAction:'all',
+                emptyText:'Linea',
+                mode:'local',
+                width:150,
+                editable:false,
+				listeners:
+					{
+						select:function(cmb,record,index)
+						{
+							store_mercaderias_lista.load({params:{lin_id:cmb.getValue(),campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(), mar_id:Ext.getCmp(mercaderias.id+'-mar_id_buscar').getValue(),start:0,limit:100}});
+						}
+					}
+            });
+			
+			var txt_busqueda=new Ext.app.SearchField({
+				id:mercaderias.id+'-buscar', 
+				emptyText : 'Valor a buscar...',
+				enableKeyEvents: true,
+				store: store_mercaderias_lista,
+				hasSearch : false,
+				width: 120,
+				listeners:
+				{
+					specialkey:function(obj, e)
+					{
+						if (e.getKey() == 13)
+						{
+						mercaderias.fn_habilitar(false,0);
+						store_mercaderias_lista.load({params:{lin_id:Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue(),campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(),mar_id:Ext.getCmp(mercaderias.id+'-mar_id_buscar').getValue(),start:0,limit:100}});
+						}
+					}
+				}
+			});
+            
+            var grid_mercaderias_lista = new Ext.grid.GridPanel({
+                id:mercaderias.id+'-grid_lista',
+                store: store_mercaderias_lista,
+                singleSelect:true,
+                forceSelection:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:450,
+                stateful: true,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+                bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mcd_id',width:25,hidden:true},
+                    {header:'Código 1',sortable :true,dataIndex:'codigo1',width:100},
+                    {header:'Código 2',sortable :true,dataIndex:'codigo2',width:100},
+                    {header:'Código 3',sortable :true,dataIndex:'codigo3',width:100,hidden:true},
+                    {header:'Descripción',sortable :true,dataIndex:'nombre',width:250},
+                    {header:'Marca',sortable :true,dataIndex:'mar_nom',width:100},
+					{header:'Familia',sortable :true,dataIndex:'familia',width:100},
+					{header:'Linea',sortable :true,dataIndex:'linea',width:100},
+					{header:'Unidad de Medida',sortable :true,dataIndex:'ume_nom',width:100,hidden:true},
+					{header:'Stock Actual',sortable :true,dataIndex:'stock_pro',width:100,align:'right'},
+					<?php if($this->usp_id<>7){?>
+                    {header:'Precio Compra',sortable :true,dataIndex:'precio_compra',width:100,align:'right',hidden:true},
+					{header:'Precio Costo',sortable :true,dataIndex:'precio_costo',width:100,align:'right'},
+					<?php }?>					
+                    {header:'Precio Venta',sortable :true,dataIndex:'precio_venta',width:100,align:'right'},
+					{header:'Observacion',sortable :true,dataIndex:'observacion',width:150,align:'left',hidden:true},
+					{header:'Url',sortable :true,dataIndex:'url_imagen',width:100,align:'left',hidden:true},
+					{header:'Tipo',sortable :true,dataIndex:'tipo_mcd',width:40,align:'left'},
+                    {header:'Stock Mínimo',sortable :true,dataIndex:'stock_minimo',width:100,align:'right',hidden:true},
+					{header:'% Incremento',sortable :true,dataIndex:'utilidad',width:100,align:'right',hidden:true},
+					{header:'% Desc 1',sortable :true,dataIndex:'desc1',width:100,align:'right',hidden:true},
+					{header:'% Desc 2',sortable :true,dataIndex:'desc2',width:100,align:'right',hidden:true},
+					{header:'% Desc 3',sortable :true,dataIndex:'desc3',width:100,align:'right',hidden:true},
+					{header:'% Desc 4',sortable :true,dataIndex:'desc4',width:100,align:'right',hidden:true},
+                    {header:'Estado',sortable :true,dataIndex:'activo',width:100,hidden:true}
+                    ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        if(Ext.getCmp(mercaderias.id+'-btn_editar').isVisible()){
+							Ext.getCmp(mercaderias.id+'-panel_derecho').expand();
+				Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(true);
+                        	mercaderias.fn_editar();
+						}
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(mercaderias.id+'-btn_editar').enable();
+						Ext.getCmp(mercaderias.id+'-btn_eliminar').enable();
+                    }
+                }
+            });
+            
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+                id:mercaderias.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:mercaderias.id+'-mcd_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.35,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-codigo1',
+                                fieldLabel:'Código 1',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150,
+								allowBlank:false,
+								disabled:true
+                            }, btn_buspro
+                        ]
+                    },
+					{
+                        xtype:'panel',layout:'form',
+                        border:false,columnWidth:0.15,
+                        items:
+                        [
+                            btn_buspro
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.5,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-codigo2',
+                                fieldLabel:'Código 2',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150,
+								disabled:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-codigo3',
+                                fieldLabel:'Código 3',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150,
+								disabled:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.6,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								disabled:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.4,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_unidad_medida_lista,
+                                id:mercaderias.id+'-ume_id',
+                                fieldLabel:'Unidad de Medida',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                mode:'local',
+                                valueField:'ume_id',
+                                displayField:'abreviatura',
+                                triggerAction:'all',
+                                forceSelection:true,
+								disabled:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_marcas_lista,
+                                id:mercaderias.id+'-mar_id',
+                                fieldLabel:'Marca',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                valueField:'mar_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								pageSize:100,
+								disabled:true,
+                                listeners:
+                                    {
+										beforequery:function(obj){
+											store_marcas_lista.setBaseParam('campo', 'nombre');
+											store_marcas_lista.setBaseParam('query', Ext.getCmp(mercaderias.id+'-mar_id').getValue());						
+										},
+										expand:function(cmb){
+											if(!cmb.getRawValue()){
+												store_marcas_lista.load({params:{start:0,limit:100}});
+											}
+										},
+										specialkey:function(obj, e)
+										{
+											if (e.getKey() == 13)
+											{
+												store_marcas_lista.load({params:{campo:'nombre',query:obj.getRawValue(),start:0,limit:100}});
+											}
+										},
+										select:function(cmb,record,index)
+										{
+											Ext.getCmp(mercaderias.id+'-prv_ruc').setValue(record.get('ruc'));
+											Ext.getCmp(mercaderias.id+'-prv_codigo').setValue(record.get('codigo'));
+										}
+									}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_fam_lista,
+                                id:mercaderias.id+'-fam_id',
+                                fieldLabel:'Familia',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'fam_id',
+								allowBlank:false,
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								disabled:true,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(mercaderias.id+'-lin_id').setValue('');
+                                        store_lineas_lista.load({params:{campo:'fam_id',query:record.get('fam_id')}});
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_lineas_lista,
+                                id:mercaderias.id+'-lin_id',
+                                fieldLabel:'Línea',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'lin_id',
+                                displayField:'nombre',
+								allowBlank:false,
+                                triggerAction:'all',
+                                forceSelection:true,
+								disabled:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-precio_compra',
+                                fieldLabel:'Precio de Compra',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:.75,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Cálculo de Precios",
+                                id: mercaderias.id+'-ind_calculo',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "ind_calculo"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:mercaderias.id+'-ind_calculo_m',
+                                        boxLabel: "Manual",name: "ind_calculo",
+                                        inputValue: "M",
+                                        checked:true
+                                    },
+                                    {
+                                        id:mercaderias.id+'-ind_calculo_c',
+                                        boxLabel: "Automatico",name: "ind_calculo",
+                                        inputValue: "A"
+                                    }
+                                ],
+								listeners : {
+									change : function(){
+										if(Ext.getCmp(mercaderias.id+'-ind_calculo').getValue().getGroupValue()=="M"){
+											Ext.getCmp(mercaderias.id+'-precio_compra').enable();
+											Ext.getCmp(mercaderias.id+'-precio_costo').enable();
+											Ext.getCmp(mercaderias.id+'-precio_venta').enable();
+											Ext.getCmp(mercaderias.id+'-utilidad').enable();
+										}else{
+											Ext.getCmp(mercaderias.id+'-precio_compra').disable();
+											Ext.getCmp(mercaderias.id+'-precio_costo').disable();
+											Ext.getCmp(mercaderias.id+'-precio_venta').disable();
+											Ext.getCmp(mercaderias.id+'-utilidad').disable();
+										}
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-precio_costo',
+                                fieldLabel:'Precio de Costo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(mercaderias.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(mercaderias.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(mercaderias.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-utilidad',
+                                fieldLabel:'% Incremento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:3,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(mercaderias.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(mercaderias.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(mercaderias.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.5,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-precio_venta',
+                                fieldLabel:'Precio de Venta',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vcosto = eval(Ext.getCmp(mercaderias.id+'-precio_costo').getValue());
+										if(vcosto>0){											
+											vventa = eval(Ext.getCmp(mercaderias.id+'-precio_venta').getValue());
+											vvalor = (vventa/vcosto)*100 - 100;
+											Ext.getCmp(mercaderias.id+'-utilidad').setValue(vvalor);
+										}else{
+											Ext.getCmp(mercaderias.id+'-utilidad').setValue(0);
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-stock_minimo',
+                                fieldLabel:'Stock Mínimo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.75,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-stock_actual',
+                                fieldLabel:'Stock Actual',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-desc1',
+                                fieldLabel:'% Desc 1',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-desc2',
+                                fieldLabel:'% Desc 2',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-desc3',
+                                fieldLabel:'% Desc 3',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:0.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:mercaderias.id+'-desc4',
+                                fieldLabel:'% Desc 4',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-ubicacion',
+                                fieldLabel:'Ubicacion',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-aplicacion',
+                                fieldLabel:'Aplicacion',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: mercaderias.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:mercaderias.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:mercaderias.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-observacion',
+                                fieldLabel:'Observacion',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:mercaderias.id+'-url_imagen',
+                                fieldLabel:'Imagen URL',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo de Mercaderia",
+                                id: mercaderias.id+'-tipo_mcd',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tipo_mcd"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:mercaderias.id+'-tipo_mcd_i',
+                                        boxLabel: "Importacion",name: "tipo_mcd",
+                                        inputValue: "I",
+                                        checked:true
+                                    },
+                                    {
+                                        id:mercaderias.id+'-tipo_mcd_p',
+                                        boxLabel: "Plaza",name: "tipo_mcd",
+                                        inputValue: "P"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir, '-',btn_excel,
+							{
+                                xtype:'combo',
+                                store:store_marcas_lista,
+                                id:mercaderias.id+'-mar_id_buscar',
+                                fieldLabel:'Marca',
+                                itemCls: 'label01',
+                                width:150,
+								emptyText:'Marca',
+                                valueField:'mar_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								pageSize:100,
+                                listeners:
+                                    {
+										beforequery:function(obj){
+											store_marcas_lista.setBaseParam('campo', 'nombre');
+											store_marcas_lista.setBaseParam('query', Ext.getCmp(mercaderias.id+'-mar_id').getValue());						
+										},
+										expand:function(cmb){
+											if(!cmb.getRawValue()){
+												store_marcas_lista.load({params:{start:0,limit:100}});
+											}
+										},
+										specialkey:function(obj, e)
+										{
+											if (e.getKey() == 13)
+											{
+												store_marcas_lista.load({params:{campo:'nombre',query:obj.getRawValue(),start:0,limit:100}});
+											}
+										},
+										select:function(cmb,record,index)
+										{
+											store_mercaderias_lista.load({params:{lin_id:Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue(),campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(),mar_id:cmb.getValue(),start:0,limit:100}});
+										}
+									}
+                            },
+							combo_lineas_busq,
+                            combo_mercaderias_describe,txt_busqueda
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'98%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_mercaderias_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:mercaderias.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+             new Ext.Window({
+                                        id:'win_mercaderias',
+                                        title:'Stock de Productos',
+                                        width: 1024,
+                                        height:550,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_mercaderias').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+			});
+                Ext.getCmp('win_mercaderias').show();
+                Ext.getCmp('win_mercaderias').center();
+                Ext.getCmp('win_mercaderias').toFront();
+                mercaderias.fn_habilitar(false,0);
+                //store_mercaderias_lista.load({params:{start:0,limit:100}});
+                Ext.getCmp(mercaderias.id+'-panel_derecho').collapse();
+							Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(false);
+				Ext.getCmp(mercaderias.id+'-combo_describe').setValue('codigo1');
+				
+        },
+        fn_nuevo:function()
+        {
+            Ext.getCmp(mercaderias.id+'-mcd_id').setValue('');
+            Ext.getCmp(mercaderias.id+'-codigo1').setValue('');
+            Ext.getCmp(mercaderias.id+'-codigo2').setValue('');
+            Ext.getCmp(mercaderias.id+'-codigo3').setValue('');
+            Ext.getCmp(mercaderias.id+'-nombre').setValue('');
+            Ext.getCmp(mercaderias.id+'-ume_id').setValue('');
+            Ext.getCmp(mercaderias.id+'-mar_id').setValue('');
+            Ext.getCmp(mercaderias.id+'-fam_id').setValue('');
+			Ext.getCmp(mercaderias.id+'-lin_id').setValue('');
+			
+			<?php if($this->datos->se_calculo_precios=='A'){?>
+			Ext.getCmp(mercaderias.id+'-ind_calculo').items.items[0].setValue(true);
+			Ext.getCmp(mercaderias.id+'-ind_calculo').items.items[1].setValue(false);
+			<?php }else{ ?>
+			Ext.getCmp(mercaderias.id+'-ind_calculo').items.items[1].setValue(true);
+			Ext.getCmp(mercaderias.id+'-ind_calculo').items.items[0].setValue(false);
+			<?php }?>
+            
+			
+            Ext.getCmp(mercaderias.id+'-precio_compra').setValue("0.00");
+			Ext.getCmp(mercaderias.id+'-precio_costo').setValue("0.00");
+            Ext.getCmp(mercaderias.id+'-precio_venta').setValue("0.00");
+            Ext.getCmp(mercaderias.id+'-stock_minimo').setValue("0");
+            Ext.getCmp(mercaderias.id+'-stock_actual').setValue("0");
+			Ext.getCmp(mercaderias.id+'-utilidad').setValue("<?=($this->datos->se_utilidad?$this->datos->se_utilidad:0)?>");
+			Ext.getCmp(mercaderias.id+'-desc1').setValue("<?=($this->datos->se_desc1?$this->datos->se_desc1:0)?>");
+			Ext.getCmp(mercaderias.id+'-desc2').setValue("<?=($this->datos->se_desc2?$this->datos->se_desc2:0)?>");
+			Ext.getCmp(mercaderias.id+'-desc3').setValue("<?=($this->datos->se_desc3?$this->datos->se_desc3:0)?>");
+			Ext.getCmp(mercaderias.id+'-desc4').setValue("<?=($this->datos->se_desc4?$this->datos->se_desc4:0)?>");
+			
+			Ext.getCmp(mercaderias.id+'-aplicacion').setValue("");
+			Ext.getCmp(mercaderias.id+'-ubicacion').setValue("");
+			
+			Ext.getCmp(mercaderias.id+'-observacion').setValue("");
+			Ext.getCmp(mercaderias.id+'-url_imagen').setValue("");
+			Ext.getCmp(mercaderias.id+'-tipo_mcd').setValue("P");
+			
+            Ext.getCmp(mercaderias.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(mercaderias.id+'-estado').items.items[1].setValue(false);
+            mercaderias.fn_habilitar(true,1);
+			Ext.getCmp(mercaderias.id+'-codigo1').focus(true,10);
+			//inicio.getForm( 'maestros/activacion','Activacion de Productos')
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(mercaderias.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(mercaderias.id+'-panel_derecho').expand();
+				Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(mercaderias.id+'-mcd_id').setValue(rs.get('mcd_id'));
+                Ext.getCmp(mercaderias.id+'-codigo1').setValue(rs.get('codigo1'));
+                Ext.getCmp(mercaderias.id+'-codigo2').setValue(rs.get('codigo2'));
+                Ext.getCmp(mercaderias.id+'-codigo3').setValue(rs.get('codigo3'));
+                Ext.getCmp(mercaderias.id+'-nombre').setValue(rs.get('nombre'));
+                Ext.getCmp(mercaderias.id+'-ume_id').setValue(rs.get('ume_id'));
+				
+				Ext.getCmp(mercaderias.id+'-mar_id').store.load({params:{campo:'mar_id',query:rs.get('mar_id'),start:0,limit:100},
+				callback:function()
+				{
+					Ext.getCmp(mercaderias.id+'-mar_id').setValue(rs.get('mar_id'));         
+				}});				
+				
+                Ext.getCmp(mercaderias.id+'-fam_id').setValue(rs.get('fam_id'));
+				
+				Ext.getCmp(mercaderias.id+'-lin_id').store.load({params:{campo:'fam_id',query:rs.get('fam_id')},
+				callback:function()
+				{
+					Ext.getCmp(mercaderias.id+'-lin_id').setValue(rs.get('lin_id'));                    
+				}});
+				
+                Ext.getCmp(mercaderias.id+'-precio_compra').setValue(rs.get('precio_compra'));
+				Ext.getCmp(mercaderias.id+'-precio_costo').setValue(rs.get('precio_costo'));
+                Ext.getCmp(mercaderias.id+'-precio_venta').setValue(rs.get('precio_venta'));
+				Ext.getCmp(mercaderias.id+'-utilidad').setValue(rs.get('utilidad'));
+				
+				if(rs.get('ind_calculo')=='A'){
+					Ext.getCmp(mercaderias.id+'-ind_calculo').setValue("A");
+				}else{
+					Ext.getCmp(mercaderias.id+'-ind_calculo').setValue("M");
+				}
+				
+				if(rs.get('ind_calculo')=="C"){
+					Ext.getCmp(mercaderias.id+'-precio_compra').disable();
+					Ext.getCmp(mercaderias.id+'-precio_costo').disable();
+					Ext.getCmp(mercaderias.id+'-precio_venta').disable();
+					Ext.getCmp(mercaderias.id+'-utilidad').disable();
+				}
+				
+                Ext.getCmp(mercaderias.id+'-stock_minimo').setValue(rs.get('stock_minimo'));
+                Ext.getCmp(mercaderias.id+'-stock_actual').setValue(rs.get('stock_pro'));
+				Ext.getCmp(mercaderias.id+'-stock_actual').setReadOnly(true);
+				Ext.getCmp(mercaderias.id+'-stock_actual').disable();
+				
+				
+				Ext.getCmp(mercaderias.id+'-desc1').setValue(rs.get('desc1'));
+				Ext.getCmp(mercaderias.id+'-desc2').setValue(rs.get('desc2'));
+				Ext.getCmp(mercaderias.id+'-desc3').setValue(rs.get('desc3'));
+				Ext.getCmp(mercaderias.id+'-desc4').setValue(rs.get('desc4'));
+				
+				Ext.getCmp(mercaderias.id+'-aplicacion').setValue(rs.get('aplicacion'));
+				Ext.getCmp(mercaderias.id+'-ubicacion').setValue(rs.get('ubicacion'));
+				
+				Ext.getCmp(mercaderias.id+'-observacion').setValue(rs.get('observacion'));
+				Ext.getCmp(mercaderias.id+'-url_imagen').setValue(rs.get('url_imagen'));
+				Ext.getCmp(mercaderias.id+'-tipo_mcd').setValue(rs.get('tipo_mcd'));
+				
+                Ext.getCmp(mercaderias.id+'-estado').setValue(rs.get('activo'));				
+                
+                mercaderias.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(mercaderias.fn_validar()){
+				//alert(Ext.getCmp(mercaderias.id+'-ind_calculo').getValue().getGroupValue());
+				Ext.getCmp(mercaderias.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/mercaderias-actualizar',
+					params:{ 
+						mcd_id:Ext.getCmp(mercaderias.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(mercaderias.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(mercaderias.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(mercaderias.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(mercaderias.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(mercaderias.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(mercaderias.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(mercaderias.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(mercaderias.id+'-lin_id').getValue(),
+						precio_costo:Ext.getCmp(mercaderias.id+'-precio_costo').getValue(),
+						precio_compra:Ext.getCmp(mercaderias.id+'-precio_compra').getValue(),
+						precio_venta:Ext.getCmp(mercaderias.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(mercaderias.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(mercaderias.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(mercaderias.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(mercaderias.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(mercaderias.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(mercaderias.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(mercaderias.id+'-desc4').getValue(),
+						estado:Ext.getCmp(mercaderias.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(mercaderias.id+'-ind_calculo').getValue().getGroupValue(),
+						aplicacion:Ext.getCmp(mercaderias.id+'-aplicacion').getValue(),
+						ubicacion:Ext.getCmp(mercaderias.id+'-ubicacion').getValue(),
+						observacion:Ext.getCmp(mercaderias.id+'-observacion').getValue(),
+						url_imagen:Ext.getCmp(mercaderias.id+'-url_imagen').getValue(),
+						tipo_mcd:Ext.getCmp(mercaderias.id+'-tipo_mcd').getValue().getGroupValue(),
+					},
+					waitTitle: 'Registro de Mercaderia',
+					waitMsg: 'Actualizando Informacion..',
+					success: function(form, action){	
+						//alert(action.response.responseText);				
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(mercaderias.id+'-panel_derecho').collapse();
+							Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							mercaderias.fn_habilitar(false,0);
+							Ext.getCmp(mercaderias.id+'-grid_lista').store.load({params:{lin_id:Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue(),campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(mercaderias.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(mercaderias.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(mercaderias.id+res.campo).focus(true,10);							
+					}
+				});
+				/*Ext.Msg.wait('Actualizando información de mercaderia... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/mercaderias-actualizar',
+					params:
+					{
+						mcd_id:Ext.getCmp(mercaderias.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(mercaderias.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(mercaderias.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(mercaderias.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(mercaderias.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(mercaderias.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(mercaderias.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(mercaderias.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(mercaderias.id+'-lin_id').getValue(),
+						precio_costo:Ext.getCmp(mercaderias.id+'-precio_costo').getValue(),
+						precio_compra:Ext.getCmp(mercaderias.id+'-precio_compra').getValue(),
+						precio_venta:Ext.getCmp(mercaderias.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(mercaderias.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(mercaderias.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(mercaderias.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(mercaderias.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(mercaderias.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(mercaderias.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(mercaderias.id+'-desc4').getValue(),
+						estado:Ext.getCmp(mercaderias.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(mercaderias.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{       
+						Ext.Msg.hide();     
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(mercaderias.id+'-panel_derecho').collapse();
+							Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							mercaderias.fn_habilitar(false,0);
+							Ext.getCmp(mercaderias.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(mercaderias.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {
+            if(mercaderias.fn_validar()){
+				Ext.getCmp(mercaderias.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'maestros/mercaderias-guardar',
+					params:{ 
+						mcd_id:Ext.getCmp(mercaderias.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(mercaderias.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(mercaderias.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(mercaderias.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(mercaderias.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(mercaderias.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(mercaderias.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(mercaderias.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(mercaderias.id+'-lin_id').getValue(),
+						precio_compra:Ext.getCmp(mercaderias.id+'-precio_compra').getValue(),
+						precio_costo:Ext.getCmp(mercaderias.id+'-precio_costo').getValue(),
+						precio_venta:Ext.getCmp(mercaderias.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(mercaderias.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(mercaderias.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(mercaderias.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(mercaderias.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(mercaderias.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(mercaderias.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(mercaderias.id+'-desc4').getValue(),
+						estado:Ext.getCmp(mercaderias.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(mercaderias.id+'-ind_calculo').getValue().getGroupValue(),						
+						aplicacion:Ext.getCmp(mercaderias.id+'-aplicacion').getValue(),
+						ubicacion:Ext.getCmp(mercaderias.id+'-ubicacion').getValue(),
+						observacion:Ext.getCmp(mercaderias.id+'-observacion').getValue(),
+						url_imagen:Ext.getCmp(mercaderias.id+'-url_imagen').getValue(),
+						tipo_mcd:Ext.getCmp(mercaderias.id+'-tipo_mcd').getValue().getGroupValue(),
+					},
+					waitTitle: 'Registro de ',
+					waitMsg: 'Guardando Información..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(mercaderias.id+'-panel_derecho').collapse();
+							Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							mercaderias.fn_habilitar(false,0);
+							Ext.getCmp(mercaderias.id+'-grid_lista').store.load({params:{lin_id:Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue(),campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(mercaderias.id+res.campo).focus(true,10);						
+						}
+						Ext.getCmp(mercaderias.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(mercaderias.id+res.campo).focus(true,10);							
+					}
+				});
+				/*Ext.Msg.wait('Guardando información de mercaderia... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/mercaderias-guardar',
+					params:
+					{
+						mcd_id:Ext.getCmp(mercaderias.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(mercaderias.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(mercaderias.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(mercaderias.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(mercaderias.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(mercaderias.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(mercaderias.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(mercaderias.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(mercaderias.id+'-lin_id').getValue(),
+						precio_compra:Ext.getCmp(mercaderias.id+'-precio_compra').getValue(),
+						precio_costo:Ext.getCmp(mercaderias.id+'-precio_costo').getValue(),
+						precio_venta:Ext.getCmp(mercaderias.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(mercaderias.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(mercaderias.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(mercaderias.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(mercaderias.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(mercaderias.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(mercaderias.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(mercaderias.id+'-desc4').getValue(),
+						estado:Ext.getCmp(mercaderias.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(mercaderias.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{       
+						Ext.Msg.hide();      
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(mercaderias.id+'-panel_derecho').collapse();
+							Ext.getCmp(mercaderias.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							mercaderias.fn_habilitar(false,0);
+							Ext.getCmp(mercaderias.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(),start:0,limit:100}});
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(mercaderias.id+res.campo).focus(true,10);							
+						}						
+					}
+				});*/
+			}
+        },
+        fn_eliminar:function()
+        {
+			//alert("AQUI");
+            var rs=Ext.getCmp(mercaderias.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				 Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Mercaderia :<br>' + rs.get('nombre'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando mercaderia... por favor espere!');
+						Ext.Ajax.request({
+							url:'maestros/mercaderias-eliminar',
+							params:
+							{
+								mcd_id:rs.get('mcd_id')
+							},
+							success:function(response,options)
+							{        
+								Ext.Msg.hide();     
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									mercaderias.fn_habilitar(false,0);
+									Ext.getCmp(mercaderias.id+'-grid_lista').store.load({params:{lin_id:Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue(),campo:Ext.getCmp(mercaderias.id+'-combo_describe').getValue(),query:Ext.getCmp(mercaderias.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(mercaderias.id+res.campo).focus(true,10);				
+								}									
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(mercaderias.id+'-codigo1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 1");
+                Ext.getCmp(mercaderias.id+'-codigo1').focus(true,10);
+                return false;
+            }
+            /*if(!Ext.getCmp(mercaderias.id+'-codigo2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 2");
+                Ext.getCmp(mercaderias.id+'-codigo2').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-codigo3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 3");
+                Ext.getCmp(mercaderias.id+'-codigo3').focus(true,10);
+                return false;
+            }*/
+            if(!Ext.getCmp(mercaderias.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(mercaderias.id+'-nombre').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-ume_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Unidad de Medida");
+                Ext.getCmp(mercaderias.id+'-ume_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-mar_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Marca");
+                Ext.getCmp(mercaderias.id+'-mar_id').focus(true,10);
+                return false;
+            }
+			 if(!Ext.getCmp(mercaderias.id+'-fam_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Familia");
+                Ext.getCmp(mercaderias.id+'-fam_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-lin_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Linea");
+                Ext.getCmp(mercaderias.id+'-lin_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(mercaderias.id+'-precio_compra').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Compra");
+                Ext.getCmp(mercaderias.id+'-precio_compra').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-precio_costo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Costo");
+                Ext.getCmp(mercaderias.id+'-precio_costo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-precio_venta').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Venta");
+                Ext.getCmp(mercaderias.id+'-precio_venta').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-stock_minimo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Mínimo");
+                Ext.getCmp(mercaderias.id+'-stock_minimo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(mercaderias.id+'-stock_actual').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Actual");
+                Ext.getCmp(mercaderias.id+'-stock_actual').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(mercaderias.id+'-utilidad').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Incremento");
+                Ext.getCmp(mercaderias.id+'-utilidad').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(mercaderias.id+'-desc1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 1");
+                Ext.getCmp(mercaderias.id+'-desc1').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(mercaderias.id+'-desc2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 2");
+                Ext.getCmp(mercaderias.id+'-desc2').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(mercaderias.id+'-desc3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 3");
+                Ext.getCmp(mercaderias.id+'-desc3').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(mercaderias.id+'-desc4').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 4");
+                Ext.getCmp(mercaderias.id+'-desc4').focus(true,10);
+                return false;
+            }
+			return true;
+		},		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-mercaderias').action="maestros/mercaderias-lista-impresion";
+			var activePage = Math.ceil((Ext.getCmp(mercaderias.id+'_pager').cursor + Ext.getCmp(mercaderias.id+'_pager').pageSize) / Ext.getCmp(mercaderias.id+'_pager').pageSize);
+			document.getElementById('txtpar1').value = Ext.getCmp(mercaderias.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(mercaderias.id+'-buscar').getValue();
+			document.getElementById('txtpar3').value = Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue();
+			document.getElementById('txtpar4').value = activePage;
+			document.getElementById('txtpar5').value = Ext.getCmp(mercaderias.id+'-mar_id_buscar').getValue();
+			
+			vOrden = Ext.getCmp(mercaderias.id+'-grid_lista').store.getSortState( );			
+			document.getElementById('txttitulo').value = "Listado de Stock Actual de Productos";
+			vFiltro = '';
+			if(Ext.getCmp(mercaderias.id+'-mar_id_buscar').getValue()>0){
+				vFiltro = "Marca : " + Ext.getCmp(mercaderias.id+'-mar_id_buscar').getRawValue();
+			}
+			if(Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue()>0){
+				if(vFiltro!=''){
+					vFiltro=vFiltro + ', ';
+				}
+				vFiltro = vFiltro + "Linea : " + Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getRawValue();
+			}
+			if(Ext.getCmp(mercaderias.id+'-buscar').getValue()!=''){
+				if(vFiltro!=''){
+					vFiltro=vFiltro + ', ';
+				}
+				vFiltro = vFiltro + Ext.getCmp(mercaderias.id+'-combo_describe').getRawValue() + " : " + Ext.getCmp(mercaderias.id+'-buscar').getValue();
+			}
+			document.getElementById('txtfiltro').value = 'FILTRO : ' + vFiltro;
+			document.getElementById('txtsort').value = vOrden.field;
+			document.getElementById('txtdir').value = vOrden.direction;
+            document.getElementById('frmReporte-mercaderias').submit();
+        },				
+		fn_imprimir_excel:function()
+        {
+			document.getElementById('frmReporte-mercaderias').action="maestros/mercaderias-lista-excel";
+			var activePage = Math.ceil((Ext.getCmp(mercaderias.id+'_pager').cursor + Ext.getCmp(mercaderias.id+'_pager').pageSize) / Ext.getCmp(mercaderias.id+'_pager').pageSize);
+			document.getElementById('txtpar1').value = Ext.getCmp(mercaderias.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(mercaderias.id+'-buscar').getValue();
+			document.getElementById('txtpar3').value = Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue();
+			document.getElementById('txtpar4').value = activePage;
+			document.getElementById('txtpar5').value = Ext.getCmp(mercaderias.id+'-mar_id_buscar').getValue();
+			
+			vOrden = Ext.getCmp(mercaderias.id+'-grid_lista').store.getSortState( );			
+			document.getElementById('txttitulo').value = "Listado de Stock Actual de Productos";
+			vFiltro = '';
+			if(Ext.getCmp(mercaderias.id+'-mar_id_buscar').getValue()>0){
+				vFiltro = "Marca : " + Ext.getCmp(mercaderias.id+'-mar_id_buscar').getRawValue();
+			}
+			if(Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getValue()>0){
+				if(vFiltro!=''){
+					vFiltro=vFiltro + ', ';
+				}
+				vFiltro = vFiltro + "Linea : " + Ext.getCmp(mercaderias.id+'-combo_lineas_busq').getRawValue();
+			}
+			if(Ext.getCmp(mercaderias.id+'-buscar').getValue()!=''){
+				if(vFiltro!=''){
+					vFiltro=vFiltro + ', ';
+				}
+				vFiltro = vFiltro + Ext.getCmp(mercaderias.id+'-combo_describe').getRawValue() + " : " + Ext.getCmp(mercaderias.id+'-buscar').getValue();
+			}
+			document.getElementById('txtfiltro').value = 'FILTRO : ' + vFiltro;
+			document.getElementById('txtsort').value = vOrden.field;
+			document.getElementById('txtdir').value = vOrden.direction;
+            document.getElementById('frmReporte-mercaderias').submit();
+        },
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(mercaderias.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(mercaderias.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(mercaderias.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(mercaderias.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(mercaderias.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(mercaderias.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			<?php if($this->acceso[1]=='Y'){?>
+			Ext.getCmp(mercaderias.id+'-btn_nuevo').setVisible(!sw);			
+			<? } ?>
+			Ext.getCmp(mercaderias.id+'-btn_cancelar').setVisible(sw);
+			<?php if($this->acceso[2]=='Y'){?>
+			Ext.getCmp(mercaderias.id+'-btn_editar').setVisible(!sw);
+			<? } ?>
+			<?php if($this->acceso[3]=='Y'){?>
+			Ext.getCmp(mercaderias.id+'-btn_eliminar').setVisible(!sw);
+			<? } ?>
+
+			Ext.getCmp(mercaderias.id+'-btn_editar').disable();
+			Ext.getCmp(mercaderias.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(mercaderias.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(mercaderias.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(mercaderias.id+'-btn_imprimir').setVisible(!sw);			
+        }
+    }
+    Ext.onReady(mercaderias.init,mercaderias);
+
+</script>

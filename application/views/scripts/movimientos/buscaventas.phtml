@@ -1,0 +1,220 @@
+<form id="frmReporte-buscaventas" name="frmReporte-buscaventas" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('buscaventas');
+    buscaventas={
+        id:'buscaventas',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+			
+			var btn_seleccionar=new Ext.Button({
+                id:buscaventas.id+'-btn_seleccionar',
+                text:'Seleccionar',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert("HOLA");
+                            buscaventas.fn_seleccionar();
+                        }
+                    }
+            });
+			            
+            var store_buscaventas_lista=new Ext.data.JsonStore({
+                url:'movimientos/ventas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['nombre_cliente','descripcion_documento','mve_id','codigo','cli_id','tipo_ingreso','doc_id','doc_n','n_guia','cpa_id','mon_id','valor_venta','impuesto_igv','total_venta', 'fec_ven', 'fec_mov', 'moneda', 'cli_codigo', 'ruc', 'anulado', 'afecta', 'formato', 'observacion', 'cliente', 'cli_ruc', 'condicion', 'saldo', 'dias', 'letras', 'fec_ori', 'tipo'],
+				remoteSort:true,				
+				sortInfo: {field:'fec_mov', direction:'desc'}
+            });            
+			
+			var pager = new Ext.PagingToolbar({
+                id:buscaventas.id+'_pager',
+                store:store_buscaventas_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(buscaventas.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(buscaventas.id+'-buscar').getValue();
+				params.modo = '1';
+				params.cli_id = vgId;
+			});
+			
+            var store_buscaventas_describe=new Ext.data.JsonStore({
+                url:'movimientos/ventas-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_buscaventas_describe.load({params:{table:'movimientos_ventas'}});
+            
+            var combo_buscaventas_describe=new Ext.form.ComboBox({
+                id:buscaventas.id+'-combo_describe',
+                store:store_buscaventas_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_buscaventas_lista = new Ext.grid.GridPanel({
+                id:buscaventas.id+'-grid_lista',
+                store: store_buscaventas_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mve_id',width:25},
+					{header:'Fecha',sortable :true,dataIndex:'fec_ven',width:70},
+                    {header:'Documento',sortable :true,dataIndex:'descripcion_documento',width:80},
+					{header:'Número',sortable :true,dataIndex:'doc_n',width:80, align:'center'},
+					{header:'Cliente',sortable :true,dataIndex:'nombre_cliente',width:200},
+                    {header:'Saldo',sortable :true,dataIndex:'saldo',width:80, align:'right'},
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:70, align:'left'},
+                ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+						//alert("DOBLE");
+						buscaventas.fn_seleccionar();
+                    },
+                }
+            });
+            
+			var panel = new Ext.Panel({  
+				layout: 'border',
+				tbar:[
+					{
+						xtype: 'toolbar',
+						dock: 'top',
+						items: [
+							'Buscar','-',combo_buscaventas_describe,'-',
+							new Ext.app.SearchField({
+								id:buscaventas.id+'-buscar', 
+								emptyText : 'Valor a buscar...',
+								enableKeyEvents: true,
+								store: store_buscaventas_lista,
+								hasSearch : false,
+								width: 120,
+								listeners:
+								{
+									specialkey:function(obj,e)
+									{
+										if(e.getKey() == 13)
+										{
+											store_buscaventas_lista.load({params:{campo:Ext.getCmp(buscaventas.id+'-combo_describe').getValue(),query:Ext.getCmp(buscaventas.id+'-buscar').getValue(),modo:'1', cli_id:vgId}});
+										}
+									}
+								}
+							}), '-',btn_seleccionar
+					
+						]
+					}],
+				bodyStyle:'height:auto;width:70%;margin:auto;',
+				border:false,
+				items: [
+					{  
+						region: 'west',
+						layout:'fit',
+						xtype: 'panel',
+						width:'96%',
+						autoScroll: true,  
+						border:false,
+						items:
+						[
+							grid_buscaventas_lista
+							
+						]
+					}
+					,
+					{
+						region:'center',
+						width:'0',
+						height:'0'
+					},
+					{  
+						region: 'east',
+						width:'0',
+						height:'0'
+					}
+		  		]  
+	    	});
+            
+        	new Ext.Window({
+				id:'win_buscaventas',
+				title:'Busqueda de Ventas', 
+				width: 650,
+				height:450,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:true,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_buscaventas').close();}, resizable:true,
+                items:panel,
+                buttonAlign:'center',
+				listeners: {
+					'beforeclose': function(){ inicio.setActiveStyleSheet('gray'); }
+				}
+            });
+            
+            Ext.getCmp('win_buscaventas').show();
+            Ext.getCmp('win_buscaventas').center();
+            Ext.getCmp('win_buscaventas').toFront();       
+			inicio.setActiveStyleSheet('blue');        
+            
+        },
+		fn_seleccionar:function(){
+			//alert("HOLAAA");
+			var rs=Ext.getCmp(buscaventas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {                
+				//alert(vgVentana);
+				if(vgVentana=='canje'){
+					canje.fn_ubicaventa(rs.get('mve_id'), rs.get('descripcion_documento'),rs.get('doc_n'),rs.get('fec_ven'),rs.get('mon_id'),rs.get('moneda'), rs.get('saldo'), rs.get('tipo') );
+					Ext.getCmp('win_buscaventas').close();
+				}
+				
+				if(vgVentana=='compromisoventas'){
+					compromisoventas.fn_ubicaventa(rs.get('mve_id'), rs.get('descripcion_documento'),rs.get('doc_n'),rs.get('fec_ven'),rs.get('mon_id'),rs.get('moneda'), rs.get('saldo'), rs.get('tipo') );
+					Ext.getCmp('win_buscaventas').close();
+				}
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+			
+		},
+    }
+	Ext.onReady(buscaventas.init,buscaventas);
+</script>

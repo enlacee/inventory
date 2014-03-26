@@ -1,0 +1,1887 @@
+<form id="frmReporte-caja" name="frmReporte-caja" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('caja');
+    caja={
+        id:'caja',
+        store_reader_detallecaja:new Ext.data.ArrayStore({  //step 1
+            id:caja.id+'-reader_detallecaja',
+            fields:[{name:'item'},{name:'concepto'},{name:'cuenta'},{name:'tip_doc'},{name:'nro_doc'},{name:'debe'},{name:'haber'},{name:'tipo'},{name:'doc_id'},{name:'cco_id'}, {name:'deb_hab'}, {name:'detalle'}, {name:'monto'}]
+            }),
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:caja.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(caja.id+'-panel_derecho').expand();
+				Ext.getCmp(caja.id+'-panel_derecho').setVisible(true);
+                            caja.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:caja.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            caja.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:caja.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            caja.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:caja.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            caja.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:caja.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(caja.id+'-panel_derecho').collapse();
+							Ext.getCmp(caja.id+'-panel_derecho').setVisible(false);
+                            caja.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_anular=new Ext.Button({
+                id:caja.id+'-btn_anular',
+                text:'Anular',
+                icon:'images/icon/btn_cancelar.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+							caja.fn_anular();
+                        }
+                    }
+            });
+			
+			var btn_eliminar=new Ext.Button({
+                id:caja.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							caja.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:caja.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    caja.fn_imprimir();
+                                }
+                            });
+                        }
+                    }
+            });
+			
+			var btn_busprv=new Ext.Button({
+                id:caja.id+'-btn_busprv',
+                text:'Buscar Provee', hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert(vgVentana);
+							vgVentana = 'caja';
+                           inicio.getForm( 'maestros/buscaproveedores','Busca Proveedores')
+                        }
+                    }
+            });
+			
+			var btn_buscli=new Ext.Button({
+                id:caja.id+'-btn_buscli',
+                text:'Buscar Cliente', hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert(vgVentana);
+							vgVentana = 'caja';
+							inicio.getForm( 'maestros/buscaclientes','Busca Clientes')
+                        }
+                    }
+            });
+			
+			var btn_busper=new Ext.Button({
+                id:caja.id+'-btn_busper',
+                text:'Buscar Personal',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert(vgVentana);
+							vgVentana = 'caja';
+							inicio.getForm( 'usuarios/buscapersonal','Busca Clientes')
+                        }
+                    }
+            });
+
+            var store_caja_lista=new Ext.data.JsonStore({
+                url:'movimientos/caja-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['fecha','nro','tipo_cpa','persona','concepto','moneda','ingreso','egreso', 'comentario', 'mca_id', 'mon_id', 'tc'],
+				remoteSort:true,				
+				sortInfo: {field:'mca_id', direction:'asc'},
+				listeners:{
+					load:function(){
+						caja.fn_calcular_totales();	
+					}
+				}
+            });
+			
+			var pager = new Ext.PagingToolbar({
+                id:caja.id+'_pager',
+                store:store_caja_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.fecha = Ext.getCmp(caja.id+'-fecha_caja').getValue();
+			});
+            
+            
+            
+            var vstore_proveedores_lista=new Ext.data.JsonStore({
+                url:'maestros/proveedores-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['prv_id','nombre','ruc','codigo']
+            });
+            
+            //vstore_proveedores_lista.load({params:{start:0,limit:100}});
+			
+			var pagerCmbPrv = new Ext.PagingToolbar({
+                id:caja.id+'_pagerCmbPrb',
+                store:vstore_proveedores_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerCmbPrv.on('beforechange',function(bar,params){  
+				params.campo = 'nombre';
+				params.query = Ext.getCmp(caja.id+'-combo_prv').getValue();
+			});
+            
+            var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });
+            
+            store_monedas_lista.load();
+			
+			var store_concepto_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/concepto-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['coc_id','nombre']
+            });
+			
+			var store_tipo_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/tipo-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tpa_id','nombre']
+            });
+
+            var store_documentos_lista=new Ext.data.JsonStore({
+                url:'tablas/documentos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['doc_id','abrev','descripcion','ventas','caja','n_ventas','n_caja','nn_credito','nn_debito','str_serie_n_caja','str_n_caja','str_serie_n_ventas','str_n_ventas','str_serie_nn_credito','str_nn_credito','str_serie_nn_debito','str_nn_debito']
+            });
+            
+            store_documentos_lista.load({params:{campo:'caja',query:'SI'}});
+            
+            var store_condiciones_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cpa_id','codigo','descripcion','dias','letras']
+            });
+            
+            store_condiciones_pago_lista.load();
+			
+			var store_usuarios_lista=new Ext.data.JsonStore({
+                url:'usuarios/usuarios-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['usr_id','usuario']
+            });
+            
+            store_usuarios_lista.load();
+			
+			var store_tienda_lista=new Ext.data.JsonStore({
+                url:'maestros/tiendas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tie_id','nombre','descripcion','telefono','direccion','precio','suc_id','estado']
+            });
+
+            store_tienda_lista.load();
+            
+            var grid_caja_lista = new Ext.grid.GridPanel({
+                id:caja.id+'-grid_lista',
+                store: store_caja_lista,
+                singleSelect:true,
+				forceSelection:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+				stateful: true,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mca_id',width:25},
+					{header:'Concepto',sortable :true,dataIndex:'concepto',width:200, align:'left'},
+					{header:'Fecha',sortable :true,dataIndex:'fecha',width:70},
+					{header:'Persona',sortable :true,dataIndex:'persona',width:200, align:'left'},                    
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:50, align:'left'},
+					{header:'Ingreso',sortable :true,dataIndex:'ingreso',width:80, align:'right'},
+					{header:'Egreso',sortable :true,dataIndex:'egreso',width:80, align:'right'},
+					{header:'Comentario',sortable :true,dataIndex:'comentario',width:300, align:'left'}
+					
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        Ext.getCmp(caja.id+'-panel_derecho').expand();
+				Ext.getCmp(caja.id+'-panel_derecho').setVisible(true);
+                        caja.fn_editar();
+                    },
+					rowclick:function()
+                    {
+                        Ext.getCmp(caja.id+'-btn_editar').enable();
+						Ext.getCmp(caja.id+'-btn_eliminar').enable();
+						Ext.getCmp(caja.id+'-btn_anular').enable();
+                    }
+                }
+            });
+
+            
+            var grid_detallecaja=new Ext.grid.EditorGridPanel({
+                             //tabIndex:27,
+                             id:caja.id+'-grid_detallecaja',
+                             store: caja.store_reader_detallecaja,
+                             clicksToEdit: 1,
+                             singleSelect:true,
+                             columnLines:true,
+                             /*monitorResize:true,*/
+                             enableKeyEvents: true,
+                             viewConfig:{forceFit:true},
+                             /*autoScroll:true,
+                             autoHeight:true,*/
+                             height:150,
+                             listeners:
+                                 {
+                                    afteredit:function()
+                                    {
+                                        caja.fn_calcular();
+                                    }
+                                 },
+							 columns:
+							 [
+								{
+								  header:"Item", width: 20, sortable: true, dataIndex: 'item'},
+								{
+								  header:"Concepto", width: 100, sortable: true, dataIndex: 'concepto'},
+								{
+								  header:"Cuenta", width: 70, sortable: true, dataIndex: 'cuenta'},
+								{
+								  header:"Tip Doc", width: 40, sortable: true, dataIndex: 'tip_doc',editor: new Ext.form.TextField(
+                                  {
+                                        style:{textAlign:'left'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+                                   })},
+								{
+								  header:"Nro Doc", width: 70, sortable: true, dataIndex: 'nro_doc',editor: new Ext.form.TextField(
+                                  {
+                                        style:{textAlign:'left'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+                                   })},
+								{
+								  header:"D", width: 70, sortable: true, dataIndex: 'debe',align:'right'},
+								{
+								  header:"H", width: 70, sortable: true, dataIndex: 'haber',align:'right'},
+								  {
+                                  header:"Detalle", width: 50, sortable: true, dataIndex: 'detalle',align:'left',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        style:{textAlign:'left'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+                                   })
+                                }
+							   ]
+                                });  
+
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+				id:caja.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+					{
+                      xtype:'hidden',
+                      id:caja.id+'-mca_id',
+                      value:'0'
+                    },
+					{
+                      xtype:'hidden',
+                      id:caja.id+'-tipo_per',
+                      value:'0'
+                    },
+					{
+                      xtype:'hidden',
+                      id:caja.id+'-per_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:0.4,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_tienda_lista,
+                                id:caja.id+'-tie_id',
+                                fieldLabel:'TIENDA',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:220,
+                                mode:'local',
+                                valueField:'tie_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:30,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Tipo",
+                                itemCls: 'label01',
+                                id: caja.id+'-tipo_cpa',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "tipo_cpa"},
+                                columns: [70,65],
+                                items: [
+                                    {
+                                        id:caja.id+'-tipo_cpa1',
+                                        boxLabel: "INGRESO",name: "tipo_cpa",
+                                        inputValue: "I",
+                                        checked:true
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_cpa2',
+                                        boxLabel: "EGRESO",name: "tipo_cpa",
+                                        inputValue: "E"
+                                    }
+                                ],
+								listeners:{
+									change:function()
+									{
+										Ext.getCmp(caja.id+'-nro').setValue('');
+										Ext.getCmp(caja.id+'-cpa_id').setValue('');
+										vTipo = Ext.getCmp(caja.id+'-tipo_cpa').getValue().getGroupValue();
+										store_concepto_pago_lista.load({params:{campo:'indicador',query:vTipo}});
+										if(vTipo=='I'){
+											Ext.getCmp(caja.id+'-btn_busprv').setVisible(false);
+											Ext.getCmp(caja.id+'-btn_buscli').setVisible(true);
+										}
+										if(vTipo=='E'){
+											Ext.getCmp(caja.id+'-btn_busprv').setVisible(true);
+											Ext.getCmp(caja.id+'-btn_buscli').setVisible(false);
+										}
+									}
+										
+								}
+                            }    
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:40,layout:'form',
+                        border:false,columnWidth:0.35,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+								store:store_concepto_pago_lista,
+								id:caja.id+'-cpa_id',
+								fieldLabel: "Mov",
+								emptyText:'Movimiento de Caja',
+								itemCls: 'label01',
+								style:'margin-left:0px',
+								width:200,
+								mode:'local',
+								valueField:'coc_id',
+								displayField:'nombre',
+								triggerAction:'all',
+								forceSelection:true,
+								allowBlank:false,
+								listeners:{
+									select:function()
+									{
+										caja.fn_genera_codigo();
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:37,layout:'form',
+                        border:false,columnWidth:.2,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:caja.id+'-fecha',
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                value:'<? echo date('d/m/Y');?>',
+                                style:'margin-left:7px',
+								listeners:{
+									select:function()
+									{
+										caja.fn_genera_codigo();
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.45,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:caja.id+'-nro',
+                                fieldLabel:'Nro de Recibo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:200,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:110,layout:'form',
+                        border:false,columnWidth:0.35,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:caja.id+'-prerecibo',
+                                fieldLabel:'Jalar Nro de Pre-Recibo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+								listeners : {
+									specialkey:function(obj,e)
+									{
+										if(e.getKey() == 13)
+										{
+											vDoc = obj.getValue();
+										
+											Ext.Msg.wait('Cargando información de prerecibo... por favor espere!');
+											Ext.Ajax.request({
+												url:'movimientos/prerecibo-jalar',
+												params:
+												{
+													nro:(vDoc)
+												},
+												success:function(response,options)
+												{       
+													Ext.Msg.hide();      
+													//alert(response.responseText);
+													var res = Ext.decode(response.responseText);
+													//alert(res.cabecera);
+													//alert(res.data);
+													
+													//alert(res.cabecera['fec_mov']);
+													dato1 = res.cabecera[0];
+													//alert(dato1['fec_mov']);
+													
+													Ext.getCmp(caja.id+'-tipo_pagador').setValue(dato1['tipo_pagador']);
+													Ext.getCmp(caja.id+'-per_id').setValue(dato1['per_id']);
+													Ext.getCmp(caja.id+'-ruc').setValue(dato1['per_doc']);
+													Ext.getCmp(caja.id+'-persona').setValue(dato1['per_nom']);
+													Ext.getCmp(caja.id+'-comentario').setValue(dato1['comentario']);
+													
+													Ext.getCmp(caja.id+'-grid_detallecaja').store.removeAll(false);
+													
+													for (i=0;i<res.data.length;i++){
+														detalle = res.data[i];
+														
+														if(detalle['deb_hab']=='D'){
+															vDebe = detalle['monto'];
+															vHaber =  0;
+														}else{
+															vDebe = 0;
+															vHaber =  detalle['monto'];
+														}
+														//alert(detalle['monto']);
+														vItem = i + 1;
+														var u = new caja.store_reader_detallecaja.recordType({
+															item:vItem,concepto:detalle['concepto'],cuenta:detalle['cuenta'],tipo_doc:detalle['tipo_doc'],nro_doc:detalle['nro_doc'],debe:vDebe,haber:vHaber,tipo:'',cuo_id:detalle['cuo_id'],doc_id:detalle['doc_id'],cco_id:detalle['cco_id'],deb_hab:detalle['deb_hab'],detalle:'',monto:detalle['monto']});
+														//alert(detalle['monto']);
+														grid_detallecaja.stopEditing();
+														caja.store_reader_detallecaja.insert(caja.store_reader_detallecaja.getCount(), u);
+														grid_detallecaja.startEditing(caja.store_reader_detallecaja.getCount()-1,1);
+													}
+													
+													
+													caja.fn_calcular();
+													
+												}
+											});
+										}
+									},
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.4,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Girador",
+                                id: caja.id+'-tipo_pagador',
+                                style:'margin-left:7px',
+								width:240,
+								readOnly:true,
+                                defaults: {xtype: "radio",name: "tipo_pagador"},
+                                columns: [80, 80, 80],
+                                items: [
+                                    {
+                                        id:caja.id+'-tipo_pagador_c',
+                                        boxLabel: "CLiente",name: "tipo_pagador",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pagador_p',
+                                        boxLabel: "Proveedor",name: "tipo_pagador",
+                                        inputValue: "2"
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pagador_v',
+                                        boxLabel: "Varios",name: "tipo_pagador",
+                                        inputValue: "9"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:40,layout:'form',
+                        border:false,columnWidth:.4,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:caja.id+'-persona',
+                                fieldLabel:'Persona',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:230,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:35,layout:'form',
+                        border:false,columnWidth:.2,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:caja.id+'-ruc',
+                                fieldLabel:'RUC/DNI',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:40,layout:'form',
+                        border:false,columnWidth:.5,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Forma",
+                                id: caja.id+'-tipo_pag',
+                                defaults: {xtype: "radio",name: "tipo_pag"},
+                                columns: [80, 80, 80,80],
+                                items: [
+                                    {
+                                        id:caja.id+'-tipo_pag_1',
+                                        boxLabel: "EFECTIVO",name: "tipo_pag",
+                                        inputValue: "E",
+                                        checked:true
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pag_2',
+                                        boxLabel: "CHEQUES",name: "tipo_pag",
+                                        inputValue: "C"
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pag_3',
+                                        boxLabel: "TARJETAS",name: "tipo_pag",
+                                        inputValue: "T"
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pag_4',
+                                        boxLabel: "OTROS",name: "tipo_pag",
+                                        inputValue: "O"
+                                    }
+                                ],
+								listeners : {
+									change : function(){
+										Ext.getCmp(caja.id+'-tpa_id').setValue('');
+										vTipo = Ext.getCmp(caja.id+'-tipo_pag').getValue().getGroupValue();
+										store_tipo_pago_lista.load({params:{campo:'indicador',query:vTipo}});
+									}
+								}
+                            }
+                        ]
+                    },{
+						xtype:'panel',labelWidth:1,layout:'form',
+						border:false,columnWidth:.25,
+						items:
+						[
+							{
+								xtype:'combo',
+								store:store_tipo_pago_lista,
+								id:caja.id+'-tpa_id',
+								fieldLabel:'',
+								emptyText:'Forma Pago',
+								itemCls: 'label01',
+								style:'margin-left:0px',
+								width:100,
+								mode:'local',
+								valueField:'tpa_id',
+								displayField:'nombre',
+								triggerAction:'all',
+								forceSelection:true,
+								allowBlank:false,
+							}
+						]
+					},
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:caja.id+'-nro_cheque',
+                                fieldLabel:'N° Cheque',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:40,layout:'form',
+                        border:false,columnWidth:.5,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_monedas_lista,
+                                id:caja.id+'-mon_id',
+                                fieldLabel:'Moneda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                mode:'local',
+                                valueField:'mon_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								value:'<?=$sesion->se_moneda_almacen?>',
+                				editable:false,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.5,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:caja.id+'-nro_fondo',
+                                fieldLabel:'N° Fondo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',layout:'form',
+                        border:true,columnWidth:1,height:150,/*autoScroll:true,*/
+                        bodyStyle:'margin-bottom:7px',
+                        items:
+                        [        
+                            grid_detallecaja
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.7,
+                        items:
+                        [        
+                            {
+                                xtype:'textarea',
+                                id:caja.id+'-comentario',
+                                fieldLabel:'Comentario',
+                                itemCls: 'label01',
+                                style:{marginLeft:'7px',textAlign:'left'},
+                                width:300,
+								height:40,
+								allowBlank:false,
+                            }
+                        ]
+                    },
+					{
+						xtype:'panel',labelWidth:58,layout:'form',
+						border:false,columnWidth:.3,
+						items:
+						[        
+							{
+								xtype:'numberfield',
+								id:caja.id+'-total',
+								fieldLabel:'Total',
+								itemCls: 'label01',
+								style:{marginLeft:'0px',textAlign:'right'},
+								width:76,
+							}
+						]
+					}
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_anular,btn_eliminar,'-',btn_imprimir,btn_cancelar,
+                            {
+								xtype:'datefield',
+								id:caja.id+'-fecha_caja',
+								width:100,
+								format:'d/m/Y',
+								altFormats : "d/m/Y",
+								value:'<? echo date('d/m/Y');?>',
+								style:'margin-left:7px',
+								listeners:{
+									select:function(obj){
+										store_caja_lista.load({params:{fecha:obj.getValue(), tipo_pag:Ext.getCmp(caja.id+'-tipo_pag_caja').getValue().getGroupValue(),start:0,limit:100}});
+									}	
+								}
+							},{
+                                xtype: "radiogroup",
+                                itemCls: 'label01',
+                                id: caja.id+'-tipo_pag_caja',
+                                style:'width:330px; padding-left:10px',
+                                defaults: {xtype: "radio",name: "tipo_pag_caja"},
+                                columns: [80,80,80,80],
+                                items: [
+                                    {
+                                        id:caja.id+'-tipo_pag_caja1',
+                                        boxLabel: "EFECTIVO",name: "tipo_pag_caja",
+                                        inputValue: "E",
+                                        checked:true
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pag_caja2',
+                                        boxLabel: "CHEQUES",name: "tipo_pag_caja",
+                                        inputValue: "C"
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pag_caja3',
+                                        boxLabel: "TARJETAS",name: "tipo_pag_caja",
+                                        inputValue: "T"
+                                    },
+                                    {
+                                        id:caja.id+'-tipo_pag_caja4',
+                                        boxLabel: "OTROS",name: "tipo_pag_caja",
+                                        inputValue: "O"
+                                    }
+                                ],
+								listeners:{
+									change:function(obj)
+									{
+										store_caja_lista.load({params:{fecha:Ext.getCmp(caja.id+'-fecha_caja').getValue(),tipo_pag:obj.getValue().getGroupValue(),start:0,limit:100}});										
+									}
+										
+								}
+                            } 
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:80%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_caja_lista,
+					{
+						id:caja.id+'-totales_s',
+						xtype:'form',
+						frame: true,
+						layout:'column',
+						border:false,
+						items:
+						[
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-saldo_anterior_s',
+										fieldLabel:'Anterior S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-total_ingresos_s',
+										fieldLabel:'Ingresos S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-total_egresos_s',
+										fieldLabel:'Egresos S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-nuevo_saldo_s',
+										fieldLabel:'Saldo S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							}
+						]
+					},
+					{
+						id:caja.id+'-totales_d',
+						xtype:'form',
+						frame: true,
+						layout:'column',
+						border:false,
+						items:
+						[
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-saldo_anterior_d',
+										fieldLabel:'Anterior $',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-total_ingresos_d',
+										fieldLabel:'Ingresos $',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-total_egresos_d',
+										fieldLabel:'Egresos $',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-nuevo_saldo_d',
+										fieldLabel:'Saldo $',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							}
+						]
+					},
+					{
+						id:caja.id+'-totales',
+						xtype:'form',
+						frame: true,
+						layout:'column',
+						border:false,
+						items:
+						[
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-saldo_anterior',
+										fieldLabel:'T. Anterior S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-total_ingresos',
+										fieldLabel:'T. Ingresos S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-total_egresos',
+										fieldLabel:'T. Egresos S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							},
+							{
+								xtype:'panel',labelWidth:80,layout:'form',
+								border:false,columnWidth:.25,
+								items:
+								[        
+									{
+										xtype:'textfield',
+										id:caja.id+'-nuevo_saldo',
+										fieldLabel:'T. Saldo S/.',
+										itemCls: 'label01',
+										style:{marginLeft:'0px',textAlign:'right'},
+										width:76,
+										readOnly:true
+									}
+								]
+							}
+						]
+					}
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:caja.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_caja',
+                                        title:'Caja Diaria', 
+                                        width: 800,
+                                        height:600,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                        onEsc:function(){Ext.getCmp('win_caja').close();}, resizable:true,
+                        items:panel,
+                        buttonAlign:'center'
+            });
+            Ext.getCmp('win_caja').show();
+            Ext.getCmp('win_caja').center();
+            Ext.getCmp('win_caja').toFront();
+            caja.fn_habilitar(false,0);
+			store_caja_lista.load({params:{fecha:Ext.getCmp(caja.id+'-fecha_caja').getValue(),tipo_pag:Ext.getCmp(caja.id+'-tipo_pag_caja').getValue().getGroupValue(),start:0,limit:100}});
+            Ext.getCmp(caja.id+'-panel_derecho').collapse();
+			Ext.getCmp(caja.id+'-panel_derecho').setVisible(false);
+            
+			obj = Ext.getCmp(caja.id+'_pager').getEl();
+			obj = obj.parent();
+			obj = obj.prev();
+			obj.setStyle('height','375px');
+            
+                
+            
+        },
+        fn_nuevo:function()
+        {
+			
+			
+			Ext.getCmp(caja.id+'-tie_id').setValue('<?=$this->sesion->se_age_id?>');
+			
+			Ext.getCmp(caja.id+'-tipo_cpa').setValue('I');
+			Ext.getCmp(caja.id+'-cpa_id').store.load({params:{campo:'indicador',query:'I'}});
+			Ext.getCmp(caja.id+'-cpa_id').setValue(1);
+			Ext.getCmp(caja.id+'-cpa_id').setRawValue('INGRESOS A CAJA GENERAL');
+			
+			caja.fn_genera_codigo();
+			
+			Ext.getCmp(caja.id+'-tipo_pag').setValue('E');
+			Ext.getCmp(caja.id+'-tpa_id').store.load({params:{campo:'indicador',query:'E'}});
+			
+			//alert('ABC');
+			Ext.getCmp(caja.id+'-btn_busprv').setVisible(false);
+			Ext.getCmp(caja.id+'-btn_buscli').setVisible(true);
+			
+			Ext.getCmp(caja.id+'-mca_id').setValue('');
+			Ext.getCmp(caja.id+'-tipo_per').setValue('');
+			Ext.getCmp(caja.id+'-per_id').setValue('');
+						
+			Ext.getCmp(caja.id+'-persona').setValue('');
+			Ext.getCmp(caja.id+'-ruc').setValue('');
+
+			Ext.getCmp(caja.id+'-comentario').setValue('');
+			
+			caja.fn_habilitar(true,1);
+			Ext.getCmp(caja.id+'-grid_detallecaja').store.removeAll(false);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(caja.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				Ext.getCmp(caja.id+'-panel_derecho').expand();
+				Ext.getCmp(caja.id+'-panel_derecho').setVisible(true);
+				Ext.getCmp(caja.id+'-msganulado').setVisible(false);
+                caja.fn_habilitar(true,2);
+				if(rs.get('anulado')=='1'){
+					Ext.getCmp(caja.id+'-btn_actualizar').setVisible(false);
+					Ext.getCmp(caja.id+'-msganulado').setVisible(true);
+				}
+				
+				Ext.getCmp(caja.id+'-mca_id').setValue(rs.get('mca_id'));
+				Ext.getCmp(caja.id+'-codigo').setValue(rs.get('codigo'));
+				Ext.getCmp(caja.id+'-tipo_ingreso').setValue(rs.get('tipo_ingreso'));
+				Ext.getCmp(caja.id+'-fecha').setValue(rs.get('fec_ven'));
+				Ext.getCmp(caja.id+'-prv_id').setValue(rs.get('prv_id'));
+				Ext.getCmp(caja.id+'-prv_ruc').setValue(rs.get('ruc'));
+				Ext.getCmp(caja.id+'-prv_codigo').setValue(rs.get('prv_codigo'));
+				Ext.getCmp(caja.id+'-doc_id').setValue(rs.get('doc_id'));
+				Ext.getCmp(caja.id+'-numero').setValue(rs.get('doc_n'));
+				
+				//alert(rs.get('tmv_id'));
+				Ext.getCmp(caja.id+'-tmv_id').setValue(rs.get('tmv_id'));
+				Ext.getCmp(caja.id+'-guia_remision').setValue(rs.get('n_guia'));
+				Ext.getCmp(caja.id+'-cpa_id').setValue(rs.get('cpa_id'));
+				Ext.getCmp(caja.id+'-mon_id').setValue(rs.get('mon_id'));
+				Ext.getCmp(caja.id+'-observacion').setValue(rs.get('observacion'));
+				
+				if(rs.get('afecta')=='S'){
+					Ext.getCmp(caja.id+'-afecta_almacen').setValue(true);
+				}else{
+					Ext.getCmp(caja.id+'-afecta_almacen').setValue(false);
+				}
+				if(rs.get('formato')=='S'){
+					Ext.getCmp(caja.id+'-inc_igv').setValue(true);
+				}else{
+					Ext.getCmp(caja.id+'-inc_igv').setValue(false);	
+				}
+				Ext.Msg.wait('Cargando detalle de compra... por favor espere!');
+				Ext.Ajax.request({
+					url:'movimientos/caja-detalle',
+					params:
+					{
+						mca_id:rs.get('mca_id')
+					},
+					success:function(response,options)
+					{     
+						Ext.Msg.hide();        
+						//alert(response.responseText);
+						var res = Ext.decode(response.responseText);
+						Ext.getCmp(caja.id+'-grid_detallecaja').store.removeAll(false);						
+						for (i=0;i<res.data.length;i++){
+							//alert(res.data[i]);
+							detalle = res.data[i];
+							var u = new caja.store_reader_detallecaja.recordType({
+								id:detalle['pro_id'],cantidad:detalle['cantidad'],codigo:detalle['codigo1'],detalle:detalle['producto'],precio:detalle['precio_compra'],descuento:detalle['descuento'],total:detalle['total'],ume_id:detalle['ume_id'], marca:detalle['marca']
+							});
+							//alert(detalle['pro_id']);
+							Ext.getCmp(caja.id+'-grid_detallecaja').stopEditing();
+							caja.store_reader_detallecaja.insert(caja.store_reader_detallecaja.getCount(), u);
+							Ext.getCmp(caja.id+'-grid_detallecaja').startEditing(caja.store_reader_detallecaja.getCount()-1,1);
+						}		
+						//alert("salir");			
+						caja.calcular();			
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			if(caja.fn_validar()){
+				if(Ext.getCmp(caja.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(caja.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}
+				var vData= new Array();
+				var v_detalle= new Array();
+				for(i=0;i<Ext.getCmp(caja.id+'-grid_detallecaja').store.getCount();i++)
+				{
+					datos=Ext.getCmp(caja.id+'-grid_detallecaja').getStore(0).getAt(i);
+					vValore = datos.get('id') + '.@.' + datos.get('cantidad') + '.@.' + datos.get('codigo') + '.@.' + datos.get('detalle') + '.@.' + datos.get('precio') + '.@.' + datos.get('descuento') + '.@.' + datos.get('total') + '.@.' + datos.get('ume_id') + '.@.' + vAfecta + '.@.' + datos.get('valor_bruto') + '.@.' + datos.get('valor_desc');
+					vData[i] = vValore;
+				}
+
+				Ext.getCmp(caja.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/caja-actualizar',
+					params:{ 
+						mca_id:Ext.getCmp(caja.id+'-mca_id').getValue(),
+						codigo:Ext.getCmp(caja.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(caja.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(caja.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(caja.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(caja.id+'-numero').getValue(),
+						tmv_id:Ext.getCmp(caja.id+'-tmv_id').getValue(),
+						n_guia:Ext.getCmp(caja.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(caja.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(caja.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(caja.id+'-valor_compra').getValue(),
+						valor_bruto:Ext.getCmp(caja.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(caja.id+'-valor_descuento').getValue(),
+						impuesto_igv:Ext.getCmp(caja.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(caja.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(caja.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(caja.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(caja.id+'-observacion').getValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_detalle[]":vData,
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(caja.id+'-panel_derecho').collapse();
+							Ext.getCmp(caja.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							caja.fn_habilitar(false,0);
+							Ext.getCmp(caja.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(caja.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(caja.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(caja.id+res.campo).focus(true,10);							
+					}
+				});				
+				/*Ext.Ajax.request({
+					url:'movimientos/caja-guardar',
+					params:
+					{
+						mve_id:Ext.getCmp(ventas.id+'-mve_id').getValue(),
+						codigo:Ext.getCmp(caja.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(caja.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(caja.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(caja.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(caja.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(caja.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(caja.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(caja.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(caja.id+'-valor_compra').getValue(),
+						impuesto_igv:Ext.getCmp(caja.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(caja.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(caja.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(caja.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(caja.id+'-panel_derecho').collapse();
+							Ext.getCmp(caja.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							caja.fn_habilitar(false,0);
+							Ext.getCmp(caja.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(caja.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {	
+			if(caja.fn_validar()){
+				
+				var vData= new Array();
+				for(i=0;i<Ext.getCmp(caja.id+'-grid_detallecaja').store.getCount();i++)
+				{
+					datos=Ext.getCmp(caja.id+'-grid_detallecaja').getStore(0).getAt(i);
+					alert(datos.get('tip_doc'));
+					vValore = datos.get('item') + '.@.' + datos.get('cco_id') + '.@.' + datos.get('cuo_id') + '.@.' + datos.get('doc_id') + '.@.' + datos.get('tip_doc') + '.@.' + datos.get('nro_doc') + '.@.' + datos.get('detalle') + '.@.' + datos.get('cuenta') + '.@.' + datos.get('deb_hab') + '.@.' + datos.get('monto');
+					vData[i] = vValore;
+				}
+				//alert("Antes");
+				Ext.getCmp(caja.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/caja-guardar',
+					params:{ 
+						tipo_cpa:Ext.getCmp(caja.id+'-tipo_cpa').getValue().getGroupValue(),
+						cpa_id:Ext.getCmp(caja.id+'-cpa_id').getValue(),
+						fecha:Ext.getCmp(caja.id+'-fecha').getValue(),
+						tipo_pag:Ext.getCmp(caja.id+'-tipo_pag').getValue(),
+						tpa_id:Ext.getCmp(caja.id+'-tpa_id').getValue(),
+						tipo_per:Ext.getCmp(caja.id+'-tipo_pagador').getValue().getGroupValue(),
+						per_id:Ext.getCmp(caja.id+'-per_id').getValue(),
+						per_cod:Ext.getCmp(caja.id+'-ruc').getValue(),
+						per_nom:Ext.getCmp(caja.id+'-persona').getValue(),
+						mon_id:Ext.getCmp(caja.id+'-mon_id').getValue(),
+						comentario:Ext.getCmp(caja.id+'-comentario').getValue(),
+						nro_cheque:Ext.getCmp(caja.id+'-nro_cheque').getValue(),
+						monto:Ext.getCmp(caja.id+'-total').getValue(),
+						"v_detalle[]":vData,
+					},
+					waitTitle: 'Guardando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){
+						//alert("entra");	
+						alert(action.response.responseText);				
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(caja.id+'-panel_derecho').collapse();
+							Ext.getCmp(caja.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							caja.fn_habilitar(false,0);
+							Ext.getCmp(caja.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(caja.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(caja.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						alert(action.response.responseText);
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(caja.id+res.campo).focus(true,10);							
+					}
+				});				
+
+				/*Ext.Ajax.request({
+					url:'movimientos/caja-guardar',
+					params:
+					{
+						codigo:Ext.getCmp(caja.id+'-codigo').getValue(),
+						prv_id:Ext.getCmp(caja.id+'-prv_id').getValue(),
+						tipo_ingreso:Ext.getCmp(caja.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(caja.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(caja.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(caja.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(caja.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(caja.id+'-mon_id').getValue(),
+						valor_compra:Ext.getCmp(caja.id+'-valor_compra').getValue(),
+						impuesto_igv:Ext.getCmp(caja.id+'-impuesto_igv').getValue(),
+						total_compra:Ext.getCmp(caja.id+'-total_compra').getValue(),
+						fecha:Ext.getCmp(caja.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(caja.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(caja.id+'-panel_derecho').collapse();
+							Ext.getCmp(caja.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							caja.fn_habilitar(false,0);
+							Ext.getCmp(caja.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(caja.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+		fn_anular:function()
+        {
+            var rs=Ext.getCmp(caja.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				if(rs.get('anulado')=='1'){
+					og.msg("Error","Documento ya esta anulado");
+					return;
+				}
+				Ext.Msg.confirm('Alerta', 'Desea Anular?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Anulando compra... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/caja-anular',
+							params:
+							{
+								mca_id:rs.get('mca_id')
+							},
+							success:function(response,options)
+							{           
+								Ext.Msg.hide();  
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha anulado");
+									caja.fn_habilitar(false,0);
+									Ext.getCmp(caja.id+'-grid_lista').store.load({params:{fecha:Ext.getCmp(caja.id+'-fecha_caja').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(caja.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(caja.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando compra... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/caja-eliminar',
+							params:
+							{
+								mca_id:rs.get('mca_id')
+							},
+							success:function(response,options)
+							{             			
+								Ext.Msg.hide();
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									caja.fn_habilitar(false,0);
+									Ext.getCmp(caja.id+'-grid_lista').store.load({params:{fecha:Ext.getCmp(caja.id+'-fecha_caja').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(caja.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },		
+        fn_calcular:function()
+        {
+			
+			var total='0';
+            var datos='';
+			var debe = '0';
+			var haber = '0';
+            for(i=0;i<Ext.getCmp(caja.id+'-grid_detallecaja').store.getCount();i++)
+            {
+                datos=Ext.getCmp(caja.id+'-grid_detallecaja').getStore(0).getAt(i);
+				
+                debe=Number(debe)+Number(datos.get('debe'));
+				haber=Number(haber)+Number(datos.get('haber'));
+				datos.set('item',i+1);
+				
+            }
+			debe= Math.round(debe*100)/100;
+			haber= Math.round(haber*100)/100;
+			if(debe>haber){
+				Ext.getCmp(caja.id+'-total').setValue(debe - haber);
+			}else{
+				Ext.getCmp(caja.id+'-total').setValue(haber - debe);	
+			}
+        },
+		fn_validar:function(){
+			if(!Ext.getCmp(caja.id+'-cpa_id').isValid()){
+			   og.msg("Error", "Por favor ingrese Tipo de Movimiento");
+				Ext.getCmp(caja.id+'-cpa_id').focus(true,10);
+				return false;
+			  }
+			if(!Ext.getCmp(caja.id+'-tpa_id').isValid()){
+			   og.msg("Error", "Por favor ingrese Tipo de Pago");
+				Ext.getCmp(caja.id+'-tpa_id').focus(true,10);
+				return false;
+			  }
+			  if(!Ext.getCmp(caja.id+'-mon_id').isValid()){
+			   og.msg("Error", "Por favor ingrese Moneda");
+				Ext.getCmp(caja.id+'-mon_id').focus(true,10);
+				return false;
+			  }
+			  
+			if(!Ext.getCmp(caja.id+'-comentario').isValid()){
+			   og.msg("Error", "Por favor ingrese Comentario de Caja");
+				Ext.getCmp(caja.id+'-comentario').focus(true,10);
+				return false;
+			  }
+			if(Ext.getCmp(caja.id+'-grid_detallecaja').store.getCount()==0){
+				og.msg("Error", "Por favor ingrese detalle de la Caja");
+                Ext.getCmp(caja.id+'-mon_id').focus(true,10);
+                return false;
+			}
+			return true;
+		},
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(caja.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(caja.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(caja.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(caja.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(caja.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(caja.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(caja.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(caja.id+'-btn_cancelar').setVisible(sw);
+			
+			Ext.getCmp(caja.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(caja.id+'-btn_eliminar').setVisible(!sw);
+			Ext.getCmp(caja.id+'-btn_anular').setVisible(!sw);
+
+			Ext.getCmp(caja.id+'-btn_editar').disable();
+			Ext.getCmp(caja.id+'-btn_eliminar').disable();
+			Ext.getCmp(caja.id+'-btn_anular').disable();
+			
+			Ext.getCmp(caja.id+'-fecha_caja').setVisible(!sw);			
+			//Ext.getCmp(caja.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(caja.id+'-btn_imprimir').setVisible(!sw);			
+        },
+		
+		fn_ubicaproveedor:function(vcampo, vvalor, vnombre, vruc){
+			Ext.getCmp(caja.id+'-tipo_per').setValue('1');
+			Ext.getCmp(caja.id+'-per_id').setValue(vvalor);
+			Ext.getCmp(caja.id+'-persona').setValue(vnombre);
+			Ext.getCmp(caja.id+'-ruc').setValue(vruc);			
+		},
+		
+		fn_ubicacliente:function(vcampo, vvalor, vnombre, vruc){
+			Ext.getCmp(caja.id+'-tipo_per').setValue('2');
+			Ext.getCmp(caja.id+'-per_id').setValue(vvalor);
+			Ext.getCmp(caja.id+'-persona').setValue(vnombre);
+			Ext.getCmp(caja.id+'-ruc').setValue(vruc);			
+		},
+		
+		fn_ubicapersonal:function(vcampo, vvalor, vcodigo, vnombre, vruc){
+			Ext.getCmp(caja.id+'-tipo_per').setValue('3');
+			Ext.getCmp(caja.id+'-per_id').setValue(vvalor);
+			Ext.getCmp(caja.id+'-persona').setValue(vnombre);
+			Ext.getCmp(caja.id+'-ruc').setValue(vruc);			
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-caja').action="movimientos/caja-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(caja.id+'-fecha_caja').getValue();
+			var activePage = Math.ceil((Ext.getCmp(caja.id+'_pager').cursor + Ext.getCmp(caja.id+'_pager').pageSize) / Ext.getCmp(caja.id+'_pager').pageSize);
+			document.getElementById('txtpar3').value = activePage;
+            document.getElementById('frmReporte-caja').submit();
+        },
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-caja').action="movimientos/caja-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(caja.id+'-fecha_caja').getValue();
+			var activePage = Math.ceil((Ext.getCmp(caja.id+'_pager').cursor + Ext.getCmp(caja.id+'_pager').pageSize) / Ext.getCmp(caja.id+'_pager').pageSize);
+			document.getElementById('txtpar3').value = activePage;
+            document.getElementById('frmReporte-caja').submit();
+        },
+		
+		fn_agregar_detalle:function()
+        {
+			//alert("HOLA");
+			var u = new caja.store_reader_detallecaja.recordType({
+				mca_id:0,item:0,cpa_id:Ext.getCmp(caja.id+'-cpa_id').getValue(),cpa_nom:Ext.getCmp(caja.id+'-cpa_id').getRawValue(),cuo_id:0,canje:'',monto_mov:Ext.getCmp(caja.id+'-monto').getValue(),monto_doc:Ext.getCmp(caja.id+'-monto').getValue(),ben_id:Ext.getCmp(caja.id+'-usr_id').getValue(),ben_nom:Ext.getCmp(caja.id+'-usr_id').getRawValue(),canje:Ext.getCmp(caja.id+'-detalle').getValue(), tc:vgTcC
+			});
+			//alert("antes");
+			Ext.getCmp(caja.id+'-grid_detallecaja').stopEditing();
+			caja.store_reader_detallecaja.insert(caja.store_reader_detallecaja.getCount(), u);
+			Ext.getCmp(caja.id+'-grid_detallecaja').startEditing(caja.store_reader_detallecaja.getCount()-1,1);
+			//alert("despues");
+			caja.calcular();
+        },	
+        fn_calcular_totales:function()
+        {
+            var saldo_anterior_s='0';
+			var total_ingresos_s='0';
+            var total_egresos_s='0';
+            var saldo_actual_s='0';
+			
+			 var saldo_anterior_d='0';
+			var total_ingresos_d='0';
+            var total_egresos_d='0';
+            var saldo_actual_d='0';
+			
+			 var saldo_anterior='0';
+			var total_ingresos='0';
+            var total_egresos='0';
+            var saldo_actual='0';
+			
+            var datos='';
+            for(i=0;i<Ext.getCmp(caja.id+'-grid_lista').store.getCount();i++)
+            {
+                datos=Ext.getCmp(caja.id+'-grid_lista').getStore(0).getAt(i);
+				if(i==0 || i==1){
+					if(datos.get('mon_id')==1){
+						saldo_anterior_s= Number(datos.get('ingreso'));
+						saldo_anterior= Number(saldo_anterior) + Number(datos.get('ingreso'));
+					}else{
+						saldo_anterior_d= Number(datos.get('ingreso'));
+						saldo_anterior= Number(saldo_anterior) + Number(datos.get('ingreso')) * Number(datos.get('tc'));
+					}
+				}else{
+					if(datos.get('mon_id')==1){
+						total_ingresos_s = Number(total_ingresos_s) + Number(datos.get('ingreso'));
+						total_egresos_s = Number(total_egresos_s) + Number(datos.get('egreso'));
+						total_ingresos = Number(total_ingresos) + Number(datos.get('ingreso'));
+						total_egresos = Number(total_egresos) + Number(datos.get('egreso'));
+						
+					}else{
+						total_ingresos_d = Number(total_ingresos_d) + Number(datos.get('ingreso'));
+						total_egresos_d = Number(total_egresos_d) + Number(datos.get('egreso'));
+						total_ingresos = Number(total_ingresos) + Number(datos.get('ingreso')) * Number(datos.get('tc'));
+						total_egresos = Number(total_egresos) + Number(datos.get('egreso')) * Number(datos.get('tc'));
+					}
+				}
+				
+            }
+			saldo_anterior_s= Math.round(saldo_anterior_s*100)/100;
+			saldo_anterior_d= Math.round(saldo_anterior_d*100)/100;
+			saldo_anterior= Math.round(saldo_anterior*100)/100;
+			
+			total_ingresos_s= Math.round(total_ingresos_s*100)/100;
+			total_ingresos_d= Math.round(total_ingresos_d*100)/100;
+			total_ingresos= Math.round(total_ingresos*100)/100;
+			
+			total_egresos_s= Math.round(total_egresos_s*100)/100;
+			total_egresos_d= Math.round(total_egresos_d*100)/100;
+			total_egresos= Math.round(total_egresos*100)/100;
+			
+			
+			saldo_actual_s = saldo_anterior_s + total_ingresos_s - total_egresos_s;
+			saldo_actual_d = saldo_anterior_d + total_ingresos_d - total_egresos_d;
+			saldo_actual = saldo_anterior + total_ingresos - total_egresos;
+			
+			saldo_actual_s= Math.round(saldo_actual_s*100)/100;
+			saldo_actual_d= Math.round(saldo_actual_d*100)/100;
+			saldo_actual= Math.round(saldo_actual*100)/100;
+			
+			
+			Ext.getCmp(caja.id+'-saldo_anterior_d').setValue(saldo_anterior_d);
+			Ext.getCmp(caja.id+'-total_ingresos_d').setValue(total_ingresos_d);
+			Ext.getCmp(caja.id+'-total_egresos_d').setValue(total_egresos_d);
+			Ext.getCmp(caja.id+'-nuevo_saldo_d').setValue(saldo_actual_d);
+			Ext.getCmp(caja.id+'-saldo_anterior_s').setValue(saldo_anterior_s);
+			Ext.getCmp(caja.id+'-total_ingresos_s').setValue(total_ingresos_s);
+			Ext.getCmp(caja.id+'-total_egresos_s').setValue(total_egresos_s);
+			Ext.getCmp(caja.id+'-nuevo_saldo_s').setValue(saldo_actual_s);
+			Ext.getCmp(caja.id+'-saldo_anterior').setValue(saldo_anterior);
+			Ext.getCmp(caja.id+'-total_ingresos').setValue(total_ingresos);
+			Ext.getCmp(caja.id+'-total_egresos').setValue(total_egresos);
+			Ext.getCmp(caja.id+'-nuevo_saldo').setValue(saldo_actual);
+        }, 
+		fn_genera_codigo:function()
+		{
+			dt = Date.parseDate(Ext.getCmp(caja.id+'-fecha').getRawValue(), "d/m/Y");
+			
+			//alert(dt.format('Y'));
+			//alert(dt.format('m'));
+			//alert(Ext.getCmp(caja.id+'-cpa_id').getValue());
+			Ext.Msg.wait('Generando Numero de Recibo de Caja... por favor espere!');
+            Ext.Ajax.request({
+				url:'movimientos/caja-codigo',
+				params:
+				{
+					table:'movimientos_caja',
+					cpa_id:Ext.getCmp(caja.id+'-cpa_id').getValue(),
+					anio:dt.format('Y'),
+					mes:dt.format('m'),
+				},
+				success:function(response,options)
+				{   
+					//alert(response.responseText);
+					Ext.Msg.hide();
+					dt = Date.parseDate(Ext.getCmp(caja.id+'-fecha').getRawValue(), "d/m/Y");
+			
+					var res = Ext.decode(response.responseText);						
+					var numero="000000000"+res.codigo;
+					var mov=res.mov;
+					
+					var agencia= "000"+vgIdTienda;
+					//alert(agencia);
+					var codigo=agencia.substr(agencia.length-3,3) + '-' + mov + '-' + dt.format('Y-m') +'-' + numero.substr(numero.length-6,6)
+					Ext.getCmp(caja.id+'-nro').setValue(codigo);
+					Ext.getCmp(caja.id+'-nro_fondo').setValue(codigo);
+				}
+			}); 	
+		}
+         
+    }
+    Ext.onReady(caja.init,caja);
+
+</script>

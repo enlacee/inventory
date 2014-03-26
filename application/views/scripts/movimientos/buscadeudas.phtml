@@ -1,0 +1,214 @@
+<form id="frmReporte-buscadeudas" name="frmReporte-buscadeudas" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('buscadeudas');
+    buscadeudas={
+        id:'buscadeudas',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+			
+			var btn_seleccionar=new Ext.Button({
+                id:buscadeudas.id+'-btn_seleccionar',
+                text:'Seleccionar',
+                listeners:
+                    {
+                        click:function()
+                        {
+							//alert("HOLA");
+                            buscadeudas.fn_seleccionar();
+                        }
+                    }
+            });
+			            
+            var store_buscadeudas_lista=new Ext.data.JsonStore({
+                url:'movimientos/deudas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['tipo','fecha','tip_doc','nro_doc','saldo','doc_id'],
+				remoteSort:true,				
+				sortInfo: {field:'fecha', direction:'desc'}
+            });            
+			
+			var pager = new Ext.PagingToolbar({
+                id:buscadeudas.id+'_pager',
+                store:store_buscadeudas_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(buscadeudas.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(buscadeudas.id+'-buscar').getValue();
+				params.modo = '1';
+				params.cli_id = vgId;
+			});
+			
+            var store_buscadeudas_describe=new Ext.data.JsonStore({
+                url:'movimientos/ventas-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_buscadeudas_describe.load({params:{table:'movimientos_ventas'}});
+            
+            var combo_buscadeudas_describe=new Ext.form.ComboBox({
+                id:buscadeudas.id+'-combo_describe',
+                store:store_buscadeudas_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_buscadeudas_lista = new Ext.grid.GridPanel({
+                id:buscadeudas.id+'-grid_lista',
+                store: store_buscadeudas_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Tipo',sortable :true,dataIndex:'tipo',width:25},
+					{header:'Tipo Doc',sortable :true,dataIndex:'tip_doc',width:70},
+                    {header:'Documento',sortable :true,dataIndex:'nro_doc',width:150},
+					{header:'Saldo',sortable :true,dataIndex:'saldo',width:80, align:'right'},
+					{header:'Id',sortable :true,dataIndex:'doc_id',width:30},
+                ],
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+						//alert("DOBLE");
+						buscadeudas.fn_seleccionar();
+                    },
+                }
+            });
+            
+			var panel = new Ext.Panel({  
+				layout: 'border',
+				tbar:[
+					{
+						xtype: 'toolbar',
+						dock: 'top',
+						items: [
+							'Buscar','-',combo_buscadeudas_describe,'-',
+							new Ext.app.SearchField({
+								id:buscadeudas.id+'-buscar', 
+								emptyText : 'Valor a buscar...',
+								enableKeyEvents: true,
+								store: store_buscadeudas_lista,
+								hasSearch : false,
+								width: 120,
+								listeners:
+								{
+									specialkey:function(obj,e)
+									{
+										if(e.getKey() == 13)
+										{
+											store_buscadeudas_lista.load({params:{campo:Ext.getCmp(buscadeudas.id+'-combo_describe').getValue(),query:Ext.getCmp(buscadeudas.id+'-buscar').getValue(),modo:'1', cli_id:vgId}});
+										}
+									}
+								}
+							}), '-',btn_seleccionar
+					
+						]
+					}],
+				bodyStyle:'height:auto;width:70%;margin:auto;',
+				border:false,
+				items: [
+					{  
+						region: 'west',
+						layout:'fit',
+						xtype: 'panel',
+						width:'96%',
+						autoScroll: true,  
+						border:false,
+						items:
+						[
+							grid_buscadeudas_lista
+							
+						]
+					}
+					,
+					{
+						region:'center',
+						width:'0',
+						height:'0'
+					},
+					{  
+						region: 'east',
+						width:'0',
+						height:'0'
+					}
+		  		]  
+	    	});
+            
+        	new Ext.Window({
+				id:'win_buscadeudas',
+				title:'Busqueda de Deudas', 
+				width: 650,
+				height:450,
+				layout:'fit',
+				border:false,
+				frame:true,
+				autoDestroy:true,
+				autoScroll:false,
+				minimizable: false,
+				maximizable: false,
+				closable:true,
+				collapsible:false,
+				draggable:true,
+				onEsc:function(){Ext.getCmp('win_buscadeudas').close();}, resizable:true,
+                items:panel,
+                buttonAlign:'center',
+				listeners: {
+					'beforeclose': function(){ inicio.setActiveStyleSheet('gray'); }
+				}
+            });
+            
+            Ext.getCmp('win_buscadeudas').show();
+            Ext.getCmp('win_buscadeudas').center();
+            Ext.getCmp('win_buscadeudas').toFront(); 
+			inicio.setActiveStyleSheet('blue');                             
+            
+        },
+		fn_seleccionar:function(){
+			//alert("HOLAAA");
+			var rs=Ext.getCmp(buscadeudas.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {                
+				//alert(vgVentana);
+				if(vgVentana=='prerecibo'){
+					//alert(rs.get('tipo')+'-'+rs.get('fecha')+'-'+rs.get('tip_doc')+'-'+rs.get('nro_doc')+'-'+rs.get('saldo')+'-'+rs.get('doc_id'));
+					prerecibo.fn_ubicadeuda(rs.get('tipo'),rs.get('fecha'), rs.get('tip_doc'),rs.get('nro_doc'),rs.get('saldo'),rs.get('doc_id'));
+					Ext.getCmp('win_buscadeudas').close();
+				}
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+			
+		},
+    }
+	Ext.onReady(buscadeudas.init,buscadeudas);
+</script>

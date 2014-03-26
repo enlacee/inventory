@@ -1,0 +1,1723 @@
+<form id="frmReporte-canje" name="frmReporte-canje" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+  <input type="hidden" name="txtpar3" id="txtpar3" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('canje');
+    canje={
+        id:'canje',
+		store_reader_ventas:new Ext.data.ArrayStore({  //step 1
+            id:canje.id+'-reader_ventas',
+            fields:[{name:'tabla'},{name:'tabla_id'},{name:'documento'},{name:'mon_id'},{name:'moneda'},{name:'saldo_doc'},{name: 'tc'},{name:'saldo_canje'},{name:'monto_canje'}]  
+            }),
+        store_reader:new Ext.data.ArrayStore({  //step 1
+            id:canje.id+'-reader_guiasasignadas',
+            fields:[{name:'cuota'},{name:'letra'},{name: 'fecha'},{name:'total'},{name:'ban_id'},{name:'cta_id'},{name:'nro_cta'},{name:'cod_uni'},{name:'nro_cob'},{name:'situacion'}]  
+            }),
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:canje.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(canje.id+'-panel_derecho').expand();
+				Ext.getCmp(canje.id+'-panel_derecho').setVisible(true);
+                            canje.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:canje.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            canje.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:canje.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            canje.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:canje.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+                            canje.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:canje.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(canje.id+'-panel_derecho').collapse();
+							Ext.getCmp(canje.id+'-panel_derecho').setVisible(false);
+                            canje.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_anular=new Ext.Button({
+                id:canje.id+'-btn_anular',
+                text:'Anular',
+                icon:'images/icon/btn_cancelar.png',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							canje.fn_anular();
+                        }
+                    }
+            });
+			
+			var btn_eliminar=new Ext.Button({
+                id:canje.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							canje.fn_eliminar();
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:canje.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    canje.fn_imprimir();
+                                }
+                            });
+                        }
+                    }
+            });
+			
+			var btn_imprimir_formato=new Ext.Button({
+                id:canje.id+'-btn_imprimir_formato',
+                text:'Formato',
+                icon:'images/icon/preview_log.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Si desea imprimir Preimpreso (Click en SI), sino se imprimira formato general (Click en NO)', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    canje.fn_imprimir_preimpreso();
+                                }else{
+									canje.fn_imprimir_general();
+								}
+                            });
+                        }
+                    }
+            });
+			
+			var btn_busven=new Ext.Button({
+                id:canje.id+'-btn_busven',
+                text:'Buscar Ventas',
+                listeners:
+                    {
+                        click:function()
+                        {
+							if(Ext.getCmp(canje.id+'-cli_id').getValue()>0){
+								vgVentana = 'canje';
+								vgId = Ext.getCmp(canje.id+'-cli_id').getValue();
+								inicio.getForm( 'movimientos/buscaventas','Busca Ventas')
+							}else{
+								alert("Debe elegir un CLiente");	
+							}
+                        }
+                    }
+            });
+			
+			var btn_buscli=new Ext.Button({
+                id:canje.id+'-btn_buscli',
+                text:'Buscar Clientes',
+                listeners:
+                    {
+                        click:function()
+                        {
+							vgVentana = 'canje';
+                           inicio.getForm( 'maestros/buscaclientes','Busca CLientes')
+                        }
+                    }
+            });
+			
+			var btn_edit_cuota=new Ext.Button({
+                id:canje.id+'-btn_edit_cuota',
+                text:'Modificar',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							Ext.getCmp(canje.id+'-ban_id').setDisabled(false);
+							Ext.getCmp(canje.id+'-cta_id').setDisabled(false);
+							Ext.getCmp(canje.id+'-cod_uni').setDisabled(false);
+							Ext.getCmp(canje.id+'-nro_cob').setDisabled(false);
+							Ext.getCmp(canje.id+'-situacion').setDisabled(false);
+							
+							Ext.getCmp(canje.id+'-btn_edit_cuota').setVisible(false);
+							Ext.getCmp(canje.id+'-btn_aplicar_cuota').setVisible(true);
+                        }
+                    }
+            });
+			
+			var btn_aplicar_cuota=new Ext.Button({
+                id:canje.id+'-btn_aplicar_cuota',
+                text:'Aplicar',
+				hidden:true,
+                listeners:
+                    {
+                        click:function()
+                        {
+							Ext.getCmp(canje.id+'-ban_id').setDisabled(true);
+							Ext.getCmp(canje.id+'-cta_id').setDisabled(true);
+							Ext.getCmp(canje.id+'-cod_uni').setDisabled(true);
+							Ext.getCmp(canje.id+'-nro_cob').setDisabled(true);
+							Ext.getCmp(canje.id+'-situacion').setDisabled(true);
+							
+							var rs=Ext.getCmp(canje.id+'-guias_asignadas').getSelectionModel().getSelected();
+							if(rs)
+							{
+								rs.set('ban_id',Ext.getCmp(canje.id+'-ban_id').getValue());
+								rs.set('cta_id',Ext.getCmp(canje.id+'-cta_id').getValue());
+								rs.set('nro_cta',Ext.getCmp(canje.id+'-cta_id').getRawValue());
+								rs.set('nro_cob',Ext.getCmp(canje.id+'-nro_cob').getValue());
+								rs.set('cod_uni',Ext.getCmp(canje.id+'-cod_uni').getValue());
+								rs.set('situacion',Ext.getCmp(canje.id+'-situacion').getValue());
+							}
+                        }
+                    }
+            });
+
+            var store_canje_lista=new Ext.data.JsonStore({
+                url:'movimientos/canje-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['canje_id', 'canje_codigo', 'cpa_id', 'fecha_canje', 'formato', 'mon_id', 'total_canje', 'tie_id', 'cli_id', 'condicion', 'moneda', 'persona'],
+				remoteSort:true,				
+				sortInfo: {field:'canje_id', direction:'desc'}
+            });
+            
+            
+			
+			var pager = new Ext.PagingToolbar({
+                id:canje.id+'_pager',
+                store:store_canje_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(canje.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(canje.id+'-buscar').getValue();
+			});
+			
+            
+            var vstore_clientes_lista=new Ext.data.JsonStore({
+                url:'maestros/clientes-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cli_id','nombre','ruc','codigo']
+            });
+            
+            //vstore_clientes_lista.load({params:{start:0,limit:100}});
+			
+			var pagerCmbCli = new Ext.PagingToolbar({
+                id:canje.id+'_pagerCmbCli',
+                store:vstore_clientes_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pagerCmbCli.on('beforechange',function(bar,params){  
+				params.campo = 'nombre';
+				params.query = Ext.getCmp(canje.id+'-cli_id').getValue();
+			});
+            
+            var store_monedas_lista=new Ext.data.JsonStore({
+                url:'tablas/monedas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mon_id','nombre']
+            });            
+            store_monedas_lista.load();
+			
+			
+			
+			var store_ctabanco_lista=new Ext.data.JsonStore({
+                url:'tablas/ctabanco-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cta_id','nro_cta']
+            });            
+			
+			var store_bancos_lista=new Ext.data.JsonStore({
+                url:'tablas/bancos-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ban_id','nombre']
+            });            
+            store_bancos_lista.load();
+			
+			var store_situacion_lista=new Ext.data.SimpleStore({
+                fields: ['sit_id', 'nombre'],
+				data: [['1', 'Amortizacion'], ['2', 'Cobranza']],
+				autoLoad: false
+            });  
+            
+            var store_condiciones_pago_lista=new Ext.data.JsonStore({
+                url:'tablas/condiciones-pago-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['cpa_id','codigo','descripcion','dias','letras']
+            });
+            
+            store_condiciones_pago_lista.load();
+
+            var store_compras_describe=new Ext.data.JsonStore({
+                url:'movimientos/canje-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_compras_describe.load({params:{table:'movimientos_compras'}});
+            
+            var combo_compras_describe=new Ext.form.ComboBox({
+                id:canje.id+'-combo_describe',
+                store:store_compras_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+                width:100,
+                editable:false
+            });
+            
+            var grid_canje_lista = new Ext.grid.GridPanel({
+                id:canje.id+'-grid_lista',
+                store: store_canje_lista,
+                singleSelect:true,
+                columnLines:true,
+                monitorResize:true,
+                width:226,
+                height:300,
+                loadMask:true,
+                sm: new Ext.grid.RowSelectionModel({
+                    singleSelect:true
+                }),
+				bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'canje_id',width:25},
+					{header:'Fecha',sortable :true,dataIndex:'fecha_canje',width:70},
+                    {header:'Codigo',sortable :true,dataIndex:'canje_codigo',width:70},
+					{header:'Persona',sortable :true,dataIndex:'persona',width:200},
+					{header:'Moneda',sortable :true,dataIndex:'moneda',width:80, align:'center'},
+					{header:'Condicion',sortable :true,dataIndex:'condicion',width:100},
+                    {header:'Total Canje',sortable :true,dataIndex:'total_canje',width:80, align:'right'},
+                ]
+                ,
+                listeners:
+                {
+                    rowdblclick:function()
+                    {
+                        Ext.getCmp(canje.id+'-panel_derecho').expand();
+				Ext.getCmp(canje.id+'-panel_derecho').setVisible(true);
+                        canje.fn_editar();
+                    },
+					rowclick:function()
+                    {
+                        //Ext.getCmp(canje.id+'-btn_editar').enable();
+						Ext.getCmp(canje.id+'-btn_eliminar').enable();
+						//Ext.getCmp(canje.id+'-btn_anular').enable();
+                    }
+                }
+            });
+
+            
+            var grid_guiasAsignadas=new Ext.grid.EditorGridPanel({
+                             //tabIndex:27,
+                             id:canje.id+'-guias_asignadas',
+                             store: canje.store_reader,
+                             clicksToEdit: 1,
+                             singleSelect:true,
+                             columnLines:true,
+                             /*monitorResize:true,*/
+                             enableKeyEvents: true,
+                             viewConfig:{forceFit:true},
+                             /*autoScroll:true,
+                             autoHeight:true,*/
+                             height:150,
+							 sm: new Ext.grid.RowSelectionModel({
+								singleSelect:true
+							}),
+                             listeners:
+                                 {
+                                    afteredit:function()
+                                    {
+                                        canje.calcular();
+                                    },
+									rowclick:function()
+									{
+										
+										var rs=Ext.getCmp(canje.id+'-guias_asignadas').getSelectionModel().getSelected();
+										//alert(rs);
+										if(rs)
+										{
+											//alert("ADENTRO");
+											Ext.getCmp(canje.id+'-btn_edit_cuota').setVisible(true);
+											Ext.getCmp(canje.id+'-btn_aplicar_cuota').setVisible(false);
+											
+											//alert(rs.get('cuota'));
+											Ext.getCmp(canje.id+'-ban_id').setValue(rs.get('ban_id'));
+											Ext.getCmp(canje.id+'-cta_id').setValue(rs.get('cta_id'));
+											Ext.getCmp(canje.id+'-cta_id').setRawValue(rs.get('nro_cta'));
+											
+											Ext.getCmp(canje.id+'-cuota').setValue(rs.get('cuota'));
+											Ext.getCmp(canje.id+'-nro_cob').setValue(rs.get('nro_cob'));
+											Ext.getCmp(canje.id+'-cod_uni').setValue(rs.get('cod_uni'));
+											Ext.getCmp(canje.id+'-situacion').setValue(rs.get('situacion'));
+										}
+									}								
+                                 },
+                             columns:
+                             [
+                                {header:"tabla", width: 20, sortable: true, dataIndex: 'tabla', hidden:true},
+								{header:"tabla_id", width: 20, sortable: true, dataIndex: 'tabla_id', hidden:true},
+								{header:"Cuota", width: 10, sortable: true, dataIndex: 'cuota'},
+                                {header:"Letra", width: 30, sortable: true, dataIndex: 'letra',align:'left',
+                                  editor: new Ext.form.TextField(
+                                  {
+									  	style:{textAlign:'left'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+                                   })
+                                },
+								{header:"Fecha Canc.", width: 20, sortable: true, dataIndex: 'fecha',align:'right',xtype: 'datecolumn',format: 'd/m/Y',
+									//renderer: Ext.util.Format.dateRenderer('d/m/Y'), //xtype: 'datecolumn',format: 'd/M/Y',
+                                  editor: new Ext.form.DateField(
+                                  {
+									  	style:{textAlign:'right'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+										format:'d/m/Y',									
+                                   })
+                                },
+                                {header:"Total", width: 30, sortable: true, dataIndex: 'total',align:'right',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        style:{textAlign:'right'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+                                  })
+                                }
+								
+                               ]
+                             ,
+                             tbar:
+                               [
+									'Fecha :',
+									{
+										
+										xtype:'datefield',
+										id:canje.id+'-fecha_canje',
+										style:'margin-left:7px',
+										itemCls: 'label01',
+										width:100,
+										allowBlank:false,
+										format:'d/m/Y',	
+										value:'<?=date('d/m/Y')?>',									
+									},{
+										
+										xtype:'combo',
+										store:store_monedas_lista,
+										id:canje.id+'-mon_id',
+										emptyText:'Moneda',
+										itemCls: 'label01',
+										style:'margin-left:7px',
+										width:80,
+										mode:'local',
+										valueField:'mon_id',
+										displayField:'nombre',
+										triggerAction:'all',
+										forceSelection:true,
+										allowBlank:false,
+										value:'1',
+										listeners:
+										{
+											select:function(cmb,record,index)
+											{
+												Ext.getCmp(canje.id+'-cta_id').setValue('');
+												//alert(Ext.getCmp(canje.id+'-ban_id').getValue() + record.get('mon_id'));
+												store_ctabanco_lista.load({params:{ban_id:Ext.getCmp(canje.id+'-ban_id').getValue(),mon_id:record.get('mon_id')}});
+											}
+										}
+											
+									},'-','Total de Venta :',
+									{
+										
+										xtype:'numberfield',
+										id:canje.id+'-total_ventas',
+										style:'margin-left:7px',
+										itemCls: 'label01',
+										width:70,
+										allowBlank:false,
+										value:'0.0',
+										readOnly:true,											
+									},{
+										
+										xtype:'combo',
+										store:store_condiciones_pago_lista,
+										id:canje.id+'-cpa_id',
+										emptyText:'Condicion',
+										itemCls: 'label01',
+										style:'margin-left:7px',
+										width:120,
+										mode:'local',
+										valueField:'cpa_id',
+										displayField:'descripcion',
+										triggerAction:'all',
+										forceSelection:true,
+										allowBlank:false,
+										value:'1',
+											
+									},'-','Formato',{
+										xtype: "radiogroup",
+										id: canje.id+'-formato',
+										style:'margin-left:7px',
+										defaults: {xtype: "radio",name: "formato"},
+										columns: [70,70],
+										items: [
+											{
+												id:canje.id+'-formato1',
+												boxLabel: "FORMA 1",name: "formato",
+												inputValue: "1",
+												checked:true
+											},
+											{
+												id:canje.id+'-formato2',
+												boxLabel: "FORMA 2",name: "formato",
+												inputValue: "2"
+											}
+										]
+	                            	},{
+                                     xtype:'button',
+                                     text:'Generar',
+                                     iconCls:'btn_add_log',
+                                     listeners:
+                                     {
+                                       click:function()
+                                       {
+										   	canje.fn_generacuota();
+                                       }
+									}
+								  }
+
+                                    
+                                     ]
+                                }); 
+								
+								
+						var grid_ventas=new Ext.grid.EditorGridPanel({
+                             //tabIndex:27,
+                             id:canje.id+'-grid_ventas',
+                             store: canje.store_reader_ventas,
+                             clicksToEdit: 1,
+                             singleSelect:true,
+                             columnLines:true,
+                             /*monitorResize:true,*/
+                             enableKeyEvents: true,
+                             viewConfig:{forceFit:true},
+                             /*autoScroll:true,
+                             autoHeight:true,*/
+                             height:150,
+                             listeners:
+                                 {
+                                    afteredit:function()
+                                    {
+                                        canje.calcularventas();
+                                    }
+                                 },
+                             columns:
+                             [
+                                {header:"Documento", width: 150, sortable: true, dataIndex: 'documento'},
+								{header:"Moneda", width: 50, sortable: true, dataIndex: 'moneda'},
+								{header:"Saldo", width: 80, sortable: true, dataIndex: 'saldo_doc'},
+								{header:"Nuevo Saldo", width: 80, sortable: true, dataIndex: 'saldo_canje'},
+                                {header:"Monto", width: 80, sortable: true, dataIndex: 'monto_canje',align:'right',
+                                  editor: new Ext.form.NumberField(
+                                  {
+                                        style:{textAlign:'right'},
+                                        enableKeyEvents: true,
+										selectOnFocus:true,
+                                  })
+                                }
+								
+                               ]
+                             ,
+                             tbar:
+                               [
+                                  {
+                                     xtype:'button',
+                                     text:'Añadir Venta',
+                                     iconCls:'btn_add_log',
+                                     listeners:
+                                     {
+                                       click:function()
+                                       {
+										   	if(Ext.getCmp(canje.id+'-cli_id').getValue()>0){
+												vgVentana = 'canje';
+												vgId = Ext.getCmp(canje.id+'-cli_id').getValue();
+												inicio.getForm( 'movimientos/buscaventas','Busca Ventas')
+											}else{
+												alert("Debe elegir un CLiente");	
+											}
+                                       }
+									}
+								  },
+                                  {
+                                     xtype:'button',
+                                     text:'Quitar Venta',
+                                     iconCls:'btn_delete_log',
+                                     listeners:
+                                     {
+                                       click:function()
+                                       {
+                                          var index = grid_ventas.getSelectionModel().getSelectedCell();
+                                          if (!index)
+                                          {
+                                              return false;
+                                          }
+                                          var rec =  canje.store_reader_ventas.getAt(index[0]);
+                                           canje.store_reader_ventas.remove(rec);
+                                           
+                                           canje.calcularventas();
+                                           
+                                           
+                                       }
+                                     }
+                                  },
+                                    
+                                     ]
+                                });
+								
+
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+				id:canje.id+'-formulario',
+				xtype:'form',
+				frame: true,
+                layout:'column',
+                border:false,
+                items:
+                [
+					{
+                      xtype:'hidden',
+                      id:canje.id+'-mve_id',
+                      value:'0'
+                    },
+					{
+                      xtype:'hidden',
+                      id:canje.id+'-cli_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.55,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-cliente',
+                                fieldLabel:'Cliente',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+								readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'RUC/DNI',
+                                id:canje.id+'-ruc',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true,
+                            }
+                        ]
+                    },
+					{
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [
+                            btn_buscli
+                        ]
+                    },/*
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.30,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-documento',
+                                fieldLabel:'Documento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-numero',
+                                fieldLabel:'Número',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+								readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'datefield',
+                                id:canje.id+'-fecha',
+                                emptyText:'Fecha',
+                                width:100,
+                                fieldLabel:'Fecha',
+                                format:'d/m/Y',
+                                altFormats : "d/m/Y",
+                                value:'<? echo date('d/m/Y');?>',
+                                style:'margin-left:7px',
+								readOnly:true
+                            }
+                        ]
+                    },
+					{
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.20,
+                        items:
+                        [
+                            btn_busven
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.3,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'Condicion',
+                                id:canje.id+'-condicion',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'Moneda',
+                                id:canje.id+'-moneda',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:120,
+                                readOnly:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:50,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                fieldLabel:'Saldo',
+                                id:canje.id+'-saldo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:100,
+                                readOnly:true,
+                            }
+                        ]
+                    },*/
+                    {
+                        xtype:'panel',layout:'form',
+                        border:true,columnWidth:1,height:150,/*autoScroll:true,*/
+                        bodyStyle:'margin-bottom:7px',
+                        items:
+                        [        
+                            grid_ventas
+                        ]
+                    },
+                    {
+                        xtype:'panel',layout:'form',
+                        border:true,columnWidth:1,height:150,/*autoScroll:true,*/
+                        bodyStyle:'margin-bottom:7px',
+                        items:
+                        [        
+                            grid_guiasAsignadas
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:1,layout:'form',
+                        border:false,columnWidth:.075,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-cuota',
+								emptyText:'Cuota',	
+                                fieldLabel:'',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'left'},
+                                width:40,
+								disabled:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:1,layout:'form',
+                        border:false,columnWidth:0.22,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_bancos_lista,
+                                id:canje.id+'-ban_id',
+                                fieldLabel:'',
+                                itemCls: 'label01',
+                                width:160,
+                                mode:'local',
+                                valueField:'ban_id',
+                                displayField:'nombre',
+								emptyText:'Banco',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								disabled:true,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(canje.id+'-cta_id').setValue('');
+										//alert(Ext.getCmp(canje.id+'-mon_id').getValue() + record.get('ban_id'));
+                                        store_ctabanco_lista.load({params:{ban_id:record.get('ban_id'),mon_id:Ext.getCmp(canje.id+'-mon_id').getValue()}});
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:1,layout:'form',
+                        border:false,columnWidth:0.19,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_ctabanco_lista,
+                                id:canje.id+'-cta_id',
+                                fieldLabel:'',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:130,
+                                mode:'local',
+                                valueField:'cta_id',
+                                displayField:'nro_cta',
+								emptyText:'Cuenta Bancaria',		
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								disabled:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:1,layout:'form',
+                        border:false,columnWidth:.15,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-nro_cob',
+								emptyText:'Nro de Cobranza',	
+                                fieldLabel:'',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'left'},
+                                width:100,
+								disabled:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:1,layout:'form',
+                        border:false,columnWidth:.15,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-cod_uni',
+								emptyText:'Codigo Unico',	
+                                fieldLabel:'',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'left'},
+                                width:100,
+								disabled:true,
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:1,layout:'form',
+                        border:false,columnWidth:0.15,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_situacion_lista,
+                                id:canje.id+'-situacion',
+                                fieldLabel:'',
+                                itemCls: 'label01',
+                                width:95,
+                                mode:'local',
+                                valueField:'sit_id',
+                                displayField:'nombre',
+								emptyText:'Situación',								
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+								disabled:true,
+                            }
+                        ]
+                    },btn_edit_cuota,btn_aplicar_cuota,
+                    {
+                        xtype:'panel',labelWidth:80,layout:'form',
+                        border:false,columnWidth:.4,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-nro_cuotas',
+                                fieldLabel:'Nro de Cuotas',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:80,
+                                readOnly:true
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:60,layout:'form',
+                        border:false,columnWidth:.6	,
+                        items:
+                        [        
+                            {
+                                xtype:'textfield',
+                                id:canje.id+'-total',
+                                fieldLabel:'Total',
+                                itemCls: 'label01',
+                                style:{marginLeft:'0px',textAlign:'right'},
+                                width:76,
+                                readOnly:true
+                            }
+                        ]
+                    }
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+            tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_anular,btn_eliminar,'-',btn_imprimir, '-',btn_cancelar,
+                            combo_compras_describe,'-',
+                    new Ext.app.SearchField({
+                        id:canje.id+'-buscar', 
+                        emptyText : 'Valor a buscar...',
+                        enableKeyEvents: true,
+                        store: store_canje_lista,
+                        hasSearch : false,
+                        width: 120,
+                        listeners:
+                        {
+                            specialkey:function(obj,e)
+                            {
+                                if(e.getKey() == 13)
+                                {
+                                    store_canje_lista.load({params:{campo:Ext.getCmp(canje.id+'-combo_describe').getValue(),query:Ext.getCmp(canje.id+'-buscar').getValue()}});
+                                }
+                            }
+                        }
+                    })
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_canje_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:canje.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+            new Ext.Window({
+                                        id:'win_compras',
+                                        title:'canje', 
+                                        width: 800,
+                                        height:500,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                        onEsc:function(){Ext.getCmp('win_compras').close();}, resizable:true,
+                        items:panel,
+                        buttonAlign:'center'
+            });
+            
+            Ext.getCmp('win_compras').show();
+            Ext.getCmp('win_compras').center();
+            Ext.getCmp('win_compras').toFront();
+            canje.fn_habilitar(false,0);
+			//store_cuota_lista.load({params:{start:0,limit:100}});
+            Ext.getCmp(canje.id+'-panel_derecho').collapse();
+							Ext.getCmp(canje.id+'-panel_derecho').setVisible(false);
+            
+            
+                
+            
+        },
+        fn_nuevo:function()
+        {           
+
+			Ext.getCmp(canje.id+'-cpa_id').setValue('2');
+			Ext.getCmp(canje.id+'-mon_id').setValue('1');
+			Ext.getCmp(canje.id+'-mon_id').setRawValue('SOLES');
+			
+			Ext.getCmp(canje.id+'-total_ventas').setValue('0');
+			canje.fn_habilitar(true,1);
+			Ext.getCmp(canje.id+'-guias_asignadas').store.removeAll(false);
+			Ext.getCmp(canje.id+'-grid_ventas').store.removeAll(false);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(canje.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {				
+				Ext.getCmp(canje.id+'-panel_derecho').expand();
+				Ext.getCmp(canje.id+'-panel_derecho').setVisible(true);
+				Ext.getCmp(canje.id+'-msganulado').setVisible(false);
+                canje.fn_habilitar(true,2);
+				if(rs.get('anulado')=='1'){
+					Ext.getCmp(canje.id+'-btn_actualizar').setVisible(false);
+					Ext.getCmp(canje.id+'-msganulado').setVisible(true);
+				}
+				
+				Ext.getCmp(canje.id+'-mve_id').setValue(rs.get('mve_id'));
+				Ext.getCmp(canje.id+'-codigo').setValue(rs.get('codigo'));
+				Ext.getCmp(canje.id+'-tipo_ingreso').setValue(rs.get('tipo_ingreso'));
+				Ext.getCmp(canje.id+'-fecha').setValue(rs.get('fec_ven'));
+				//alert(rs.get('cli_id'));
+				if(rs.get('cli_id')=='0'){
+					Ext.getCmp(canje.id+'-clientes_varios').setValue(true);
+					//alert("Despues");
+					Ext.getCmp(canje.id+'-cli_id').setVisible(false);
+					Ext.getCmp(canje.id+'-cliente').setVisible(true);
+					Ext.getCmp(canje.id+'-cli_ruc').setReadOnly(false);
+					Ext.apply(Ext.getCmp(canje.id+'-cli_id'),{allowBlank:true});
+					Ext.apply(Ext.getCmp(canje.id+'-cliente'),{allowBlank:false});
+					//Ext.apply(Ext.getCmp(canje.id+'-cli_ruc'),{allowBlank:false});
+				}else{
+					Ext.getCmp(canje.id+'-clientes_varios').setValue(false);
+					//alert("Despues");
+					Ext.getCmp(canje.id+'-cliente').setVisible(false);
+					Ext.getCmp(canje.id+'-cli_id').setVisible(true);
+					Ext.getCmp(canje.id+'-cli_ruc').setReadOnly(true);
+					Ext.apply(Ext.getCmp(canje.id+'-cli_id'),{allowBlank:false});
+					Ext.apply(Ext.getCmp(canje.id+'-cliente'),{allowBlank:true});
+					//Ext.apply(Ext.getCmp(canje.id+'-cli_ruc'),{allowBlank:true});
+				}
+				
+				Ext.getCmp(canje.id+'-cliente').setValue(rs.get('nombre_cliente'));	
+				Ext.getCmp(canje.id+'-cli_id').setValue(rs.get('cli_id'));
+				Ext.getCmp(canje.id+'-cli_ruc').setValue(rs.get('ruc'));
+				Ext.getCmp(canje.id+'-cli_codigo').setValue(rs.get('cli_codigo'));
+				Ext.getCmp(canje.id+'-doc_id').setValue(rs.get('doc_id'));
+				Ext.getCmp(canje.id+'-numero').setValue(rs.get('doc_n'));
+				Ext.getCmp(canje.id+'-guia_remision').setValue(rs.get('n_guia'));
+				Ext.getCmp(canje.id+'-cpa_id').setValue(rs.get('cpa_id'));
+				Ext.getCmp(canje.id+'-mon_id').setValue(rs.get('mon_id'));
+				Ext.getCmp(canje.id+'-observacion').setValue(rs.get('observacion'));
+				
+				if(rs.get('afecta')=='S'){
+					Ext.getCmp(canje.id+'-afecta_almacen').setValue(true);
+				}else{
+					Ext.getCmp(canje.id+'-afecta_almacen').setValue(false);
+				}
+				if(rs.get('formato')=='S'){
+					Ext.getCmp(canje.id+'-inc_igv').setValue(true);
+				}else{
+					Ext.getCmp(canje.id+'-inc_igv').setValue(false);	
+				}
+				Ext.Msg.wait('Cargando detalle de compra... por favor espere!');
+				Ext.Ajax.request({
+					url:'movimientos/canje-detalle',
+					params:
+					{
+						mve_id:rs.get('mve_id')
+					},
+					success:function(response,options)
+					{     
+						Ext.Msg.hide();        
+						//alert(response.responseText);
+						var res = Ext.decode(response.responseText);
+						Ext.getCmp(canje.id+'-guias_asignadas').store.removeAll(false);						
+						for (i=0;i<res.data.length;i++){
+							//alert(res.data[i]);
+							detalle = res.data[i];
+							var u = new canje.store_reader.recordType({
+								id:detalle['pro_id'],cantidad:detalle['cantidad'],codigo:detalle['codigo1'],detalle:detalle['producto'],precio:detalle['precio_venta'],descuento:detalle['descuento'],total:detalle['total'],ume_id:detalle['ume_id'], marca:detalle['marca']
+							});
+							//alert(detalle['pro_id']);
+							Ext.getCmp(canje.id+'-guias_asignadas').stopEditing();
+							canje.store_reader.insert(canje.store_reader.getCount(), u);
+							Ext.getCmp(canje.id+'-guias_asignadas').startEditing(canje.store_reader.getCount()-1,1);
+						}		
+						//alert("salir");			
+						canje.calcular();			
+					}
+				});
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+			if(canje.fn_validar()){
+				if(Ext.getCmp(canje.id+'-afecta_almacen').getValue()){
+					vAfecta = 'S';	
+				}else{
+					vAfecta = 'N';	
+				}
+				if(Ext.getCmp(canje.id+'-inc_igv').getValue()){
+					vFormato = 'S';	
+				}else{
+					vFormato = 'N';	
+				}
+				
+				var vVentas= new Array();
+				for(i=0;i<Ext.getCmp(canje.id+'-guias_asignadas').store.getCount();i++)
+				{
+					datos=Ext.getCmp(canje.id+'-guias_asignadas').getStore(0).getAt(i);
+					vValore = datos.get('id') + '.@.' + datos.get('cantidad') + '.@.' + datos.get('codigo') + '.@.' + datos.get('detalle') + '.@.' + datos.get('precio') + '.@.' + datos.get('descuento') + '.@.' + datos.get('total') + '.@.' + datos.get('ume_id') + '.@.' + vAfecta + '.@.' + datos.get('valor_bruto') + '.@.' + datos.get('valor_desc');
+					vData[i] = vValore;
+				}
+				
+				
+				var vData= new Array();
+				for(i=0;i<Ext.getCmp(canje.id+'-guias_asignadas').store.getCount();i++)
+				{
+					datos=Ext.getCmp(canje.id+'-guias_asignadas').getStore(0).getAt(i);
+					vValore = datos.get('id') + '.@.' + datos.get('cantidad') + '.@.' + datos.get('codigo') + '.@.' + datos.get('detalle') + '.@.' + datos.get('precio') + '.@.' + datos.get('descuento') + '.@.' + datos.get('total') + '.@.' + datos.get('ume_id') + '.@.' + vAfecta + '.@.' + datos.get('valor_bruto') + '.@.' + datos.get('valor_desc');
+					vData[i] = vValore;
+				}
+				if(Ext.getCmp(canje.id+'-clientes_varios').getValue()){
+					vIdCli='0';
+					vCli = Ext.getCmp(canje.id+'-cliente').getValue();
+					vRuc = Ext.getCmp(canje.id+'-cli_ruc').getValue();
+				}else{
+					vIdCli = Ext.getCmp(canje.id+'-cli_id').getValue();
+					vCli = Ext.getCmp(canje.id+'-cli_id').getRawValue();
+					vRuc = Ext.getCmp(canje.id+'-cli_ruc').getValue();
+				}
+				Ext.getCmp(canje.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/canje-actualizar',
+					params:{ 
+						mve_id:Ext.getCmp(canje.id+'-mve_id').getValue(),
+						codigo:Ext.getCmp(canje.id+'-codigo').getValue(),
+						cli_id:vIdCli,
+						cliente:vCli,
+						cli_ruc:vRuc,
+						tipo_ingreso:Ext.getCmp(canje.id+'-tipo_ingreso').getValue(),
+						doc_id:Ext.getCmp(canje.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(canje.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(canje.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(canje.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(canje.id+'-mon_id').getValue(),
+						valor_venta:Ext.getCmp(canje.id+'-valor_venta').getValue(),
+						valor_bruto:Ext.getCmp(canje.id+'-valor_bruto').getValue(),
+						valor_desc:Ext.getCmp(canje.id+'-valor_descuento').getValue(),
+						impuesto_igv:Ext.getCmp(canje.id+'-impuesto_igv').getValue(),
+						total_venta:Ext.getCmp(canje.id+'-total_venta').getValue(),
+						fecha:Ext.getCmp(canje.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(canje.id+'-doc_id').getRawValue(),
+						observacion:Ext.getCmp(canje.id+'-observacion').getValue(),
+						afecta_stock:vAfecta,
+						formato:vFormato,
+						igv:18,
+						"v_ventas[]":vVentas,
+						"v_detalle[]":vData,
+					},
+					waitTitle: 'Actualizando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){					
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(canje.id+'-panel_derecho').collapse();
+							Ext.getCmp(canje.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							canje.fn_habilitar(false,0);
+							Ext.getCmp(canje.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(canje.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(canje.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(canje.id+res.campo).focus(true,10);							
+					}
+				});				
+				/*Ext.Ajax.request({
+					url:'movimientos/canje-guardar',
+					params:
+					{
+						mve_id:Ext.getCmp(canje.id+'-mve_id').getValue(),
+						codigo:Ext.getCmp(canje.id+'-codigo').getValue(),
+						cli_id:Ext.getCmp(canje.id+'-cli_id').getValue(),
+						tipo_ingreso:Ext.getCmp(canje.id+'-tipo_ingreso').getValue().getGroupValue(),
+						doc_id:Ext.getCmp(canje.id+'-doc_id').getValue(),
+						doc_n:Ext.getCmp(canje.id+'-numero').getValue(),
+						n_guia:Ext.getCmp(canje.id+'-guia_remision').getValue(),
+						cpa_id:Ext.getCmp(canje.id+'-cpa_id').getValue(),
+						mon_id:Ext.getCmp(canje.id+'-mon_id').getValue(),
+						valor_venta:Ext.getCmp(canje.id+'-valor_venta').getValue(),
+						impuesto_igv:Ext.getCmp(canje.id+'-impuesto_igv').getValue(),
+						total_venta:Ext.getCmp(canje.id+'-total_venta').getValue(),
+						fecha:Ext.getCmp(canje.id+'-fecha').getValue(),
+						tip_doc:Ext.getCmp(canje.id+'-doc_id').getRawValue(),
+						afecta_stock:vAfecta,
+						"v_detalle[]":vData,
+					},
+					success:function(response,options)
+					{
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(canje.id+'-panel_derecho').collapse();
+							Ext.getCmp(canje.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							canje.fn_habilitar(false,0);
+							Ext.getCmp(canje.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(canje.id+res.campo).focus(true,10);							
+						}
+					}
+				});*/
+			}
+        },
+        fn_guardar:function()
+        {	
+			if(canje.fn_validar()){
+				
+				fields:[{name:'tabla'},{name:'tabla_id'},{name:'documento'},{name:'mon_id'},{name:'moneda'},{name:'saldo_doc'},{name: 'tc'},{name:'saldo_canje'},{name:'monto_canje'}]  
+				
+				var vVentas= new Array();
+				for(i=0;i<Ext.getCmp(canje.id+'-grid_ventas').store.getCount();i++)
+				{
+					datos=Ext.getCmp(canje.id+'-grid_ventas').getStore(0).getAt(i);
+					vValore = datos.get('tabla') + '.@.' + datos.get('tabla_id') + '.@.' + datos.get('saldo_canje') + '.@.' + datos.get('tc') + '.@.' + datos.get('monto_canje');
+					vVentas[i] = vValore;
+				}
+				
+				var vData= new Array();
+				for(i=0;i<Ext.getCmp(canje.id+'-guias_asignadas').store.getCount();i++)
+				{
+					datos=Ext.getCmp(canje.id+'-guias_asignadas').getStore(0).getAt(i);
+					vFechita =datos.get('fecha');
+					vFechita = vFechita.format('Y-m-d');
+					vValore = datos.get('cuota') + '.@.' + datos.get('letra') + '.@.' + vFechita + '.@.' + datos.get('total') + '.@.' + datos.get('ban_id') + '.@.' + datos.get('cta_id') + '.@.' + datos.get('nro_cob') + '.@.' + datos.get('cod_uni') + '.@.' + datos.get('situacion');
+					vData[i] = vValore;
+				}
+				//alert(Ext.getCmp(canje.id+'-mve_id').getValue());
+				Ext.getCmp(canje.id+'-formulario').getForm().submit({						
+					method: 'POST',
+					url:'movimientos/canje-guardar',
+					params:{
+						cli_id:Ext.getCmp(canje.id+'-cli_id').getValue(),
+						fecha_canje:Ext.getCmp(canje.id+'-fecha_canje').getValue(),
+						mon_id:Ext.getCmp(canje.id+'-mon_id').getValue(),
+						total_ventas:Ext.getCmp(canje.id+'-total_ventas').getValue(),
+						cpa_id:Ext.getCmp(canje.id+'-cpa_id').getValue(),
+						formato:Ext.getCmp(canje.id+'-formato').getValue().getGroupValue(),
+						"v_ventas[]":vVentas,
+						"v_detalle[]":vData,
+					},
+					waitTitle: 'Guardando Informacion',
+					waitMsg: 'Enviando datos..',
+					success: function(form, action){	
+						//alert(action.response.responseText);				
+						var res = Ext.decode(action.response.responseText);
+						if(res.success){
+							Ext.getCmp(canje.id+'-panel_derecho').collapse();
+							Ext.getCmp(canje.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha guardado");
+							canje.fn_habilitar(false,0);
+							Ext.getCmp(canje.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(canje.id+res.campo).focus(true,10);							
+						}
+						Ext.getCmp(canje.id+'-formulario').getForm().reset();
+					},
+					failure: function(form, action){
+						//alert(action.response.responseText);		
+						var res = Ext.decode(action.response.responseText);
+						Ext.Msg.show({
+							title:'Error',
+							msg: res.mensaje,
+							   buttons: Ext.Msg.OK,
+							   icon: Ext.MessageBox.ERROR
+						});
+						Ext.getCmp(canje.id+res.campo).focus(true,10);							
+					}
+				});
+			}
+        },
+		fn_anular:function()
+        {
+            var rs=Ext.getCmp(canje.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				if(rs.get('anulado')=='1'){
+					og.msg("Error","Documento ya esta anulado");
+					return;
+				}
+				Ext.Msg.confirm('Alerta', 'Desea Anular?<br>Documento :<br>' + rs.get('doc_n'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Anulando Venta... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/canje-anular',
+							params:
+							{
+								mve_id:rs.get('mve_id')
+							},
+							success:function(response,options)
+							{           
+								Ext.Msg.hide();  
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha anulado");
+									canje.fn_habilitar(false,0);
+									Ext.getCmp(canje.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(canje.id+'-combo_describe').getValue(),query:Ext.getCmp(canje.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(canje.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(canje.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.Msg.confirm('Alerta', 'Desea eliminar?<br>Canje :<br>' + rs.get('canje_codigo'), function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando Compromisos de Pago del Canje... por favor espere!');
+						Ext.Ajax.request({
+							url:'movimientos/canje-eliminar',
+							params:
+							{
+								canje_id:rs.get('canje_id'),
+							},
+							success:function(response,options)
+							{             	
+								//alert(response.responseText);		
+								Ext.Msg.hide();
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									canje.fn_habilitar(false,0);
+									Ext.getCmp(canje.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(canje.id+'-combo_describe').getValue(),query:Ext.getCmp(canje.id+'-buscar').getValue(),start:0,limit:100}});
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(canje.id+res.campo).focus(true,10);				
+								}
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },		
+        calcular:function()
+        {
+            var valor_total='0';
+			var nro='0';
+            for(i=0;i<Ext.getCmp(canje.id+'-guias_asignadas').store.getCount();i++)
+            {
+                datos=Ext.getCmp(canje.id+'-guias_asignadas').getStore(0).getAt(i);
+				valor_total=Number(valor_total)+Number(datos.get('total'));
+				nro = Number(nro)+1;
+				vLetra = datos.get('letra');
+				if(vLetra.substring(0,5)=='Cuota'){
+					datos.set('letra','Cuota ' + nro);
+				}
+				datos.set('cuota',nro);
+				
+            }
+			
+			Ext.getCmp(canje.id+'-total').setValue(valor_total);
+			Ext.getCmp(canje.id+'-nro_cuotas').setValue(nro);
+        },
+		calcularventas:function()
+        {
+            var valor_total='0';
+			var nro='0';
+            for(i=0;i<Ext.getCmp(canje.id+'-grid_ventas').store.getCount();i++)
+            {
+                datos=Ext.getCmp(canje.id+'-grid_ventas').getStore(0).getAt(i);
+				valor_total=Number(valor_total)+Number(datos.get('monto_canje'));
+				nro = Number(nro)+1;
+            }
+			Ext.getCmp(canje.id+'-total_ventas').setValue(valor_total);
+        },
+		fn_validar:function(){
+			var valor_total='0';
+			var vDateAnt = null;
+            for(i=0;i<Ext.getCmp(canje.id+'-guias_asignadas').store.getCount();i++)
+            {
+                datos=Ext.getCmp(canje.id+'-guias_asignadas').getStore(0).getAt(i);
+				
+				valor_total=Number(valor_total)+Number(datos.get('total'));
+				
+				vFecha = datos.get('fecha');
+				if(i==0){
+					vDateAnt= vFecha;	
+				}else{
+					if(	vFecha<=vDateAnt){
+						og.msg("Error", "Fecha no es valida");
+						return false;	
+					}else{
+						vDateAnt= vFecha;	
+					}
+				}				
+            }
+			
+			if(valor_total!=Ext.getCmp(canje.id+'-total_ventas').getValue()){
+				og.msg("Error", "La suma de Montos debe ser igual al Saldo");
+				return false;	
+			}
+			return true;
+		},
+		fn_habilitar:function(sw, tipo)
+        {
+			if(!sw){
+				Ext.getCmp(canje.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(canje.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(canje.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(canje.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(canje.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(canje.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(canje.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(canje.id+'-btn_cancelar').setVisible(sw);
+			
+			//Ext.getCmp(canje.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(canje.id+'-btn_eliminar').setVisible(!sw);
+			//Ext.getCmp(canje.id+'-btn_anular').setVisible(!sw);
+
+			//Ext.getCmp(canje.id+'-btn_editar').disable();
+			Ext.getCmp(canje.id+'-btn_eliminar').disable();
+			//Ext.getCmp(canje.id+'-btn_anular').disable();
+			
+			Ext.getCmp(canje.id+'-buscar').setVisible(!sw);			
+			Ext.getCmp(canje.id+'-combo_describe').setVisible(!sw);
+			
+			Ext.getCmp(canje.id+'-btn_imprimir').setVisible(!sw);			
+        },
+		fn_imprimir_formato:function(vid)
+        {
+				document.getElementById('frmReporte-cuota').action="movimientos/formato-cuota";
+				document.getElementById('txtpar1').value = '1';
+				document.getElementById('txtpar2').value = vid;
+				document.getElementById('frmReporte-cuota').submit();
+        },
+		fn_generacuota:function(){		
+		
+			Ext.getCmp(canje.id+'-guias_asignadas').store.removeAll(false);
+			//alert("entra");
+			store = Ext.getCmp(canje.id+'-cpa_id').getStore();
+			vIndex = store.find('cpa_id',Ext.getCmp(canje.id+'-cpa_id').getValue());
+			//alert(vIndex);
+			
+			
+			datos = store.getAt(vIndex);
+			vlet = datos.get('letras');
+			vdia = datos.get('dias');
+			//alert(vlet);
+			//alert(vdia);
+			
+			if(vdia.indexOf(",")>0){
+				var vDias = vdia.split(",");
+			}else{
+				var vDias = new Array();
+				vDias[0]=vdia;
+			}
+			//alert(Number(vDias[0]));
+			vfor = Ext.getCmp(canje.id+'-fecha_canje').getValue();
+			vfor = vfor.format('Y-m-d');
+			//alert(vfor);
+			
+			vFec = vfor.split('-');
+			var myDate = new Date(Number(vFec[0]),Number(vFec[1]) - 1,Number(vFec[2]));
+			//alert(vFec[0]+'.'+vFec[1]+'.'+vFec[2]);
+			myDate.setDate(myDate.getDate() + Number(vDias[0]));
+			//alert(myDate.format('d/m/Y'));
+			
+			vTotal = 	Ext.getCmp(canje.id+'-total_ventas').getValue();
+			vTotal = Number(vTotal);
+			vTotal = Math.round(vTotal*100)/100;
+			//alert(vTotal)
+			if(Ext.getCmp(canje.id+'-formato').getValue().getGroupValue()=='1'){
+				vIgv = (vTotal * Number(vgIgv)) / (100 + Number(vgIgv));
+				vIgv = Math.round(vIgv*10)/10;
+				vTotalTmp = vTotal - vIgv;
+				vTotalTmp = Math.round(vTotalTmp*100)/100;
+				vCuota = vTotalTmp / Number(vlet);
+				vCuota = Math.round(vCuota*10)/10;
+			}else{
+				vIgv = 0;
+				vTotal = vTotal - vIgv;
+				vCuota = vTotal / Number(vlet);
+				vCuota = Math.round(vCuota*10)/10;
+			}
+			//alert(vIgv);
+			//alert(vCuota)
+			vAcumula=0;
+			for(i=1;i<=Number(vlet);i++){
+				vFec = myDate.format('Y-m-d');
+				var vFechita = vFec.split('-');
+				
+				if(i==1){vPonerCuota = vCuota + vIgv;}else{vPonerCuota = vCuota;}
+				if(i==Number(vlet)){vPonerCuota = vTotal - vAcumula}
+				
+				vPonerCuota = Math.round(vPonerCuota*100)/100;
+				vAcumula = vAcumula + vPonerCuota;
+				
+				var u = new canje.store_reader.recordType({
+					cuota:i,letra:('Cuota ' + i),fecha:new Date(Number(vFechita[0]),(Number(vFechita[1])-1),Number(vFechita[2])),total:vPonerCuota
+				});
+				//alert("antes");
+				Ext.getCmp(canje.id+'-guias_asignadas').stopEditing();
+				canje.store_reader.insert(canje.store_reader.getCount(), u);
+				Ext.getCmp(canje.id+'-guias_asignadas').startEditing(canje.store_reader.getCount()-1,1);
+				if(vDias.length>i){
+					//alert(Number(vDias[i]));
+					myDate.setDate(myDate.getDate() + Number(vDias[i]));
+					//alert(myDate.format('d/m/Y'));
+				}
+			}
+			//alert("despues");
+			canje.calcular();
+			
+		},
+		fn_ubicaventa:function(vmve_id, vdoct, vdocn, vfve, vmid, vmon, vsal){		
+		
+		fields:[{name:'tabla'},{name:'tabla_id'},{name:'documento'},{name:'mon_id'},{name:'moneda'},{name:'saldo_doc'},{name: 'tc'},{name:'saldo_canje'},{name:'monto_canje'}] 
+		
+			var u = new canje.store_reader_ventas.recordType({
+				tabla:'2',tabla_id:vmve_id,documento:vdoct + ' ' + vdocn,mon_id:vmid,moneda:vmon,saldo_doc:vsal, tc:2.65, saldo_canje:vsal, monto_canje:vsal, 
+			});
+			Ext.getCmp(canje.id+'-grid_ventas').stopEditing();
+			canje.store_reader_ventas.insert(canje.store_reader_ventas.getCount(), u);
+			Ext.getCmp(canje.id+'-grid_ventas').startEditing(canje.store_reader_ventas.getCount()-1,1);
+			canje.calcularventas();
+			
+		},
+		fn_ubicacliente:function(vcampo, vvalor, vnombre, vruc){
+			//alert('entra');
+			Ext.getCmp(canje.id+'-cli_id').setValue(vvalor);
+			Ext.getCmp(canje.id+'-cliente').setValue(vnombre);
+			Ext.getCmp(canje.id+'-ruc').setValue(vruc);
+			
+		},
+		fn_dateadd:function(datepart,number,objDate){
+           y = objDate.getFullYear();
+           m = objDate.getMonth()+1;
+           d = objDate.getDate();
+           hr =     objDate.getHours();
+           mn =     objDate.getMinutes();
+           sc =     objDate.getSeconds();
+           newY=y;
+           newM=m;
+           newD=d;
+           if (datepart== 'y'){
+                newY = parseInt(y) + parseInt(number);
+           } else if (datepart== 'm') {
+                newM = parseInt(m) + parseInt(number);
+           } else {
+                newD = parseInt(d) + parseInt(number);
+           }
+           objNewDate = new Date(newY,newM,newD,hr,mn,sc);
+           return objNewDate;
+      }
+         
+    }
+    Ext.onReady(canje.init,canje);
+
+</script>

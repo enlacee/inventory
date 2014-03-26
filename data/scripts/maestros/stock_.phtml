@@ -1,0 +1,1229 @@
+<form id="frmReporte-stock" name="frmReporte-stock" method="post" action="" target="_blank">
+  <input type="hidden" name="txtpar1" id="txtpar1" />
+  <input type="hidden" name="txtpar2" id="txtpar2" />
+</form>
+<script type="text/javascript"> 
+    var tab = Ext.getCmp(inicio.id+'-tabContent');
+    //if(!Ext.getCmp('tiponovedades-tab')){
+    Ext.ns('stock');
+    stock={
+        id:'stock',
+        init:function(){
+            Ext.Ajax.timeout = 180000;
+            Ext.QuickTips.init();
+            
+            var btn_nuevo=new Ext.Button({
+                id:stock.id+'-btn_nuevo',
+                text:'Nuevo',
+                iconCls:'btn_add_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(stock.id+'-panel_derecho').expand();
+				Ext.getCmp(stock.id+'-panel_derecho').setVisible(true);
+                            stock.fn_nuevo();
+                        }
+                    }
+            });
+            
+            var btn_guardar=new Ext.Button({
+                id:stock.id+'-btn_guardar',
+                text:'Guardar',
+                iconCls:'btn_save_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            stock.fn_guardar();
+                        }
+                    }
+            });
+            
+            var btn_actualizar=new Ext.Button({
+                id:stock.id+'-btn_actualizar',
+                text:'Actualizar',
+                iconCls:'btn_update_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            stock.fn_actualizar();
+                        }
+                    }
+            });
+            
+            var btn_editar=new Ext.Button({
+                id:stock.id+'-btn_editar',
+                text:'Editar',
+                iconCls:'btn_edit_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            stock.fn_editar();
+                        }
+                    }
+            });
+            
+            var btn_cancelar=new Ext.Button({
+                id:stock.id+'-btn_cancelar',
+                text:'Cancelar',
+                iconCls:'btn_cancel_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.getCmp(stock.id+'-panel_derecho').collapse();
+							Ext.getCmp(stock.id+'-panel_derecho').setVisible(false);
+                            stock.fn_habilitar(false,0);
+                        }
+                    }
+            });
+            
+            var btn_eliminar=new Ext.Button({
+                id:stock.id+'-btn_eliminar',
+                text:'Eliminar',
+                iconCls:'btn_delete_log',
+                listeners:
+                    {
+                        click:function()
+                        {
+							stock.fn_eliminar();                            
+                        }
+                    }
+            });
+			
+			var btn_imprimir=new Ext.Button({
+                id:stock.id+'-btn_imprimir',
+                text:'Imprimir',
+                icon:'images/icon/printer.png',
+                listeners:
+                    {
+                        click:function()
+                        {
+                            Ext.Msg.confirm('Alerta', 'Desea imprimir listado?', function(btn) {
+                                if(btn == 'yes')
+                                {
+                                    stock.fn_imprimir();
+                                }
+                            });
+
+                            
+                        }
+                    }
+            });
+			
+			var store_fam_lista=new Ext.data.JsonStore({
+                url:'tablas/familias-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['fam_id','nombre']
+            });
+            
+            store_fam_lista.load();
+            
+            var store_marcas_lista=new Ext.data.JsonStore({
+                url:'tablas/marcas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mar_id','nombre']
+            });
+            
+            store_marcas_lista.load();
+            
+            var store_lineas_lista=new Ext.data.JsonStore({
+                url:'tablas/lineas-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['lin_id','nombre']
+            });
+            
+            var store_unidad_medida_lista=new Ext.data.JsonStore({
+                url:'tablas/unidad-medida-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['ume_id','codigo','abreviatura','descripcion']
+            });
+            
+            store_unidad_medida_lista.load();
+            
+            var store_stock_lista=new Ext.data.JsonStore({
+                url:'maestros/stock-lista',
+                root:'data',
+                totalProperty:'total',
+                fields:['mcd_id','codigo1','codigo2','codigo3','nombre','ume_id','mar_id','lin_id','precio_costo','precio_venta','stock_minimo','stock_actual', 'utilidad', 'desc1', 'desc2', 'desc3', 'desc4','activo', 'fam_id', 'ume_nom', 'precio_compra', 'ind_calculo','mar_nom', 'stock_pro', 'stock_inicial', 'stock_inservible', 'stock_inservible_inicial', 'total_stock', 'total_inservible', {name: 'editado', type: 'bool'}],
+				remoteSort:true,
+				sortInfo: {field:'nombre', direction:'asc'}
+            });
+            
+            var store_stock_describe=new Ext.data.JsonStore({
+                url:'maestros/mercaderias-describe',
+                root:'data',
+                totalProperty:'total',
+                fields:['Field']
+            });
+            
+            store_stock_describe.load({params:{table:'maestros_mercaderias'}});
+            
+            var pager = new Ext.PagingToolbar({
+                id:stock.id+'_pager',
+                store:store_stock_lista,
+                displayInfo: true,
+                displayMsg: '{0} - {1} de {2} Registros',
+                emptyMsg: 'No existen registros',
+                pageSize:100
+            });
+			
+			pager.on('beforechange',function(bar,params){  
+				params.campo = Ext.getCmp(stock.id+'-combo_describe').getValue();
+				params.query = Ext.getCmp(stock.id+'-buscar').getValue();
+			});
+            
+            var combo_stock_describe=new Ext.form.ComboBox({
+                id:stock.id+'-combo_describe',
+                store:store_stock_describe,
+                valueField:'Field',
+                displayField:'Field',
+                triggerAction:'all',
+                emptyText:'Campo',
+                mode:'local',
+				value:'codigo1',
+                width:100,
+                editable:false
+            });
+			
+			var txt_busqueda=new Ext.app.SearchField({
+				id:stock.id+'-buscar', 
+				emptyText : 'Valor a buscar...',
+				enableKeyEvents: true,
+				store: store_stock_lista,
+				hasSearch : false,
+				width: 120,
+				listeners:
+				{
+					specialkey:function(obj, e)
+					{
+						if (e.getKey() == 13)
+						{
+						stock.fn_habilitar(false,0);
+						store_stock_lista.load({params:{campo:Ext.getCmp(stock.id+'-combo_describe').getValue(),query:Ext.getCmp(stock.id+'-buscar').getValue(),start:0,limit:100}});
+						}
+					},
+				}
+			});
+            
+            var grid_stock_lista = new Ext.grid.EditorGridPanel({
+                id:stock.id+'-grid_lista',
+                store: store_stock_lista,
+				 singleSelect:true,
+				 columnLines:true,
+				 monitorResize:true,
+				 width:226,
+                height:400,
+				 enableKeyEvents: true,
+				 enableHdMenu:false,
+                bbar:pager,
+                columns:
+                [
+                    {header:'Id',sortable :true,dataIndex:'mcd_id',width:25,hidden:true},
+                    {header:'Código 1',sortable :true,dataIndex:'codigo1',width:80},
+                    {header:'Código 2',sortable :true,dataIndex:'codigo2',width:100,hidden:true},
+                    {header:'Código 3',sortable :true,dataIndex:'codigo3',width:100,hidden:true},
+                    {header:'Descripción',sortable :true,dataIndex:'nombre',width:250},
+                    {header:'Marca',sortable :true,dataIndex:'mar_nom',width:100},
+					{header:'Unidad de Medida',sortable :true,dataIndex:'ume_nom',width:100,hidden:true},
+					{header:'Stock I',sortable :true,dataIndex:'stock_inicial',width:70,align:'right',
+                                  editor: new Ext.form.TextField(
+                                  {
+									  	style:{textAlign:'right'},
+                                        enableKeyEvents: true
+                                   })},
+					{header:'Stock N',sortable :true,dataIndex:'stock_pro',width:70,align:'right',
+                                  editor: new Ext.form.TextField(
+                                  {
+									  	style:{textAlign:'right'},
+                                        enableKeyEvents: true
+                                   })},
+					{header:'Inser I',sortable :true,dataIndex:'stock_inservible_inicial',width:70,align:'right',
+                                  editor: new Ext.form.TextField(
+                                  {
+									  	style:{textAlign:'right'},
+                                        enableKeyEvents: true
+                                   })},
+					{header:'Inser N',sortable :true,dataIndex:'stock_inservible',width:70,align:'right',
+                                  editor: new Ext.form.TextField(
+                                  {
+									  	style:{textAlign:'right'},
+                                        enableKeyEvents: true
+                                   })},
+                    {header:'Precio Compra',sortable :true,dataIndex:'precio_compra',width:100,align:'right',hidden:true},
+					{header:'Precio Costo',sortable :true,dataIndex:'precio_costo',width:70,align:'right',hidden:true},
+                    {header:'Precio Venta',sortable :true,dataIndex:'precio_venta',width:70,align:'right',hidden:true},
+					{header:'Editado',sortable :true,dataIndex:'editado',width:25,align:'left',editable:false, hidden:true},
+                    {header:'Stock Mínimo',sortable :true,dataIndex:'stock_minimo',width:100,align:'right',hidden:true},
+					{header:'% Incremento',sortable :true,dataIndex:'utilidad',width:100,align:'right',hidden:true},
+					{header:'% Desc 1',sortable :true,dataIndex:'desc1',width:100,align:'right',hidden:true},
+					{header:'% Desc 2',sortable :true,dataIndex:'desc2',width:100,align:'right',hidden:true},
+					{header:'% Desc 3',sortable :true,dataIndex:'desc3',width:100,align:'right',hidden:true},
+					{header:'% Desc 4',sortable :true,dataIndex:'desc4',width:100,align:'right',hidden:true},
+                    {header:'Estado',sortable :true,dataIndex:'activo',width:100,hidden:true}
+                    ]
+            });
+            
+            
+            var panel_form=new Ext.Panel({
+            layout:'form',
+            border:false,
+            bodyStyle:'margin:5px;',
+            items:
+            [
+            {
+				xtype:'panel',
+                border:false,
+                items:
+                [
+                    {
+                      xtype:'hidden',
+                      id:stock.id+'-mcd_id',
+                      value:'0'
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:stock.id+'-codigo1',
+                                fieldLabel:'Código 1',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:stock.id+'-codigo2',
+                                fieldLabel:'Código 2',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:stock.id+'-codigo3',
+                                fieldLabel:'Código 3',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:150
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'textfield',
+                                id:stock.id+'-nombre',
+                                fieldLabel:'Nombre',
+                                itemCls: 'label01',
+								style: {textTransform: "uppercase", marginLeft:"7px"},
+                                width:350,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_unidad_medida_lista,
+                                id:stock.id+'-ume_id',
+                                fieldLabel:'Unidad de Medida',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:150,
+                                mode:'local',
+                                valueField:'ume_id',
+                                displayField:'abreviatura',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_marcas_lista,
+                                id:stock.id+'-mar_id',
+                                fieldLabel:'Marca',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'mar_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_fam_lista,
+                                id:stock.id+'-fam_id',
+                                fieldLabel:'Familia',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'fam_id',
+								allowBlank:false,
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false,
+                                listeners:
+                                {
+                                    select:function(cmb,record,index)
+                                    {
+                                        Ext.getCmp(stock.id+'-lin_id').setValue('');
+                                        store_lineas_lista.load({params:{campo:'fam_id',query:record.get('fam_id')}});
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'combo',
+                                store:store_lineas_lista,
+                                id:stock.id+'-lin_id',
+                                fieldLabel:'Línea',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+                                width:300,
+                                mode:'local',
+                                valueField:'lin_id',
+                                displayField:'nombre',
+                                triggerAction:'all',
+                                forceSelection:true,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:.25,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-precio_compra',
+                                fieldLabel:'Precio de Compra',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:120,layout:'form',
+                        border:false,columnWidth:.75,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Cálculo de Precios",
+                                id: stock.id+'-ind_calculo',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "ind_calculo"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:stock.id+'-ind_calculo_m',
+                                        boxLabel: "Manual",name: "ind_calculo",
+                                        inputValue: "M",
+                                        checked:true
+                                    },
+                                    {
+                                        id:stock.id+'-ind_calculo_c',
+                                        boxLabel: "Automatico",name: "ind_calculo",
+                                        inputValue: "A"
+                                    }
+                                ],
+								listeners : {
+									change : function(){
+										if(Ext.getCmp(stock.id+'-ind_calculo').getValue().getGroupValue()=="M"){
+											Ext.getCmp(stock.id+'-precio_compra').enable();
+											Ext.getCmp(stock.id+'-precio_costo').enable();
+											Ext.getCmp(stock.id+'-precio_venta').enable();
+											Ext.getCmp(stock.id+'-utilidad').enable();
+										}else{
+											Ext.getCmp(stock.id+'-precio_compra').disable();
+											Ext.getCmp(stock.id+'-precio_costo').disable();
+											Ext.getCmp(stock.id+'-precio_venta').disable();
+											Ext.getCmp(stock.id+'-utilidad').disable();
+										}
+									}
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-precio_costo',
+                                fieldLabel:'Precio de Costo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(stock.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(stock.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(stock.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-utilidad',
+                                fieldLabel:'% Incremento',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vvalor = (eval(Ext.getCmp(stock.id+'-precio_costo').getValue()) * (100 + eval(Ext.getCmp(stock.id+'-utilidad').getValue())))/100;
+										Ext.getCmp(stock.id+'-precio_venta').setValue(vvalor);
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-precio_venta',
+                                fieldLabel:'Precio de Venta',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:70,
+								allowNegative: false,
+								decimalPrecision:2,
+								allowBlank:false,
+								listeners : {
+									blur:function(obj){
+										vcosto = eval(Ext.getCmp(stock.id+'-precio_costo').getValue());
+										if(vcosto>0){											
+											vventa = eval(Ext.getCmp(stock.id+'-precio_venta').getValue());
+											vvalor = (vventa/vcosto)*100 - 100;
+											Ext.getCmp(stock.id+'-utilidad').setValue(vvalor);
+										}else{
+											Ext.getCmp(stock.id+'-utilidad').setValue(0);
+										}
+									}	
+								}
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-stock_minimo',
+                                fieldLabel:'Stock Mínimo',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-stock_actual',
+                                fieldLabel:'Stock Actual',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:50,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-desc1',
+                                fieldLabel:'% Desc 1',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-desc2',
+                                fieldLabel:'% Desc 2',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-desc3',
+                                fieldLabel:'% Desc 3',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+					
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype:'numberfield',
+                                id:stock.id+'-desc4',
+                                fieldLabel:'% Desc 4',
+                                itemCls: 'label01',
+                                style:'margin-left:7px',
+								fieldClass:'x-form-field derecha',
+                                width:30,
+								maxValue:100,
+								allowNegative: false,
+								decimalPrecision:0,
+								allowBlank:false
+                            }
+                        ]
+                    },
+                    {
+                        xtype:'panel',labelWidth:90,layout:'form',
+                        border:false,columnWidth:1,
+                        items:
+                        [
+                            {
+                                xtype: "radiogroup",
+                                fieldLabel: "Estado",
+                                id: stock.id+'-estado',
+                                style:'margin-left:7px',
+                                defaults: {xtype: "radio",name: "estado"},
+                                columns: [60, 100],
+                                items: [
+                                    {
+                                        id:stock.id+'-estado_activo',
+                                        boxLabel: "Activo",name: "estado",
+                                        inputValue: "1",
+                                        checked:true
+                                    },
+                                    {
+                                        id:stock.id+'-estado_desactivo',
+                                        boxLabel: "Desactivado",name: "estado",
+                                        inputValue: "0"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    
+                ]
+            }
+
+            ]
+            });
+            
+            var panel = new Ext.Panel({  
+            layout: 'border',
+
+                                        tbar:[
+                    {
+                        xtype: 'toolbar',
+                        dock: 'top',
+                        items: [
+                            btn_nuevo,'-',btn_guardar,btn_actualizar,btn_editar,'-',btn_eliminar,btn_cancelar, '-', btn_imprimir,
+                            combo_stock_describe,txt_busqueda
+                    
+                        ]
+                    }],
+            bodyStyle:'height:auto;width:70%;margin:auto;',
+            border:false,
+            items: [
+            {  
+                region: 'west',
+                layout:'fit',
+                xtype: 'panel',
+                width:'96%',
+                autoScroll: true,  
+                border:false,
+                items:
+                [
+                    grid_stock_lista
+                    
+                ]
+            }
+            ,
+            {
+            region:'center',
+            width:'0',
+            height:'0'
+            }
+            ,
+            {  
+                id:stock.id+'-panel_derecho',
+                region: 'east',
+                xtype: 'panel',
+                collapsible:true,
+                layout: 'form',
+                split:true,
+                collapsed:true,
+                width:'100%',
+                border:false,
+                items:
+                [
+                    panel_form
+                ]  
+            }
+      ]  
+    });
+            
+             new Ext.Window({
+                                        id:'win_stock',
+                                        title:'Actualizar Stock de Productos',
+                                        width: 800,
+                                        height:600,
+                                        layout:'fit',
+                                        border:false,
+                                        frame:true,
+                                        autoDestroy:true,
+                                        autoScroll:false,
+                                        minimizable: false,
+                                        maximizable: false,
+                                        closable:true,
+                                        collapsible:false,
+                                        draggable:true,
+                                        onEsc:function(){Ext.getCmp('win_stock').close();}, resizable:true,
+                                        items:panel,
+                                        buttonAlign:'center'
+			});
+                Ext.getCmp('win_stock').show();
+                Ext.getCmp('win_stock').center();
+                Ext.getCmp('win_stock').toFront();
+                stock.fn_habilitar(false,0);
+                //store_stock_lista.load({params:{start:0,limit:100}});
+                Ext.getCmp(stock.id+'-panel_derecho').collapse();
+							Ext.getCmp(stock.id+'-panel_derecho').setVisible(false);
+        },
+        fn_nuevo:function()
+        {
+            Ext.getCmp(stock.id+'-mcd_id').setValue('');
+            Ext.getCmp(stock.id+'-codigo1').setValue('');
+            Ext.getCmp(stock.id+'-codigo2').setValue('');
+            Ext.getCmp(stock.id+'-codigo3').setValue('');
+            Ext.getCmp(stock.id+'-nombre').setValue('');
+            Ext.getCmp(stock.id+'-ume_id').setValue('');
+            Ext.getCmp(stock.id+'-mar_id').setValue('');
+            Ext.getCmp(stock.id+'-fam_id').setValue('');
+			Ext.getCmp(stock.id+'-lin_id').setValue('');
+			Ext.getCmp(stock.id+'-ind_calculo').items.items[0].setValue(true);
+            Ext.getCmp(stock.id+'-ind_calculo').items.items[1].setValue(false);
+			
+            Ext.getCmp(stock.id+'-precio_compra').setValue("0.00");
+			Ext.getCmp(stock.id+'-precio_costo').setValue("0.00");
+            Ext.getCmp(stock.id+'-precio_venta').setValue("0.00");
+            Ext.getCmp(stock.id+'-stock_minimo').setValue("0");
+            Ext.getCmp(stock.id+'-stock_actual').setValue("0");
+			Ext.getCmp(stock.id+'-utilidad').setValue("0");
+			Ext.getCmp(stock.id+'-desc1').setValue("0");
+			Ext.getCmp(stock.id+'-desc2').setValue("0");
+			Ext.getCmp(stock.id+'-desc3').setValue("0");
+			Ext.getCmp(stock.id+'-desc4').setValue("0");
+            Ext.getCmp(stock.id+'-estado').items.items[0].setValue(true);
+            Ext.getCmp(stock.id+'-estado').items.items[1].setValue(false);
+            stock.fn_habilitar(true,1);
+			Ext.getCmp(stock.id+'-codigo1').focus(true,10);
+        },
+        fn_editar:function()
+        {
+            var rs=Ext.getCmp(stock.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				Ext.getCmp(stock.id+'-panel_derecho').expand();
+				Ext.getCmp(stock.id+'-panel_derecho').setVisible(true);
+                Ext.getCmp(stock.id+'-mcd_id').setValue(rs.get('mcd_id'));
+                Ext.getCmp(stock.id+'-codigo1').setValue(rs.get('codigo1'));
+                Ext.getCmp(stock.id+'-codigo2').setValue(rs.get('codigo2'));
+                Ext.getCmp(stock.id+'-codigo3').setValue(rs.get('codigo3'));
+                Ext.getCmp(stock.id+'-nombre').setValue(rs.get('nombre'));
+                Ext.getCmp(stock.id+'-ume_id').setValue(rs.get('ume_id'));
+                Ext.getCmp(stock.id+'-mar_id').setValue(rs.get('mar_id'));
+                Ext.getCmp(stock.id+'-fam_id').setValue(rs.get('fam_id'));
+				Ext.getCmp(stock.id+'-lin_id').store.load({params:{campo:'fam_id',query:rs.get('fam_id')},
+				callback:function()
+				{
+					Ext.getCmp(stock.id+'-lin_id').setValue(rs.get('lin_id'));                    
+				}});
+				
+                Ext.getCmp(stock.id+'-precio_compra').setValue(rs.get('precio_compra'));
+				Ext.getCmp(stock.id+'-precio_costo').setValue(rs.get('precio_costo'));
+                Ext.getCmp(stock.id+'-precio_venta').setValue(rs.get('precio_venta'));
+				Ext.getCmp(stock.id+'-utilidad').setValue(rs.get('utilidad'));
+				
+				Ext.getCmp(stock.id+'-ind_calculo').setValue(rs.get('ind_calculo'));
+				
+				if(rs.get('ind_calculo')=="C"){
+					Ext.getCmp(stock.id+'-precio_compra').disable();
+					Ext.getCmp(stock.id+'-precio_costo').disable();
+					Ext.getCmp(stock.id+'-precio_venta').disable();
+					Ext.getCmp(stock.id+'-utilidad').disable();
+				}
+				
+                Ext.getCmp(stock.id+'-stock_minimo').setValue(rs.get('stock_minimo'));
+                Ext.getCmp(stock.id+'-stock_actual').setValue(rs.get('stock_actual'));
+				Ext.getCmp(stock.id+'-stock_actual').setReadOnly(true);
+				Ext.getCmp(stock.id+'-stock_actual').disable();
+				
+				
+				Ext.getCmp(stock.id+'-desc1').setValue(rs.get('desc1'));
+				Ext.getCmp(stock.id+'-desc2').setValue(rs.get('desc2'));
+				Ext.getCmp(stock.id+'-desc3').setValue(rs.get('desc3'));
+				Ext.getCmp(stock.id+'-desc4').setValue(rs.get('desc4'));
+				
+                Ext.getCmp(stock.id+'-estado').setValue(rs.get('activo'));
+                
+                stock.fn_habilitar(true,2);
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+        fn_actualizar:function()
+        {
+            if(stock.fn_validar()){
+				Ext.Msg.wait('Actualizando stock... por favor espere!');
+				Ext.Ajax.request({
+					url:'maestros/stock-actualizar',
+					params:
+					{
+						mcd_id:Ext.getCmp(stock.id+'-mcd_id').getValue(),
+						codigo1:Ext.getCmp(stock.id+'-codigo1').getValue().toUpperCase(),
+						codigo2:Ext.getCmp(stock.id+'-codigo2').getValue().toUpperCase(),
+						codigo3:Ext.getCmp(stock.id+'-codigo3').getValue().toUpperCase(),
+						nombre:Ext.getCmp(stock.id+'-nombre').getValue().toUpperCase(),
+						ume_id:Ext.getCmp(stock.id+'-ume_id').getValue(),
+						mar_id:Ext.getCmp(stock.id+'-mar_id').getValue(),
+						mar_nom:Ext.getCmp(stock.id+'-mar_id').getRawValue(),
+						lin_id:Ext.getCmp(stock.id+'-lin_id').getValue(),
+						precio_costo:Ext.getCmp(stock.id+'-precio_costo').getValue(),
+						precio_compra:Ext.getCmp(stock.id+'-precio_compra').getValue(),
+						precio_venta:Ext.getCmp(stock.id+'-precio_venta').getValue(),
+						stock_minimo:Ext.getCmp(stock.id+'-stock_minimo').getValue(),
+						stock_actual:Ext.getCmp(stock.id+'-stock_actual').getValue(),
+						utilidad:Ext.getCmp(stock.id+'-utilidad').getValue(),
+						desc1:Ext.getCmp(stock.id+'-desc1').getValue(),
+						desc2:Ext.getCmp(stock.id+'-desc2').getValue(),
+						desc3:Ext.getCmp(stock.id+'-desc3').getValue(),
+						desc4:Ext.getCmp(stock.id+'-desc4').getValue(),
+						estado:Ext.getCmp(stock.id+'-estado').getValue().getGroupValue(),
+						ind_calculo:Ext.getCmp(stock.id+'-ind_calculo').getValue().getGroupValue()
+					},
+					success:function(response,options)
+					{        
+						Ext.Msg.hide();    
+						var res = Ext.decode(response.responseText);
+						if(res.success){
+							Ext.getCmp(stock.id+'-panel_derecho').collapse();
+							Ext.getCmp(stock.id+'-panel_derecho').setVisible(false);
+							og.msg("Ok","El registro se ha actualizado");
+							stock.fn_habilitar(false,0);
+							Ext.getCmp(stock.id+'-grid_lista').store.load();
+						}else{
+							og.msg("Error",res.mensaje);
+							Ext.getCmp(stock.id+res.campo).focus(true,10);							
+						}
+					}
+				});
+			}
+        },
+        fn_guardar:function()
+        {
+            var vData= new Array();
+			var v_stock= new Array();
+			for(i=0;i<Ext.getCmp(stock.id+'-grid_lista').store.getCount();i++)
+            {
+				//id'},{name:'cantidad'},{name:'codigo'},{name:'detalle'},{name:'precio'},{name:'descuento'},{name:'total
+                datos=Ext.getCmp(stock.id+'-grid_lista').getStore(0).getAt(i);
+				vValore = datos.get('mcd_id') + '.@.' + datos.get('ume_id') + '.@.' + datos.get('stock_inicial') + '.@.' + datos.get('stock_pro') + '.@.' + datos.get('stock_inservible_inicial') + '.@.' + datos.get('stock_inservible');
+				vData[i] = vValore;
+            }
+			/*alert("antes");
+			Ext.getCmp(stock.id+'-formulario').getForm().submit({						
+				method: 'POST',
+				url:'maestros/stock-guardar',
+				params:{ 
+					"v_detalle[]":vData,
+				},
+				waitTitle: 'Registro de ',
+				waitMsg: 'Guardando Información..',
+				success: function(form, action){
+					alert(action.response.responseText);				
+					var res = Ext.decode(action.response.responseText);
+					if(res.success){
+						og.msg("Ok","El registro se ha actualizado");
+                    Ext.getCmp(stock.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(stock.id+'-combo_describe').getValue(),query:Ext.getCmp(stock.id+'-buscar').getValue(),start:0,limit:100}});
+					}else{
+						og.msg("Error",res.mensaje);
+						Ext.getCmp(stock.id+res.campo).focus(true,10);						
+					}
+					Ext.getCmp(stock.id+'-formulario').getForm().reset();
+				},
+				failure: function(form, action){
+					alert(action.response.responseText);
+					var res = Ext.decode(action.response.responseText);
+					Ext.Msg.show({
+						title:'Error',
+						msg: res.data,
+						   buttons: Ext.Msg.OK,
+						   icon: Ext.MessageBox.ERROR
+						});
+						
+						
+				}
+			});*/
+			Ext.Msg.wait('Guardando información de stock... por favor espere!');
+            Ext.Ajax.request({
+                url:'maestros/stock-guardar',
+                params:
+                {
+					"v_detalle[]":vData,
+                },
+				waitTitle: 'Registro de ',
+				waitMsg: 'Guardando Información..',
+                success:function(response,options)
+                {
+					Ext.Msg.hide();
+					//alert(response.responseText);
+                    var res = Ext.decode(response.responseText);
+                    og.msg("Ok","El registro se ha actualizado");
+                    Ext.getCmp(stock.id+'-grid_lista').store.load({params:{campo:Ext.getCmp(stock.id+'-combo_describe').getValue(),query:Ext.getCmp(stock.id+'-buscar').getValue(),start:0,limit:100}});
+				}
+			});
+        },
+        fn_eliminar:function()
+        {
+            var rs=Ext.getCmp(stock.id+'-grid_lista').getSelectionModel().getSelected();
+            if(rs)
+            {
+				 Ext.Msg.confirm('Alerta', 'Desea eliminar?', function(btn) {
+					if(btn == 'yes')
+					{
+						Ext.Msg.wait('Eliminando datos de stock... por favor espere!');
+						Ext.Ajax.request({
+							url:'maestros/stock-eliminar',
+							params:
+							{
+								mcd_id:rs.get('mcd_id')
+							},
+							success:function(response,options)
+							{          
+								Ext.Msg.hide();   
+								var res = Ext.decode(response.responseText);
+								if(res.success){
+									og.msg("Ok","El registro se ha eliminado");
+									stock.fn_habilitar(false,0);
+									Ext.getCmp(stock.id+'-grid_lista').store.load();
+								}else{
+									og.msg("Error",res.mensaje);
+									Ext.getCmp(stock.id+res.campo).focus(true,10);				
+								}									
+							}
+						});
+					}
+				 });
+            }
+            else
+            {
+                og.msg("Error","Seleccione un registro");
+            }
+        },
+		
+		fn_validar:function(){
+			if(!Ext.getCmp(stock.id+'-codigo1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 1");
+                Ext.getCmp(stock.id+'-codigo1').focus(true,10);
+                return false;
+            }
+            /*if(!Ext.getCmp(stock.id+'-codigo2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 2");
+                Ext.getCmp(stock.id+'-codigo2').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-codigo3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Código 3");
+                Ext.getCmp(stock.id+'-codigo3').focus(true,10);
+                return false;
+            }*/
+            if(!Ext.getCmp(stock.id+'-nombre').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Nombre");
+                Ext.getCmp(stock.id+'-nombre').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-ume_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Unidad de Medida");
+                Ext.getCmp(stock.id+'-ume_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-mar_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Marca");
+                Ext.getCmp(stock.id+'-mar_id').focus(true,10);
+                return false;
+            }
+			 if(!Ext.getCmp(stock.id+'-fam_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Familia");
+                Ext.getCmp(stock.id+'-fam_id').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-lin_id').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Linea");
+                Ext.getCmp(stock.id+'-lin_id').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(stock.id+'-precio_compra').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Compra");
+                Ext.getCmp(stock.id+'-precio_compra').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-precio_costo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Costo");
+                Ext.getCmp(stock.id+'-precio_costo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-precio_venta').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Precio de Venta");
+                Ext.getCmp(stock.id+'-precio_venta').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-stock_minimo').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Mínimo");
+                Ext.getCmp(stock.id+'-stock_minimo').focus(true,10);
+                return false;
+            }
+            if(!Ext.getCmp(stock.id+'-stock_actual').isValid())
+            {
+                og.msg("Error", "Ingrese el campo Stock Actual");
+                Ext.getCmp(stock.id+'-stock_actual').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(stock.id+'-utilidad').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Incremento");
+                Ext.getCmp(stock.id+'-utilidad').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(stock.id+'-desc1').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 1");
+                Ext.getCmp(stock.id+'-desc1').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(stock.id+'-desc2').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 2");
+                Ext.getCmp(stock.id+'-desc2').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(stock.id+'-desc3').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 3");
+                Ext.getCmp(stock.id+'-desc3').focus(true,10);
+                return false;
+            }
+			if(!Ext.getCmp(stock.id+'-desc4').isValid())
+            {
+                og.msg("Error", "Ingrese el campo % de Desc 4");
+                Ext.getCmp(stock.id+'-desc4').focus(true,10);
+                return false;
+            }
+			return true;
+		},
+		
+		fn_imprimir:function()
+        {
+			document.getElementById('frmReporte-stock').action="maestros/stock-lista-impresion";
+			document.getElementById('txtpar1').value = Ext.getCmp(stock.id+'-combo_describe').getValue();
+			document.getElementById('txtpar2').value = Ext.getCmp(stock.id+'-buscar').getValue();
+            document.getElementById('frmReporte-stock').submit();
+        },
+		
+		fn_habilitar:function(sw, tipo)
+        {
+			/*if(!sw){
+				Ext.getCmp(stock.id+'-btn_guardar').setVisible(sw);
+				Ext.getCmp(stock.id+'-btn_actualizar').setVisible(sw);
+			}else{
+				if(tipo==1){
+					Ext.getCmp(stock.id+'-btn_guardar').setVisible(sw);
+					Ext.getCmp(stock.id+'-btn_actualizar').setVisible(!sw);
+				}else{
+					Ext.getCmp(stock.id+'-btn_guardar').setVisible(!sw);
+					Ext.getCmp(stock.id+'-btn_actualizar').setVisible(sw);
+				}
+			}
+			Ext.getCmp(stock.id+'-btn_nuevo').setVisible(!sw);			
+			Ext.getCmp(stock.id+'-btn_cancelar').setVisible(sw);
+			
+			Ext.getCmp(stock.id+'-btn_editar').setVisible(!sw);
+			Ext.getCmp(stock.id+'-btn_eliminar').setVisible(!sw);
+
+			Ext.getCmp(stock.id+'-btn_editar').disable();
+			Ext.getCmp(stock.id+'-btn_eliminar').disable();
+			
+			Ext.getCmp(stock.id+'-buscar').setVisible(true);			
+			Ext.getCmp(stock.id+'-combo_describe').setVisible(true);
+			
+			Ext.getCmp(stock.id+'-btn_imprimir').setVisible(!sw);	*/
+			
+			Ext.getCmp(stock.id+'-btn_guardar').setVisible(true);
+			Ext.getCmp(stock.id+'-btn_actualizar').setVisible(false);
+			Ext.getCmp(stock.id+'-btn_nuevo').setVisible(false);
+			Ext.getCmp(stock.id+'-btn_cancelar').setVisible(false);
+			
+			Ext.getCmp(stock.id+'-btn_editar').setVisible(false);
+			Ext.getCmp(stock.id+'-btn_eliminar').setVisible(false);
+			Ext.getCmp(stock.id+'-buscar').setVisible(true);			
+			Ext.getCmp(stock.id+'-combo_describe').setVisible(true);
+			
+			Ext.getCmp(stock.id+'-btn_imprimir').setVisible(true);
+					
+        }
+    }
+    Ext.onReady(stock.init,stock);
+
+</script>
